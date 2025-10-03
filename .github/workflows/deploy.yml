@@ -18,42 +18,42 @@ jobs:
           ssh-keyscan -p 22 13.125.205.126 >> ~/.ssh/known_hosts
 
       - name: Deploy over SSH
-        env:
-          APP_DIR: ${{ secrets.APP_DIR }}
-          GH_PAT: ${{ secrets.GH_PAT }}
-          NGINX_STATIC_DIR: ${{ secrets.NGINX_STATIC_DIR }}
-        run: |
-          ssh -p 22 ec2-user@13.125.205.126 'bash -s' << REMOTE
-          set -e
-          # 1) 경로/시크릿 정리
-          APP_DIR_RAW="${APP_DIR}"
-          APP_DIR=\$(printf "%s" "\$APP_DIR_RAW" | tr -d '\r' | xargs)
-          REPO_URL="https://x-access-token:${GH_PAT}@github.com/wo-ong-dev/my-budget-app.git"
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 13.125.205.126
+          username: ec2-user
+          key: ${{ secrets.KEY }}
+          port: 22
+          envs: APP_DIR,GH_PAT,NGINX_STATIC_DIR
+          script: |
+            set -e
+            # 시크릿 정리
+            APP_DIR="$(printf "%s" "$APP_DIR" | tr -d '\r' | xargs)"
+            NGINX_STATIC_DIR="$(printf "%s" "$NGINX_STATIC_DIR" | tr -d '\r' | xargs)"
+            REPO_URL="https://x-access-token:${GH_PAT}@github.com/wo-ong-dev/my-budget-app.git"
 
-          echo "Using APP_DIR: [\${APP_DIR}]"
-          mkdir -p "\${APP_DIR}"
+            echo "Using APP_DIR: [$APP_DIR]"
+            mkdir -p "$APP_DIR"
 
-          # 2) 첫 배포면 클론, 있으면 갱신
-          if [ ! -d "\${APP_DIR}/.git" ]; then
-            rm -rf "\${APP_DIR}"/*
-            git clone "\${REPO_URL}" "\${APP_DIR}"
-          fi
+            # 리포 준비
+            if [ ! -d "$APP_DIR/.git" ]; then
+              rm -rf "$APP_DIR"/*
+              git clone "$REPO_URL" "$APP_DIR"
+            fi
 
-          cd "\${APP_DIR}"
-          git remote set-url origin "\${REPO_URL}"
-          git fetch --all
-          git reset --hard origin/main
+            cd "$APP_DIR"
+            git remote set-url origin "$REPO_URL"
+            git fetch --all
+            git reset --hard origin/main
 
-          # 3) 빌드
-          npm ci
-          npm run build
+            # 빌드
+            npm ci
+            npm run build
 
-          # 4) Nginx 정적 배치(있는 경우만)
-          NGINX_DIR_RAW="\${NGINX_STATIC_DIR}"
-          NGINX_DIR=\$(printf "%s" "\$NGINX_DIR_RAW" | tr -d '\r' | xargs)
-          if [ -n "\$NGINX_DIR" ] && [ -d "\$NGINX_DIR" ]; then
-            sudo rm -rf "\$NGINX_DIR"/*
-            sudo cp -r dist/* "\$NGINX_DIR"/
-            sudo systemctl reload nginx || true
-          fi
-          REMOTE
+            # 정적 배치(있을 때만)
+            if [ -n "$NGINX_STATIC_DIR" ] && [ -d "$NGINX_STATIC_DIR" ]; then
+              sudo rm -rf "$NGINX_STATIC_DIR"/*
+              sudo cp -r dist/* "$NGINX_STATIC_DIR"/
+              sudo systemctl reload nginx || true
+            fi
+            REMOTE
