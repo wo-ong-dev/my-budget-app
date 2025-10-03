@@ -1,0 +1,63 @@
+name: Deploy
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start ssh-agent and add key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.KEY }}
+
+      - name: Add host to known_hosts
+        run: ssh-keyscan -p 22 13.125.205.126 >> ~/.ssh/known_hosts
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          APP_DIR: ${{ secrets.APP_DIR }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          NGINX_STATIC_DIR: ${{ secrets.NGINX_STATIC_DIR }}
+        with:
+          host: 13.125.205.126
+          username: ec2-user
+          key: ${{ secrets.KEY }}
+          port: 22
+          envs: APP_DIR,GH_PAT,NGINX_STATIC_DIR
+          script: |
+            set -e
+            # 시크릿 정리
+            APP_DIR="$(printf "%s" "$APP_DIR" | tr -d '\r' | xargs)"
+            NGINX_STATIC_DIR="$(printf "%s" "$NGINX_STATIC_DIR" | tr -d '\r' | xargs)"
+            GH_PAT_CLEAN="$(printf "%s" "$GH_PAT" | tr -d '\r\n' | xargs)"
+            REPO_URL="https://x-access-token:${GH_PAT_CLEAN}@github.com/wo-ong-dev/my-budget-app.git"
+
+            echo "Using APP_DIR: [$APP_DIR]"
+            mkdir -p "$APP_DIR"
+
+            # 리포 준비(없으면 클론)
+            if [ ! -d "$APP_DIR/.git" ]; then
+              rm -rf "$APP_DIR"/*
+              git clone "$REPO_URL" "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+            git remote set-url origin "$REPO_URL"
+            git fetch --all
+            git reset --hard origin/main
+
+            # 빌드
+            npm ci
+            npm run build
+
+            # 정적 배치(있는 경우만)
+            if [ -n "$NGINX_STATIC_DIR" ] && [ -d "$NGINX_STATIC_DIR" ]; then
+              sudo rm -rf "$NGINX_STATIC_DIR"/*
+              sudo cp -r dist/* "$NGINX_STATIC_DIR"/
+              sudo systemctl reload nginx || true
+            fi
