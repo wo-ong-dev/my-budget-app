@@ -1,0 +1,42 @@
+name: Deploy
+on:
+  push:
+    branches: [ "main" ]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            set -e
+            cd ${{ secrets.APP_DIR }}
+            git fetch --all
+            git reset --hard origin/main
+
+            # Backend
+            cd backend
+            npm ci
+            npm run build || true
+            if command -v pm2 >/dev/null 2>&1; then
+              pm2 startOrReload ecosystem.config.js || pm2 reload all || true
+            else
+              sudo systemctl restart my-budget-backend || true
+            fi
+
+            # Frontend
+            cd ../frontend
+            npm ci
+            npm run build
+
+            if [ -n "${{ secrets.NGINX_STATIC_DIR }}" ]; then
+              sudo rm -rf ${{ secrets.NGINX_STATIC_DIR }}/*
+              sudo cp -r dist/* ${{ secrets.NGINX_STATIC_DIR }}/
+              sudo systemctl reload nginx || true
+            fi
