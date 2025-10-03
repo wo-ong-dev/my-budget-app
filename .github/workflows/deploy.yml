@@ -1,39 +1,27 @@
-name: Deploy
-on:
-  push:
-    branches: [ "main" ]
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # 1) SSH 키를 에이전트에 등록 (Secrets.KEY 그대로 사용, 개행 문제 회피)
-      - name: Start ssh-agent and add key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.KEY }}
-
-      # 2) 최초 접속시 호스트키 프롬프트 방지
-      - name: Add host to known_hosts
-        run: |
-          ssh-keyscan -p 22 13.125.205.126 >> ~/.ssh/known_hosts
-
-      # 3) 원격 서버에서 배포 스크립트 실행
       - name: Deploy over SSH
         run: |
           ssh -p 22 ec2-user@13.125.205.126 'bash -s' << "REMOTE"
           set -e
-          cd ${{ secrets.APP_DIR }}
+          # 1) APP_DIR 시크릿의 개행/공백 제거 후 사용
+          APP_DIR_RAW='${{ secrets.APP_DIR }}'
+          APP_DIR=$(printf "%s" "$APP_DIR_RAW" | tr -d '\r' | xargs)
+          echo "Using APP_DIR: [$APP_DIR]"
+          mkdir -p "$APP_DIR"
+          cd "$APP_DIR"
+
+          # 2) 배포
           git fetch --all
           git reset --hard origin/main
 
           npm ci
           npm run build
 
-          if [ -n "${{ secrets.NGINX_STATIC_DIR }}" ] && [ -d "${{ secrets.NGINX_STATIC_DIR }}" ]; then
-            sudo rm -rf "${{ secrets.NGINX_STATIC_DIR }}"/*
-            sudo cp -r dist/* "${{ secrets.NGINX_STATIC_DIR }}/"
+          # 3) Nginx 정적 복사(있는 경우만)
+          NGINX_DIR_RAW='${{ secrets.NGINX_STATIC_DIR }}'
+          NGINX_DIR=$(printf "%s" "$NGINX_DIR_RAW" | tr -d '\r' | xargs)
+          if [ -n "$NGINX_DIR" ] && [ -d "$NGINX_DIR" ]; then
+            sudo rm -rf "$NGINX_DIR"/*
+            sudo cp -r dist/* "$NGINX_DIR"/
             sudo systemctl reload nginx || true
           fi
           REMOTE
