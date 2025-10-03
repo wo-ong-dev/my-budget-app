@@ -1,3 +1,22 @@
+name: Deploy
+on:
+  push:
+    branches: [ "main" ]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start ssh-agent and add key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.KEY }}
+
+      - name: Add host to known_hosts
+        run: |
+          ssh-keyscan -p 22 13.125.205.126 >> ~/.ssh/known_hosts
+
       - name: Deploy over SSH
         run: |
           ssh -p 22 ec2-user@13.125.205.126 'bash -s' << "REMOTE"
