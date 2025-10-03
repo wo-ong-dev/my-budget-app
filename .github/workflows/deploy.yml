@@ -56,4 +56,3 @@ jobs:
               sudo cp -r dist/* "$NGINX_STATIC_DIR"/
               sudo systemctl reload nginx || true
             fi
-            REMOTE
