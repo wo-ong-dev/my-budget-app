@@ -7,27 +7,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
+
+      # 1) SSH 키를 에이전트에 등록 (Secrets.KEY 그대로 사용, 개행 문제 회피)
+      - name: Start ssh-agent and add key
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          host: "13.125.205.126"   # 일단 하드코딩
-          username: "${{ secrets.USER }}"
-          key: "${{ secrets.KEY }}"
-          port: "22"               # 문자열로 고정
-          debug: true
-          script_stop: true
-          command_timeout: 30m
-          script: |
-            set -e
-            cd ${{ secrets.APP_DIR }}
-            git fetch --all
-            git reset --hard origin/main
+          ssh-private-key: ${{ secrets.KEY }}
 
-            npm ci
-            npm run build
+      # 2) 최초 접속시 호스트키 프롬프트 방지
+      - name: Add host to known_hosts
+        run: |
+          ssh-keyscan -p 22 13.125.205.126 >> ~/.ssh/known_hosts
 
-            if [ -n "${{ secrets.NGINX_STATIC_DIR }}" ] && [ -d "${{ secrets.NGINX_STATIC_DIR }}" ]; then
-              sudo rm -rf "${{ secrets.NGINX_STATIC_DIR }}"/*
-              sudo cp -r dist/* "${{ secrets.NGINX_STATIC_DIR }}/"
-              sudo systemctl reload nginx || true
-            fi
+      # 3) 원격 서버에서 배포 스크립트 실행
+      - name: Deploy over SSH
+        run: |
+          ssh -p 22 ec2-user@13.125.205.126 'bash -s' << "REMOTE"
+          set -e
+          cd ${{ secrets.APP_DIR }}
+          git fetch --all
+          git reset --hard origin/main
+
+          npm ci
+          npm run build
+
+          if [ -n "${{ secrets.NGINX_STATIC_DIR }}" ] && [ -d "${{ secrets.NGINX_STATIC_DIR }}" ]; then
+            sudo rm -rf "${{ secrets.NGINX_STATIC_DIR }}"/*
+            sudo cp -r dist/* "${{ secrets.NGINX_STATIC_DIR }}/"
+            sudo systemctl reload nginx || true
+          fi
+          REMOTE
