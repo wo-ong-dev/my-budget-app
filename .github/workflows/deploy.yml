@@ -20,21 +20,11 @@ jobs:
             git fetch --all
             git reset --hard origin/main
 
-            # Backend
-            cd backend
-            npm ci
-            npm run build || true
-            if command -v pm2 >/dev/null 2>&1; then
-              pm2 startOrReload ecosystem.config.js || pm2 reload all || true
-            else
-              sudo systemctl restart my-budget-backend || true
-            fi
-
-            # Frontend
-            cd ../frontend
+            # 프론트엔드 단일 리포 기준
             npm ci
             npm run build
 
+            # Nginx가 정적 폴더를 서빙하는 경우에만 복사
             if [ -n "${{ secrets.NGINX_STATIC_DIR }}" ]; then
               sudo rm -rf ${{ secrets.NGINX_STATIC_DIR }}/*
               sudo cp -r dist/* ${{ secrets.NGINX_STATIC_DIR }}/
