@@ -13,20 +13,22 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.KEY }}
-          port: "22"
+          port: 22
+          script_stop: true
+          command_timeout: 30m
           script: |
             set -e
             cd ${{ secrets.APP_DIR }}
             git fetch --all
             git reset --hard origin/main
 
-            # 프론트엔드 단일 리포 기준
+            # 프론트엔드 단일 리포
             npm ci
             npm run build
 
-            # Nginx가 정적 폴더를 서빙하는 경우에만 복사
-            if [ -n "${{ secrets.NGINX_STATIC_DIR }}" ]; then
-              sudo rm -rf ${{ secrets.NGINX_STATIC_DIR }}/*
-              sudo cp -r dist/* ${{ secrets.NGINX_STATIC_DIR }}/
+            # Nginx가 정적 폴더를 서빙할 때만 복사
+            if [ -n "${{ secrets.NGINX_STATIC_DIR }}" ] && [ -d "${{ secrets.NGINX_STATIC_DIR }}" ]; then
+              sudo rm -rf "${{ secrets.NGINX_STATIC_DIR }}"/*
+              sudo cp -r dist/* "${{ secrets.NGINX_STATIC_DIR }}/"
               sudo systemctl reload nginx || true
             fi
