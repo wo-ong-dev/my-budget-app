@@ -28,7 +28,7 @@ jobs:
           # 1) 경로/시크릿 정리
           APP_DIR_RAW="${APP_DIR}"
           APP_DIR=\$(printf "%s" "\$APP_DIR_RAW" | tr -d '\r' | xargs)
-          REPO_URL="https://\${GH_PAT}@github.com/wo-ong-dev/my-budget-app.git"
+          REPO_URL="https://x-access-token:${GH_PAT}@github.com/wo-ong-dev/my-budget-app.git"
 
           echo "Using APP_DIR: [\${APP_DIR}]"
           mkdir -p "\${APP_DIR}"
