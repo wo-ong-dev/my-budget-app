@@ -41,7 +41,7 @@ body {
 .app-container {
   background: #fff;
   width: 100%;
-  max-width: 600px; /* 440px에서 600px로 확장 */
+  max-width: 450px; /* 450px로 설정 */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
