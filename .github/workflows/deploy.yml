@@ -1,7 +1,7 @@
 name: Deploy
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 jobs:
   deploy:
@@ -49,7 +49,7 @@ jobs:
             cd "$APP_DIR"
             git remote set-url origin "$REPO_URL"
             git fetch --all
-            git reset --hard origin/main
+            git reset --hard origin/master
 
             # 빌드
             npm ci
