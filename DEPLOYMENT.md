@@ -1,4 +1,4 @@
-# 🚀 EC2 배포 가이드
+# 🚀 CI/CD + EC2 배포 가이드 (현재 운영 기준)
 
 ## 📋 **사전 준비사항**
 
@@ -12,31 +12,29 @@
 - **SSH 클라이언트**: Windows는 PuTTY 또는 WSL
 - **SCP**: 파일 전송용
 
-## 🛠️ **배포 방법**
+## 🛠️ **배포 방법(권장: GitHub Actions)**
 
-### **방법 1: 자동 배포 스크립트 사용**
+### Workflow: `.github/workflows/deploy.yml`
+트리거
+- main 브랜치 푸시 또는 수동 `workflow_dispatch`
 
-#### Windows:
-```cmd
-# 1. EC2 인스턴스 정보 확인
-# EC2 콘솔에서 퍼블릭 IP 주소 확인
+시크릿(이미 사용 중)
+- `HOST` = 13.125.205.126
+- `USER` = ec2-user (운영 계정 사용 시 그 값)
+- `KEY` = EC2 SSH 프라이빗 키 전체 내용
+- `PORT` = 22 (변경 시 해당 값)
+- `APP_DIR` = /var/www/html (변경 시 해당 경로)
+- 추가: `VITE_API_BASE_URL` = `http://13.125.205.126/api`
 
-# 2. 배포 실행
-deploy.bat [EC2_IP] [EC2_USER]
-# 예시: deploy.bat 3.34.123.456 ec2-user
-```
+동작
+1) `npm ci` → `npm run build`
+2) `dist/*`를 EC2 `/tmp/my-budget-app`로 업로드(SCP)
+3) `/var/www/html`(또는 `APP_DIR`)로 싱크 및 Nginx 재시작
 
-#### Linux/Mac:
-```bash
-# 1. 실행 권한 부여
-chmod +x deploy.sh
+수동 실행
+- GitHub → Actions → Build and Deploy (EC2 Nginx) → Run workflow
 
-# 2. 배포 실행
-./deploy.sh [EC2_IP] [EC2_USER]
-# 예시: ./deploy.sh 3.34.123.456 ec2-user
-```
-
-### **방법 2: 수동 배포**
+### **대안: 수동 배포(비권장, 참고용)**
 
 #### 1. **EC2에 접속**
 ```bash
@@ -67,7 +65,7 @@ sudo chown -R nginx:nginx /var/www/html
 sudo nano /etc/nginx/conf.d/react-app.conf
 ```
 
-다음 내용 추가:
+다음 내용 추가(예):
 ```nginx
 server {
     listen 80;
@@ -161,7 +159,7 @@ sudo tail -f /var/log/nginx/error.log
 
 ## 🔄 **업데이트 배포**
 
-코드 변경 후 재배포:
+코드 변경 후 재배포(수동 방식일 때):
 ```bash
 # 1. 로컬에서 빌드
 npm run build
