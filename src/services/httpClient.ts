@@ -1,6 +1,8 @@
 ﻿import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? "";
+// Force API base to same-origin '/api' so that Nginx can proxy to backend (127.0.0.1:8080)
+// This avoids accidental leakage of build-time hosts/ports (e.g., :8080) into the client bundle.
+const baseURL = "/api";
 
 const httpClient = axios.create({
   baseURL,
