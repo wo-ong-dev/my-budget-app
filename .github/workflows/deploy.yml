@@ -39,8 +39,22 @@ jobs:
           PORT: ${{ secrets.PORT }}
         run: |
           SSH_PORT=${PORT:-22}
+          echo "🔍 Connecting to ${USER}@${HOST}:${SSH_PORT}"
+
+          # Test SSH connection first
+          ssh -p $SSH_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${USER}@${HOST} "echo '✅ SSH connection successful'" || {
+            echo "❌ SSH connection failed!"
+            echo "Trying with ec2-user..."
+            ssh -p $SSH_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=10 ec2-user@${HOST} "echo '✅ SSH connection successful with ec2-user'" && export USER=ec2-user || exit 1
+          }
+
+          echo "📁 Creating remote directory..."
           ssh -p $SSH_PORT -o StrictHostKeyChecking=no ${USER}@${HOST} "mkdir -p /tmp/my-budget-app/"
+
+          echo "📤 Copying files to EC2..."
           scp -P $SSH_PORT -o StrictHostKeyChecking=no -r dist/* ${USER}@${HOST}:/tmp/my-budget-app/
+
+          echo "✅ Files copied successfully"
 
       - name: Publish to Nginx docroot
         env:
@@ -51,11 +65,34 @@ jobs:
         run: |
           SSH_PORT=${PORT:-22}
           TARGET_DIR=${APP_DIR:-/var/www/html}
-          ssh -p $SSH_PORT -o StrictHostKeyChecking=no ${USER}@${HOST} \
-            "sudo mkdir -p $TARGET_DIR && \
-             sudo rm -rf $TARGET_DIR/* && \
-             sudo cp -r /tmp/my-budget-app/* $TARGET_DIR/ && \
-             sudo chown -R nginx:nginx $TARGET_DIR || true && \
-             if command -v systemctl >/dev/null 2>&1; then sudo systemctl restart nginx || true; fi"
+
+          echo "🚀 Publishing to Nginx..."
+          echo "📂 Target directory: $TARGET_DIR"
+
+          ssh -p $SSH_PORT -o StrictHostKeyChecking=no ${USER}@${HOST} bash << 'EOF'
+            set -e
+            TARGET_DIR="${APP_DIR:-/var/www/html}"
+
+            echo "📁 Creating target directory..."
+            sudo mkdir -p $TARGET_DIR
+
+            echo "🗑️  Clearing old files..."
+            sudo rm -rf $TARGET_DIR/*
+
+            echo "📋 Copying new files..."
+            sudo cp -r /tmp/my-budget-app/* $TARGET_DIR/
+
+            echo "👤 Setting permissions..."
+            sudo chown -R nginx:nginx $TARGET_DIR 2>/dev/null || sudo chown -R www-data:www-data $TARGET_DIR 2>/dev/null || echo "⚠️  Permission change skipped"
+
+            echo "🔄 Restarting Nginx..."
+            if command -v systemctl >/dev/null 2>&1; then
+              sudo systemctl restart nginx && echo "✅ Nginx restarted"
+            else
+              echo "⚠️  systemctl not found, skipping restart"
+            fi
+
+            echo "🎉 Deployment completed!"
+          EOF
 
  
