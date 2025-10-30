@@ -32,67 +32,91 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.KEY }}
 
-      - name: Copy build to EC2 (/tmp)
-        env:
-          HOST: ${{ secrets.HOST }}
-          USER: ${{ secrets.USER }}
-          PORT: ${{ secrets.PORT }}
-        run: |
-          SSH_PORT=${PORT:-22}
-          echo "🔍 Connecting to ${USER}@${HOST}:${SSH_PORT}"
-
-          # Test SSH connection first
-          ssh -p $SSH_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${USER}@${HOST} "echo '✅ SSH connection successful'" || {
-            echo "❌ SSH connection failed!"
-            echo "Trying with ec2-user..."
-            ssh -p $SSH_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=10 ec2-user@${HOST} "echo '✅ SSH connection successful with ec2-user'" && export USER=ec2-user || exit 1
-          }
-
-          echo "📁 Creating remote directory..."
-          ssh -p $SSH_PORT -o StrictHostKeyChecking=no ${USER}@${HOST} "mkdir -p /tmp/my-budget-app/"
-
-          echo "📤 Copying files to EC2..."
-          scp -P $SSH_PORT -o StrictHostKeyChecking=no -r dist/* ${USER}@${HOST}:/tmp/my-budget-app/
-
-          echo "✅ Files copied successfully"
-
-      - name: Publish to Nginx docroot
+      - name: Deploy to EC2
         env:
           HOST: ${{ secrets.HOST }}
           USER: ${{ secrets.USER }}
           PORT: ${{ secrets.PORT }}
           APP_DIR: ${{ secrets.APP_DIR }}
         run: |
+          set -e
           SSH_PORT=${PORT:-22}
           TARGET_DIR=${APP_DIR:-/var/www/html}
+          DEPLOY_USER=${USER:-ec2-user}
 
-          echo "🚀 Publishing to Nginx..."
-          echo "📂 Target directory: $TARGET_DIR"
+          echo "======================================"
+          echo "🚀 Starting Deployment"
+          echo "======================================"
+          echo "📡 Host: ${HOST}"
+          echo "👤 User: ${DEPLOY_USER}"
+          echo "🔌 Port: ${SSH_PORT}"
+          echo "📂 Target: ${TARGET_DIR}"
+          echo "======================================"
 
-          ssh -p $SSH_PORT -o StrictHostKeyChecking=no ${USER}@${HOST} bash << 'EOF'
+          # Test SSH connection and detect correct user
+          echo "🔍 Testing SSH connection..."
+          if ! ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${DEPLOY_USER}@${HOST} "echo 'Connection OK'" 2>/dev/null; then
+            echo "⚠️  Connection failed with ${DEPLOY_USER}, trying ec2-user..."
+            DEPLOY_USER=ec2-user
+            if ! ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${DEPLOY_USER}@${HOST} "echo 'Connection OK'" 2>/dev/null; then
+              echo "❌ SSH connection failed!"
+              exit 1
+            fi
+          fi
+          echo "✅ SSH connection successful as ${DEPLOY_USER}"
+
+          # Create tar archive for faster transfer
+          echo "📦 Creating deployment archive..."
+          tar -czf deploy.tar.gz -C dist .
+          ls -lh deploy.tar.gz
+
+          # Upload archive to EC2
+          echo "📤 Uploading files to EC2..."
+          scp -P ${SSH_PORT} -o StrictHostKeyChecking=no deploy.tar.gz ${DEPLOY_USER}@${HOST}:/tmp/deploy.tar.gz
+          echo "✅ Upload complete"
+
+          # Deploy on EC2
+          echo "🚀 Deploying on EC2..."
+          ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${DEPLOY_USER}@${HOST} bash << EOF
             set -e
-            TARGET_DIR="${APP_DIR:-/var/www/html}"
+            set -x
 
-            echo "📁 Creating target directory..."
-            sudo mkdir -p $TARGET_DIR
+            echo "📂 Extracting files..."
+            rm -rf /tmp/my-budget-app
+            mkdir -p /tmp/my-budget-app
+            tar -xzf /tmp/deploy.tar.gz -C /tmp/my-budget-app/
+            ls -la /tmp/my-budget-app/
 
-            echo "🗑️  Clearing old files..."
-            sudo rm -rf $TARGET_DIR/*
+            echo "📁 Preparing target directory..."
+            sudo mkdir -p ${TARGET_DIR}
+
+            echo "🗑️  Removing old files..."
+            sudo rm -rf ${TARGET_DIR}/*
 
             echo "📋 Copying new files..."
-            sudo cp -r /tmp/my-budget-app/* $TARGET_DIR/
+            sudo cp -r /tmp/my-budget-app/* ${TARGET_DIR}/
 
             echo "👤 Setting permissions..."
-            sudo chown -R nginx:nginx $TARGET_DIR 2>/dev/null || sudo chown -R www-data:www-data $TARGET_DIR 2>/dev/null || echo "⚠️  Permission change skipped"
+            sudo chown -R nginx:nginx ${TARGET_DIR} 2>/dev/null || sudo chown -R www-data:www-data ${TARGET_DIR} 2>/dev/null || true
+
+            echo "✅ Files deployed successfully"
+            ls -lh ${TARGET_DIR}/assets/ || true
 
             echo "🔄 Restarting Nginx..."
             if command -v systemctl >/dev/null 2>&1; then
-              sudo systemctl restart nginx && echo "✅ Nginx restarted"
-            else
-              echo "⚠️  systemctl not found, skipping restart"
+              sudo systemctl restart nginx || true
+              echo "✅ Nginx restarted"
             fi
 
-            echo "🎉 Deployment completed!"
+            echo "🧹 Cleaning up..."
+            rm -f /tmp/deploy.tar.gz
+            rm -rf /tmp/my-budget-app
+
+            echo "🎉 Deployment completed successfully!"
           EOF
+
+          echo "======================================"
+          echo "✅ Deployment Finished"
+          echo "======================================"
 
  
