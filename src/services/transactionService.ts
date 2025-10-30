@@ -42,7 +42,7 @@ function ensureOk(data: any, fallback: string): void {
 
 export async function fetchTransactionsByMonth(month: string): Promise<Transaction[]> {
   const { from, to } = getMonthRange(month);
-  const response = await httpClient.get("/api/transactions", { params: { from, to } });
+  const response = await httpClient.get("/transactions", { params: { from, to } });
   const { data } = response;
   ensureOk(data, "거래 내역을 불러오지 못했어요.");
 
@@ -65,7 +65,7 @@ export async function createTransaction(payload: TransactionDraft): Promise<void
     amount: payload.amount,
   };
 
-  const response = await httpClient.post("/api/transactions", body);
+  const response = await httpClient.post("/transactions", body);
   ensureOk(response.data, "내역을 저장하지 못했어요.");
 }
 
@@ -79,19 +79,19 @@ export async function updateTransaction(id: number, payload: TransactionDraft): 
     amount: payload.amount,
   };
 
-  const response = await httpClient.put(`/api/transactions/${id}`, body);
+  const response = await httpClient.put(`/transactions/${id}`, body);
   ensureOk(response.data, "내역을 수정하지 못했어요.");
 }
 
 export async function deleteTransaction(id: number): Promise<void> {
-  const response = await httpClient.delete(`/api/transactions/${id}`);
+  const response = await httpClient.delete(`/transactions/${id}`);
   ensureOk(response.data, "내역을 삭제하지 못했어요.");
 }
 
 export async function fetchSummary(month: string): Promise<TransactionSummary | null> {
   const { from, to } = getMonthRange(month);
   try {
-    const response = await httpClient.get("/api/summary", { params: { from, to } });
+    const response = await httpClient.get("/summary", { params: { from, to } });
     const data = response.data;
     ensureOk(data, "요약 정보를 불러오지 못했어요.");
     const summary = data?.summary ?? data;
