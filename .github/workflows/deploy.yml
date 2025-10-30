@@ -53,13 +53,25 @@ jobs:
           echo "📂 Target: ${TARGET_DIR}"
           echo "======================================"
 
-          # Test SSH connection and detect correct user
+          # Debug: Check loaded SSH keys
+          echo "🔑 Checking loaded SSH keys..."
+          ssh-add -l || echo "⚠️  No keys loaded in ssh-agent"
+
+          # Test SSH connection with verbose output
           echo "🔍 Testing SSH connection..."
-          if ! ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${DEPLOY_USER}@${HOST} "echo 'Connection OK'" 2>/dev/null; then
+          echo "Command: ssh -p ${SSH_PORT} ${DEPLOY_USER}@${HOST}"
+
+          if ! ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${DEPLOY_USER}@${HOST} "echo 'Connection OK'" 2>&1; then
+            echo ""
             echo "⚠️  Connection failed with ${DEPLOY_USER}, trying ec2-user..."
             DEPLOY_USER=ec2-user
-            if ! ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${DEPLOY_USER}@${HOST} "echo 'Connection OK'" 2>/dev/null; then
+            echo "Command: ssh -p ${SSH_PORT} ${DEPLOY_USER}@${HOST}"
+
+            if ! ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 -vvv ${DEPLOY_USER}@${HOST} "echo 'Connection OK'" 2>&1; then
+              echo ""
               echo "❌ SSH connection failed!"
+              echo "🔍 Debug: Trying to show more details..."
+              ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 -vvv ${DEPLOY_USER}@${HOST} "echo 'test'" 2>&1 | tail -30
               exit 1
             fi
           fi
