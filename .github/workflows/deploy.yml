@@ -33,49 +33,35 @@ jobs:
           ssh-private-key: ${{ secrets.KEY }}
 
       - name: Deploy to EC2
-        env:
-          HOST: ${{ secrets.HOST }}
-          USER: ${{ secrets.USER }}
-          PORT: ${{ secrets.PORT }}
-          APP_DIR: ${{ secrets.APP_DIR }}
         run: |
           set -e
-          SSH_PORT=${PORT:-22}
-          TARGET_DIR=${APP_DIR:-/var/www/html}
-          DEPLOY_USER=${USER:-ec2-user}
+          # Use secrets directly to avoid env variable conflicts
+          SSH_HOST="${{ secrets.HOST }}"
+          SSH_USER="${{ secrets.USER }}"
+          SSH_PORT="${{ secrets.PORT }}"
+          TARGET_DIR="${{ secrets.APP_DIR }}"
+
+          # Set defaults
+          SSH_PORT=${SSH_PORT:-22}
+          SSH_USER=${SSH_USER:-ec2-user}
+          TARGET_DIR=${TARGET_DIR:-/var/www/html}
 
           echo "======================================"
           echo "🚀 Starting Deployment"
           echo "======================================"
-          echo "📡 Host: ${HOST}"
-          echo "👤 User: ${DEPLOY_USER}"
+          echo "📡 Host: ${SSH_HOST}"
+          echo "👤 User: ${SSH_USER}"
           echo "🔌 Port: ${SSH_PORT}"
           echo "📂 Target: ${TARGET_DIR}"
           echo "======================================"
 
-          # Debug: Check loaded SSH keys
-          echo "🔑 Checking loaded SSH keys..."
-          ssh-add -l || echo "⚠️  No keys loaded in ssh-agent"
-
-          # Test SSH connection with verbose output
+          # Test SSH connection
           echo "🔍 Testing SSH connection..."
-          echo "Command: ssh -p ${SSH_PORT} ${DEPLOY_USER}@${HOST}"
-
-          if ! ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${DEPLOY_USER}@${HOST} "echo 'Connection OK'" 2>&1; then
-            echo ""
-            echo "⚠️  Connection failed with ${DEPLOY_USER}, trying ec2-user..."
-            DEPLOY_USER=ec2-user
-            echo "Command: ssh -p ${SSH_PORT} ${DEPLOY_USER}@${HOST}"
-
-            if ! ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 -vvv ${DEPLOY_USER}@${HOST} "echo 'Connection OK'" 2>&1; then
-              echo ""
-              echo "❌ SSH connection failed!"
-              echo "🔍 Debug: Trying to show more details..."
-              ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 -vvv ${DEPLOY_USER}@${HOST} "echo 'test'" 2>&1 | tail -30
-              exit 1
-            fi
+          if ! ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${SSH_USER}@${SSH_HOST} "echo 'Connection OK'"; then
+            echo "❌ SSH connection failed!"
+            exit 1
           fi
-          echo "✅ SSH connection successful as ${DEPLOY_USER}"
+          echo "✅ SSH connection successful"
 
           # Create tar archive for faster transfer
           echo "📦 Creating deployment archive..."
@@ -84,12 +70,12 @@ jobs:
 
           # Upload archive to EC2
           echo "📤 Uploading files to EC2..."
-          scp -P ${SSH_PORT} -o StrictHostKeyChecking=no deploy.tar.gz ${DEPLOY_USER}@${HOST}:/tmp/deploy.tar.gz
+          scp -P ${SSH_PORT} -o StrictHostKeyChecking=no deploy.tar.gz ${SSH_USER}@${SSH_HOST}:/tmp/deploy.tar.gz
           echo "✅ Upload complete"
 
           # Deploy on EC2
           echo "🚀 Deploying on EC2..."
-          ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${DEPLOY_USER}@${HOST} bash << EOF
+          ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} bash << EOF
             set -e
             set -x
 
