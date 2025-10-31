@@ -172,7 +172,15 @@ function App() {
   }, [availableMonths, filters.month]);
 
   const accounts = useMemo(() => {
-    const defaultAccounts = ["카카오 체크카드", "우리은행 월급통장", "신한카드", "현금"];
+    const defaultAccounts = [
+      "국민은행",
+      "토스뱅크",
+      "우리은행",
+      "신용카드",
+      "카카오페이",
+      "카카오뱅크",
+      "현금",
+    ];
     const transactionAccounts = distinct(
       transactions
         .map((tx) => tx.account ?? "")
@@ -182,7 +190,24 @@ function App() {
   }, [transactions]);
 
   const categories = useMemo(() => {
-    const defaultCategories = ["식비", "교통비", "쇼핑", "의료비", "문화생활", "급여", "용돈", "기타"];
+    const defaultCategories = [
+      "급여",
+      "기타",
+      "교통비",
+      "구독/포인트",
+      "데이트",
+      "생활/마트",
+      "선물/경조사비",
+      "식비",
+      "여행/숙박",
+      "월세/관리비",
+      "저축/상조/보험",
+      "카페/음료",
+      "통신비/인터넷비",
+      "편의점",
+      "취미",
+      "상납금",
+    ];
     const transactionCategories = distinct(
       transactions
         .map((tx) => tx.category ?? "")
