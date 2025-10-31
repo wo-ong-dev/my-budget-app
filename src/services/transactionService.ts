@@ -112,3 +112,31 @@ export async function fetchSummary(month: string): Promise<TransactionSummary | 
   }
 }
 
+export async function fetchAccounts(): Promise<string[]> {
+  try {
+    const response = await httpClient.get("/accounts");
+    const data = response.data;
+    ensureOk(data, "계좌 목록을 불러오지 못했어요.");
+
+    const accounts = Array.isArray(data?.rows) ? data.rows : Array.isArray(data) ? data : [];
+    return accounts.map((item: any) => item.name || item).filter((name: string) => name);
+  } catch (error) {
+    // Return empty array if API fails
+    return [];
+  }
+}
+
+export async function fetchCategories(): Promise<string[]> {
+  try {
+    const response = await httpClient.get("/categories");
+    const data = response.data;
+    ensureOk(data, "카테고리 목록을 불러오지 못했어요.");
+
+    const categories = Array.isArray(data?.rows) ? data.rows : Array.isArray(data) ? data : [];
+    return categories.map((item: any) => item.name || item).filter((name: string) => name);
+  } catch (error) {
+    // Return empty array if API fails
+    return [];
+  }
+}
+
