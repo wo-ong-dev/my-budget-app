@@ -1,0 +1,111 @@
+name: Setup Database
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.KEY }}
+
+      - name: Setup Database
+        run: |
+          set -e
+
+          # Use secrets directly
+          SSH_HOST="${{ secrets.HOST }}"
+          SSH_USER="${{ secrets.USER }}"
+          SSH_PORT="${{ secrets.PORT }}"
+
+          # Clean up secrets
+          SSH_HOST=$(echo "$SSH_HOST" | tr -d '[:space:]')
+          SSH_USER=$(echo "$SSH_USER" | tr -d '[:space:]')
+          SSH_PORT=$(echo "$SSH_PORT" | tr -d '[:space:]')
+
+          # Remove prefixes if any
+          SSH_HOST="${SSH_HOST#*:}"
+          SSH_USER="${SSH_USER#*:}"
+          SSH_PORT="${SSH_PORT#*:}"
+
+          # Set defaults
+          SSH_PORT=${SSH_PORT:-22}
+          SSH_USER=${SSH_USER:-ec2-user}
+
+          echo "🔍 Connecting to ${SSH_USER}@${SSH_HOST}:${SSH_PORT}"
+
+          ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} bash << 'EOF'
+            set -e
+
+            echo "📦 Installing MySQL client if needed..."
+            if ! command -v mysql &> /dev/null; then
+              sudo yum install -y mysql || sudo apt-get install -y mysql-client
+            fi
+
+            echo "🗄️ Setting up database..."
+
+            # Find backend directory and read DB credentials
+            if [ -f /var/www/backend/.env ]; then
+              source /var/www/backend/.env
+            elif [ -f ~/.env ]; then
+              source ~/.env
+            fi
+
+            # Create SQL file
+            cat > /tmp/setup_db.sql << 'EOSQL'
+-- Insert accounts
+INSERT IGNORE INTO accounts (name, type, created_at, updated_at) VALUES
+('국민은행', 'bank', NOW(), NOW()),
+('토스뱅크', 'bank', NOW(), NOW()),
+('우리은행', 'bank', NOW(), NOW()),
+('신용카드', 'card', NOW(), NOW()),
+('카카오페이', 'card', NOW(), NOW()),
+('카카오뱅크', 'bank', NOW(), NOW()),
+('현금', 'cash', NOW(), NOW());
+
+-- Insert categories
+INSERT IGNORE INTO categories (name, type, created_at, updated_at) VALUES
+('급여', 'income', NOW(), NOW()),
+('기타', 'expense', NOW(), NOW()),
+('교통비', 'expense', NOW(), NOW()),
+('구독/포인트', 'expense', NOW(), NOW()),
+('데이트', 'expense', NOW(), NOW()),
+('생활/마트', 'expense', NOW(), NOW()),
+('선물/경조사비', 'expense', NOW(), NOW()),
+('식비', 'expense', NOW(), NOW()),
+('여행/숙박', 'expense', NOW(), NOW()),
+('월세/관리비', 'expense', NOW(), NOW()),
+('저축/상조/보험', 'expense', NOW(), NOW()),
+('카페/음료', 'expense', NOW(), NOW()),
+('통신비/인터넷비', 'expense', NOW(), NOW()),
+('편의점', 'expense', NOW(), NOW()),
+('취미', 'expense', NOW(), NOW()),
+('상납금', 'expense', NOW(), NOW());
+
+-- Show results
+SELECT 'Accounts:' as '';
+SELECT * FROM accounts;
+SELECT 'Categories:' as '';
+SELECT * FROM categories;
+EOSQL
+
+            echo "✅ SQL file created"
+
+            # Try to find DB credentials and execute
+            if [ ! -z "$DB_HOST" ] && [ ! -z "$DB_USER" ] && [ ! -z "$DB_PASSWORD" ]; then
+              echo "📊 Executing SQL..."
+              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /tmp/setup_db.sql
+              echo "✅ Database setup complete!"
+            else
+              echo "⚠️ DB credentials not found in .env files"
+              echo "SQL file saved at /tmp/setup_db.sql"
+              echo "Please run manually with: mysql -h <host> -u <user> -p <database> < /tmp/setup_db.sql"
+            fi
+
+            rm -f /tmp/setup_db.sql
+EOF
+
+          echo "✅ Setup complete"
