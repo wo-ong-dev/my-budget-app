@@ -43,6 +43,12 @@ jobs:
           SSH_PORT="${{ secrets.PORT }}"
           TARGET_DIR="${{ secrets.APP_DIR }}"
 
+          # Remove any whitespace, newlines, carriage returns from secrets
+          SSH_HOST=$(echo "$SSH_HOST" | tr -d '[:space:]')
+          SSH_USER=$(echo "$SSH_USER" | tr -d '[:space:]')
+          SSH_PORT=$(echo "$SSH_PORT" | tr -d '[:space:]')
+          TARGET_DIR=$(echo "$TARGET_DIR" | tr -d '[:space:]')
+
           # Validate required secrets
           if [ -z "$SSH_HOST" ]; then
             echo "❌ ERROR: HOST secret is not set!"
