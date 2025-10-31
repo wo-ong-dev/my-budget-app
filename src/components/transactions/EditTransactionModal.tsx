@@ -37,7 +37,7 @@ function EditTransactionModal({
     : undefined;
 
   return (
-    <Modal open={open} onClose={onClose} title="���� ����">
+    <Modal open={open} onClose={onClose} title="내역 수정">
       {transaction ? (
         <>
           <TransactionForm
@@ -46,11 +46,11 @@ function EditTransactionModal({
             defaultValues={defaultValues}
             onSubmit={onSubmit}
             submitting={submitting}
-            submitLabel="�����ϱ�"
+            submitLabel="수정하기"
             resetAfterSubmit={false}
           />
           <button type="button" className="btn btn-danger modal__destructive" onClick={onDelete} disabled={deleting}>
-            {deleting ? "���� ��..." : "���� ����"}
+            {deleting ? "삭제 중..." : "내역 삭제"}
           </button>
         </>
       ) : null}
