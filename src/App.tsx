@@ -20,6 +20,8 @@ import {
   fetchSummary,
   fetchTransactionsByMonth,
   updateTransaction,
+  fetchAccounts,
+  fetchCategories,
 } from "./services/transactionService";
 
 const tabs: TabDefinition[] = [
@@ -133,6 +135,8 @@ function App() {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
   const [isDeleting, setDeleting] = useState(false);
+  const [apiAccounts, setApiAccounts] = useState<string[]>([]);
+  const [apiCategories, setApiCategories] = useState<string[]>([]);
 
   const hasLoadedRef = useRef(false);
 
@@ -171,6 +175,18 @@ function App() {
     }
   }, [availableMonths, filters.month]);
 
+  useEffect(() => {
+    const loadMasterData = async () => {
+      const [accounts, categories] = await Promise.all([
+        fetchAccounts(),
+        fetchCategories(),
+      ]);
+      setApiAccounts(accounts);
+      setApiCategories(categories);
+    };
+    loadMasterData();
+  }, []);
+
   const accounts = useMemo(() => {
     const defaultAccounts = [
       "국민은행",
@@ -186,8 +202,8 @@ function App() {
         .map((tx) => tx.account ?? "")
         .filter((value): value is string => value.length > 0)
     );
-    return distinct([...defaultAccounts, ...transactionAccounts]).sort();
-  }, [transactions]);
+    return distinct([...defaultAccounts, ...apiAccounts, ...transactionAccounts]).sort();
+  }, [transactions, apiAccounts]);
 
   const categories = useMemo(() => {
     const defaultCategories = [
@@ -213,8 +229,8 @@ function App() {
         .map((tx) => tx.category ?? "")
         .filter((value): value is string => value.length > 0)
     );
-    return distinct([...defaultCategories, ...transactionCategories]).sort();
-  }, [transactions]);
+    return distinct([...defaultCategories, ...apiCategories, ...transactionCategories]).sort();
+  }, [transactions, apiCategories]);
 
   const filteredTransactions = useMemo(() => {
     return transactions
