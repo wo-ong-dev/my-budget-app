@@ -56,7 +56,6 @@ jobs:
 
             # Create SQL file
             cat > /tmp/setup_db.sql << 'EOSQL'
--- Insert accounts
 INSERT IGNORE INTO accounts (name, type, created_at, updated_at) VALUES
 ('국민은행', 'bank', NOW(), NOW()),
 ('토스뱅크', 'bank', NOW(), NOW()),
@@ -66,7 +65,6 @@ INSERT IGNORE INTO accounts (name, type, created_at, updated_at) VALUES
 ('카카오뱅크', 'bank', NOW(), NOW()),
 ('현금', 'cash', NOW(), NOW());
 
--- Insert categories
 INSERT IGNORE INTO categories (name, type, created_at, updated_at) VALUES
 ('급여', 'income', NOW(), NOW()),
 ('기타', 'expense', NOW(), NOW()),
@@ -85,7 +83,6 @@ INSERT IGNORE INTO categories (name, type, created_at, updated_at) VALUES
 ('취미', 'expense', NOW(), NOW()),
 ('상납금', 'expense', NOW(), NOW());
 
--- Show results
 SELECT 'Accounts:' as '';
 SELECT * FROM accounts;
 SELECT 'Categories:' as '';
