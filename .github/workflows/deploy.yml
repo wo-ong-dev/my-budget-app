@@ -35,11 +35,19 @@ jobs:
       - name: Deploy to EC2
         run: |
           set -e
+          set -x  # Enable debug mode
+
           # Use secrets directly to avoid env variable conflicts
           SSH_HOST="${{ secrets.HOST }}"
           SSH_USER="${{ secrets.USER }}"
           SSH_PORT="${{ secrets.PORT }}"
           TARGET_DIR="${{ secrets.APP_DIR }}"
+
+          # Validate required secrets
+          if [ -z "$SSH_HOST" ]; then
+            echo "❌ ERROR: HOST secret is not set!"
+            exit 1
+          fi
 
           # Set defaults
           SSH_PORT=${SSH_PORT:-22}
@@ -55,10 +63,15 @@ jobs:
           echo "📂 Target: ${TARGET_DIR}"
           echo "======================================"
 
-          # Test SSH connection
+          # Check SSH key is loaded
+          echo "🔑 Checking SSH agent..."
+          ssh-add -l || echo "⚠️ No SSH keys loaded"
+
+          # Test SSH connection with verbose output
           echo "🔍 Testing SSH connection..."
-          if ! ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${SSH_USER}@${SSH_HOST} "echo 'Connection OK'"; then
+          if ! ssh -v -p ${SSH_PORT} -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${SSH_USER}@${SSH_HOST} "echo 'Connection OK'" 2>&1; then
             echo "❌ SSH connection failed!"
+            echo "Debug: Trying to connect to ${SSH_USER}@${SSH_HOST}:${SSH_PORT}"
             exit 1
           fi
           echo "✅ SSH connection successful"
