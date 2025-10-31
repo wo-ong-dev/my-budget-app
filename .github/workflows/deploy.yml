@@ -27,6 +27,13 @@ jobs:
           # Set if you want to override at build-time. Optional because code also uses absolute "/api" paths.
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
+      - name: Add build timestamp
+        run: |
+          BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          sed -i "s|</head>|  <!-- Build: $BUILD_TIME -->\n  </head>|" dist/index.html
+          echo "Added build timestamp: $BUILD_TIME"
+          head -10 dist/index.html
+
       - name: Add SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
@@ -123,7 +130,12 @@ jobs:
             sudo chown -R nginx:nginx ${TARGET_DIR} 2>/dev/null || sudo chown -R www-data:www-data ${TARGET_DIR} 2>/dev/null || true
 
             echo "✅ Files deployed successfully"
-            ls -lh ${TARGET_DIR}/assets/ || true
+            echo "📋 Deployed files:"
+            ls -lh ${TARGET_DIR}/
+            echo "📦 Assets folder:"
+            ls -lh ${TARGET_DIR}/assets/
+            echo "📄 index.html content check:"
+            head -20 ${TARGET_DIR}/index.html
 
             echo "🔄 Restarting Nginx..."
             if command -v systemctl >/dev/null 2>&1; then
