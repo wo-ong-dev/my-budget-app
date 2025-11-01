@@ -120,8 +120,17 @@ jobs:
             echo "📁 Preparing target directory..."
             sudo mkdir -p ${TARGET_DIR}
 
-            echo "🗑️  Removing old files..."
-            sudo rm -rf ${TARGET_DIR}/*
+            echo "📋 Files BEFORE cleanup:"
+            sudo ls -lha ${TARGET_DIR}/ || true
+            echo "📦 Assets BEFORE cleanup:"
+            sudo ls -lha ${TARGET_DIR}/assets/ || true
+
+            echo "🗑️  Removing ALL old files (including hidden)..."
+            sudo rm -rf ${TARGET_DIR}/* ${TARGET_DIR}/.[!.]* ${TARGET_DIR}/..?* 2>/dev/null || true
+            sudo find ${TARGET_DIR} -mindepth 1 -delete 2>/dev/null || true
+
+            echo "📋 Files AFTER cleanup (should be empty):"
+            sudo ls -lha ${TARGET_DIR}/ || true
 
             echo "📋 Copying new files..."
             sudo cp -r /tmp/my-budget-app/* ${TARGET_DIR}/
