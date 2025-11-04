@@ -144,6 +144,11 @@ jobs:
               echo "✅ Removed old budget-app.conf"
             fi
 
+            # Disable default server block in nginx.conf to let my-budget.conf take precedence
+            echo "🔧 Disabling default server block in nginx.conf..."
+            sudo sed -i '/server {/,/^    }/s/^/#/' /etc/nginx/nginx.conf 2>/dev/null || true
+            echo "✅ Default server block disabled"
+
             echo "🔄 Stopping Nginx, clearing cache, and restarting..."
             # Stop Nginx first to release file handles
             if command -v systemctl >/dev/null 2>&1; then
