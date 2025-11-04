@@ -157,6 +157,15 @@ jobs:
               echo "✅ Nginx restarted"
             fi
 
+            echo "🔍 Verifying Nginx is serving correct files..."
+            echo "Nginx configuration root directories:"
+            sudo grep -r "root " /etc/nginx/ 2>/dev/null | grep -v "#" || true
+            echo ""
+            echo "Test fetching from localhost:"
+            curl -sI http://localhost/ | head -10 || true
+            echo ""
+            curl -s http://localhost/ | head -20 || true
+
             echo "🧹 Cleaning up..."
             rm -f /tmp/deploy.tar.gz
             rm -rf /tmp/my-budget-app
