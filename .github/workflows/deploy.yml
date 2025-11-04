@@ -137,16 +137,24 @@ jobs:
             echo "📄 index.html content check:"
             head -20 ${TARGET_DIR}/index.html
 
-            echo "🔄 Clearing Nginx cache and restarting..."
+            echo "🔄 Stopping Nginx, clearing cache, and restarting..."
+            # Stop Nginx first to release file handles
+            if command -v systemctl >/dev/null 2>&1; then
+              sudo systemctl stop nginx || true
+              echo "✅ Nginx stopped"
+            fi
+
             # Clear Nginx cache (common cache locations)
             sudo rm -rf /var/cache/nginx/* 2>/dev/null || true
             sudo rm -rf /var/lib/nginx/cache/* 2>/dev/null || true
             sudo rm -rf /var/run/nginx-cache/* 2>/dev/null || true
+            echo "✅ Nginx cache cleared"
 
-            # Restart Nginx to apply changes
+            # Full restart to ensure fresh file loading
             if command -v systemctl >/dev/null 2>&1; then
-              sudo systemctl reload nginx || sudo systemctl restart nginx || true
-              echo "✅ Nginx cache cleared and restarted"
+              sudo systemctl start nginx || true
+              sudo systemctl status nginx --no-pager || true
+              echo "✅ Nginx restarted"
             fi
 
             echo "🧹 Cleaning up..."
