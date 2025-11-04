@@ -8,7 +8,7 @@ const httpClient = axios.create({
   baseURL,
   timeout: 5000, // 5초로 단축
   headers: {
-    "Content-Type": "application/json",
+    "Content-Type": "application/json; charset=utf-8",
   },
 });
 
