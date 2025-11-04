@@ -137,6 +137,13 @@ jobs:
             echo "📄 index.html content check:"
             head -20 ${TARGET_DIR}/index.html
 
+            echo "🔧 Fixing Nginx configuration conflicts..."
+            # Remove old conflicting configuration
+            if [ -f /etc/nginx/conf.d/budget-app.conf ]; then
+              sudo rm -f /etc/nginx/conf.d/budget-app.conf
+              echo "✅ Removed old budget-app.conf"
+            fi
+
             echo "🔄 Stopping Nginx, clearing cache, and restarting..."
             # Stop Nginx first to release file handles
             if command -v systemctl >/dev/null 2>&1; then
