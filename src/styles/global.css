@@ -1088,45 +1088,16 @@ body {
   }
 
   .stats-card {
-    padding: 12px 8px !important;
-    border-radius: 12px;
+    padding: 14px 10px !important;
     margin: 0 0 10px 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    display: block !important;
   }
 
   .stats-card--chart {
-    min-height: 400px !important;
-    display: block !important;
+    /* 모바일에서는 높이 제한 해제 */
   }
 
   .chart-container {
-    padding: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 350px !important;
-    min-height: 350px !important;
-    margin: 0 auto !important;
-    box-sizing: border-box !important;
-    display: block !important;
-    overflow: hidden !important;
-  }
-
-  .chart-container svg {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  .chart-container .recharts-wrapper {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  .chart-container text {
-    font-size: 10px !important;
-    stroke-width: 2px !important;
+    /* 모바일에서는 차트 컨테이너 설정 최소화 */
   }
 
   .stats-list {
