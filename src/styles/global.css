@@ -972,6 +972,8 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     -webkit-overflow-scrolling: touch;
+    height: auto !important;
+    min-height: calc(100vh - 180px) !important;
   }
 
   .app-header {
