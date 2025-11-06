@@ -80,9 +80,9 @@ function SummaryPanel({
     }
   };
 
-  // 커스텀 라벨: 도넛 안에 퍼센트만 표시 (모바일 화면 넘침 방지)
+  // 커스텀 라벨: 도넛 안에 퍼센트, 밖에 카테고리 이름 표시
   const renderCustomLabel = (props: any) => {
-    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent, name } = props;
 
     const RADIAN = Math.PI / 180;
 
@@ -94,9 +94,21 @@ function SummaryPanel({
     const innerX = cx + innerRadius_center * Math.cos(-midAngle * RADIAN);
     const innerY = cy + innerRadius_center * Math.sin(-midAngle * RADIAN);
 
+    // 바깥쪽 라벨: 카테고리 이름
+    const outerRadius_label = outerRadius * 1.3;
+    const outerX = cx + outerRadius_label * Math.cos(-midAngle * RADIAN);
+    const outerY = cy + outerRadius_label * Math.sin(-midAngle * RADIAN);
+
+    // 선 끝점 (도넛과 라벨 사이 연결선)
+    const lineEndX = cx + outerRadius * 1.05 * Math.cos(-midAngle * RADIAN);
+    const lineEndY = cy + outerRadius * 1.05 * Math.sin(-midAngle * RADIAN);
+
+    // 텍스트 정렬 (왼쪽/오른쪽 결정)
+    const textAnchor = outerX > cx ? 'start' : 'end';
+
     return (
       <g>
-        {/* 안쪽: 퍼센트만 표시 */}
+        {/* 안쪽: 퍼센트 표시 */}
         <text
           x={innerX}
           y={innerY}
@@ -112,6 +124,31 @@ function SummaryPanel({
           }}
         >
           {`${(percent * 100).toFixed(0)}%`}
+        </text>
+
+        {/* 연결선 */}
+        <line
+          x1={lineEndX}
+          y1={lineEndY}
+          x2={outerX}
+          y2={outerY}
+          stroke="var(--gray-400)"
+          strokeWidth={1}
+        />
+
+        {/* 바깥쪽: 카테고리 이름 */}
+        <text
+          x={outerX}
+          y={outerY}
+          fill="var(--gray-700)"
+          textAnchor={textAnchor}
+          dominantBaseline="central"
+          style={{
+            fontSize: '12px',
+            fontWeight: '600'
+          }}
+        >
+          {name}
         </text>
       </g>
     );
