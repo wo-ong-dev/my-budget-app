@@ -17,23 +17,30 @@
   box-sizing: border-box;
 }
 
-html, body {
-  overflow-x: hidden;
-  max-width: 100vw;
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden !important;
 }
 
 body {
   margin: 0;
+  padding: 0;
+  width: 100%;
   min-height: 100vh;
   background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-500) 100%);
   display: flex;
   justify-content: center;
   align-items: stretch;
-  padding: 0;
+  overflow-x: hidden !important;
+  position: relative;
 }
 
 #root {
   flex: 1;
+  width: 100%;
+  overflow-x: hidden !important;
 }
 
 .app-shell {
@@ -41,17 +48,20 @@ body {
   display: flex;
   justify-content: center;
   width: 100%;
+  overflow-x: hidden !important;
+  position: relative;
 }
 
 .app-container {
   background: #fff;
   width: 100%;
-  max-width: 600px; /* 440px에서 600px로 확장 */
+  max-width: 600px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-  overflow-x: hidden; /* 가로 스크롤 방지 */
+  overflow-x: hidden !important;
+  position: relative;
 }
 
 .app-header {
@@ -930,40 +940,79 @@ body {
 }
 
 @media (max-width: 520px) {
+  html, body, #root, .app-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
   .app-container {
-    max-width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
     min-height: 100vh;
-    box-shadow: none; /* 모바일에서 그림자 제거하여 넘침 방지 */
+    box-shadow: none;
+    overflow-x: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .tab-navigation {
-    padding: 0 8px;
+    padding: 0;
+    margin: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
   }
 
   .tab-panel {
-    padding: 14px 6px 32px; /* 모바일에서 좌우 패딩 최소화 */
-    min-height: calc(100vh - 180px); /* 모바일에서 조정된 최소 높이 */
-    height: calc(100vh - 180px); /* 모바일에서도 고정 높이 */
-    overflow-x: hidden; /* 가로 스크롤 방지 */
+    padding: 12px 8px 32px 8px !important;
+    min-height: calc(100vh - 180px);
+    height: calc(100vh - 180px);
+    overflow-x: hidden !important;
+    overflow-y: auto;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .app-header {
-    padding: 14px 16px 18px; /* 모바일에서 더 컴팩트한 헤더 */
+    padding: 12px 8px 16px;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   .transaction-form,
   .filters-panel,
-  .summary-panel {
-    gap: 16px; /* 모바일에서 간격 조정 */
+  .summary-panel,
+  .history-container {
+    gap: 12px;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 
   .form-group {
-    gap: 6px; /* 모바일에서 간격 조정 */
+    gap: 6px;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .form-input,
+  .form-select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .btn {
-    padding: 14px 20px; /* 모바일에서 버튼 크기 증가 */
+    padding: 14px 16px;
     font-size: 16px;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .filter-row {
@@ -989,7 +1038,12 @@ body {
 
   .history-summary-card {
     gap: 10px;
-    padding: 14px 10px;
+    padding: 12px 8px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
 
   .history-summary-item {
@@ -1014,29 +1068,64 @@ body {
   }
 
   .summary-card {
-    padding: 16px 10px;
-    border-radius: 14px;
+    padding: 14px 8px !important;
+    border-radius: 12px;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
 
   .stats-card {
-    padding: 14px 8px;
-    border-radius: 14px;
+    padding: 12px 8px !important;
+    border-radius: 12px;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
 
   .chart-container {
-    padding: 0;
-    height: 250px; /* 높이 축소 */
-    max-width: 100%;
-    overflow: hidden; /* 차트가 넘치지 않도록 */
+    padding: 0 !important;
+    height: 180px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .chart-container svg {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .chart-container .recharts-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .chart-container text {
-    font-size: 11px;
+    font-size: 10px !important;
     stroke-width: 2px;
   }
 
   .transaction-card {
-    padding: 12px 12px;
+    padding: 10px 8px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .transaction-list {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
 }
 

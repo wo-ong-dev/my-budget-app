@@ -262,8 +262,8 @@ function SummaryPanel({
                   data={chartData}
                   cx="50%"
                   cy="45%"
-                  innerRadius={50}
-                  outerRadius={75}
+                  innerRadius={30}
+                  outerRadius={50}
                   fill="#8884d8"
                   paddingAngle={5}
                   dataKey="value"
@@ -277,7 +277,7 @@ function SummaryPanel({
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} animationDuration={0} />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
