@@ -184,4 +184,73 @@ jobs:
           echo "✅ Deployment Finished"
           echo "======================================"
 
- 
+      - name: Deploy Backend and Run Migrations
+        run: |
+          set -e
+
+          SSH_HOST="${{ secrets.HOST }}"
+          SSH_USER="${{ secrets.USER }}"
+          SSH_PORT="${{ secrets.PORT }}"
+
+          SSH_HOST=$(echo "$SSH_HOST" | tr -d '[:space:]')
+          SSH_USER=$(echo "$SSH_USER" | tr -d '[:space:]')
+          SSH_PORT=$(echo "$SSH_PORT" | tr -d '[:space:]')
+          SSH_PORT=${SSH_PORT:-22}
+          SSH_USER=${SSH_USER:-ec2-user}
+
+          echo "======================================"
+          echo "🔧 Deploying Backend & Running Migrations"
+          echo "======================================"
+
+          # Create backend deployment package
+          tar -czf backend-deploy.tar.gz backend/
+
+          # Upload backend to server
+          scp -P ${SSH_PORT} -o StrictHostKeyChecking=no backend-deploy.tar.gz ${SSH_USER}@${SSH_HOST}:/tmp/backend-deploy.tar.gz
+
+          # Deploy backend and run migrations
+          ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} bash << 'EOF'
+            set -e
+
+            echo "📦 Extracting backend files..."
+            cd /tmp
+            rm -rf backend-temp
+            mkdir backend-temp
+            tar -xzf backend-deploy.tar.gz -C backend-temp/
+
+            BACKEND_DIR="/var/www/budget-backend"
+
+            echo "📁 Preparing backend directory..."
+            sudo mkdir -p ${BACKEND_DIR}
+
+            echo "📋 Copying backend files..."
+            sudo cp -r backend-temp/backend/* ${BACKEND_DIR}/
+
+            cd ${BACKEND_DIR}
+
+            echo "📦 Installing backend dependencies..."
+            npm install --production || true
+
+            echo "🗄️  Running database migrations..."
+            if [ -f add_category_type.sql ]; then
+              mysql -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} ${{ secrets.DB_NAME }} < add_category_type.sql || echo "⚠️  Migration might have already been applied"
+            fi
+
+            echo "🔄 Restarting backend service..."
+            if command -v pm2 >/dev/null 2>&1; then
+              pm2 restart budget-backend || pm2 start src/index.ts --name budget-backend
+            else
+              echo "⚠️  PM2 not found, skipping restart"
+            fi
+
+            echo "🧹 Cleaning up..."
+            rm -f /tmp/backend-deploy.tar.gz
+            rm -rf /tmp/backend-temp
+
+            echo "✅ Backend deployment completed!"
+          EOF
+
+          echo "======================================"
+          echo "✅ Backend Deployment Finished"
+          echo "======================================"
+
