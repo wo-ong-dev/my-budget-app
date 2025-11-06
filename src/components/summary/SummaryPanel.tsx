@@ -262,8 +262,8 @@ function SummaryPanel({
                   data={chartData}
                   cx="50%"
                   cy="45%"
-                  innerRadius={50}
-                  outerRadius={75}
+                  innerRadius={40}
+                  outerRadius={60}
                   fill="#8884d8"
                   paddingAngle={5}
                   dataKey="value"

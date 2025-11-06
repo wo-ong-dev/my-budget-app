@@ -941,20 +941,22 @@ body {
   }
 
   .tab-panel {
-    padding: 14px 6px 32px; /* 모바일에서 좌우 패딩 최소화 */
+    padding: 14px 0 32px; /* 모바일에서 좌우 패딩 제거 */
     min-height: calc(100vh - 180px); /* 모바일에서 조정된 최소 높이 */
     height: calc(100vh - 180px); /* 모바일에서도 고정 높이 */
     overflow-x: hidden; /* 가로 스크롤 방지 */
   }
 
   .app-header {
-    padding: 14px 16px 18px; /* 모바일에서 더 컴팩트한 헤더 */
+    padding: 14px 8px 18px; /* 모바일에서 더 컴팩트한 헤더 */
   }
 
   .transaction-form,
   .filters-panel,
-  .summary-panel {
+  .summary-panel,
+  .history-container {
     gap: 16px; /* 모바일에서 간격 조정 */
+    padding: 0 4px; /* 화면 가장자리와 간격 */
   }
 
   .form-group {
@@ -989,7 +991,8 @@ body {
 
   .history-summary-card {
     gap: 10px;
-    padding: 14px 10px;
+    padding: 14px 8px;
+    margin: 0 4px 16px 4px; /* 화면 가장자리와 간격 */
   }
 
   .history-summary-item {
@@ -1014,20 +1017,23 @@ body {
   }
 
   .summary-card {
-    padding: 16px 10px;
+    padding: 16px 8px;
     border-radius: 14px;
+    margin: 0 4px; /* 화면 가장자리와 간격 */
   }
 
   .stats-card {
-    padding: 14px 8px;
+    padding: 14px 6px;
     border-radius: 14px;
+    margin: 0 4px; /* 화면 가장자리와 간격 */
   }
 
   .chart-container {
     padding: 0;
-    height: 250px; /* 높이 축소 */
+    height: 220px; /* 높이 더 축소 */
     max-width: 100%;
     overflow: hidden; /* 차트가 넘치지 않도록 */
+    margin: 0 auto; /* 중앙 정렬 */
   }
 
   .chart-container text {
@@ -1036,7 +1042,8 @@ body {
   }
 
   .transaction-card {
-    padding: 12px 12px;
+    padding: 12px 10px;
+    margin: 0 4px; /* 화면 가장자리와 간격 */
   }
 }
 
