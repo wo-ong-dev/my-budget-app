@@ -41,6 +41,11 @@ export interface AccountBreakdownItem {
   expense: number;
 }
 
+export interface SpecialStatsItem {
+  label: string;
+  amount: number;
+}
+
 export interface TransactionSummary {
   totalIncome: number;
   totalExpense: number;
@@ -48,6 +53,7 @@ export interface TransactionSummary {
   periodLabel?: string;
   categories?: CategoryBreakdownItem[];
   accounts?: AccountBreakdownItem[];
+  specialStats?: SpecialStatsItem[];
 }
 
 export interface ApiSuccess<T> {

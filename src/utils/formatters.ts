@@ -12,6 +12,27 @@ export function todayInputValue(): string {
   return `${now.getFullYear()}-${month}-${day}`;
 }
 
+export function toInputDateValue(dateString: string): string {
+  // ISO 8601 날짜 문자열을 YYYY-MM-DD 형식으로 변환
+  if (!dateString) return todayInputValue();
+
+  // 이미 YYYY-MM-DD 형식이면 그대로 반환
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+
+  // ISO 8601 형식 (2025-11-04T00:00:00.000Z)을 파싱
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) {
+    return todayInputValue();
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function formatCurrency(amount: number): string {
   if (!Number.isFinite(amount)) {
     return "0";

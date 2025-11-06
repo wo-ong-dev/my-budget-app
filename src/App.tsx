@@ -7,27 +7,37 @@ import TransactionFilters from "./components/transactions/TransactionFilters";
 import TransactionList from "./components/transactions/TransactionList";
 import EditTransactionModal from "./components/transactions/EditTransactionModal";
 import SummaryPanel from "./components/summary/SummaryPanel";
+import BudgetPanel from "./components/budget/BudgetPanel";
 import type {
   Transaction,
   TransactionDraft,
   TransactionFilterState,
   TransactionSummary,
+  TransactionType,
+  BudgetWithUsage,
 } from "./types";
 import { buildRecentMonths, distinct, monthKey, todayInputValue } from "./utils/formatters";
 import {
   createTransaction,
   deleteTransaction,
-  fetchSummary,
   fetchTransactionsByMonth,
   updateTransaction,
   fetchAccounts,
   fetchCategories,
 } from "./services/transactionService";
+import {
+  fetchBudgetsByMonth,
+  createOrUpdateBudget,
+  updateBudget,
+  deleteBudget,
+} from "./services/budgetService";
+import { getAccountColor } from "./utils/iconMappings";
 
 const tabs: TabDefinition[] = [
   { key: "input", label: "내역 입력", description: "새로운 내역을 기록" },
   { key: "history", label: "내역 조회", description: "월별 목록과 필터" },
   { key: "summary", label: "통계 요약", description: "수입·지출 현황" },
+  { key: "budget", label: "예산 관리", description: "월별 예산 현황" },
 ];
 
 const fallbackTransactions: Transaction[] = [
@@ -98,6 +108,38 @@ function calculateSummary(transactions: Transaction[], month?: string): Transact
   const sortedCategories = Array.from(categoriesMap.values()).sort((a, b) => b.expense - a.expense);
   const sortedAccounts = Array.from(accountsMap.values()).sort((a, b) => b.expense - a.expense);
 
+  // 특별 집계 계산
+  const specialStats: { label: string; amount: number }[] = [];
+
+  // 1. [회사 중식] - '식비' 카테고리 중 '회사'와 '중식' 키워드가 함께 있는 항목
+  const lunchExpense = transactions
+    .filter((tx) =>
+      tx.type === "지출" &&
+      tx.category === "식비" &&
+      tx.memo &&
+      tx.memo.includes("회사") &&
+      tx.memo.includes("중식")
+    )
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  if (lunchExpense > 0) {
+    specialStats.push({ label: "회사 중식", amount: lunchExpense });
+  }
+
+  // 2. [데이트 중 식비] - '데이트' 카테고리 중 '식비' 키워드가 포함된 항목
+  const dateFoodExpense = transactions
+    .filter((tx) =>
+      tx.type === "지출" &&
+      tx.category === "데이트" &&
+      tx.memo &&
+      tx.memo.includes("식비")
+    )
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  if (dateFoodExpense > 0) {
+    specialStats.push({ label: "데이트 중 식비", amount: dateFoodExpense });
+  }
+
   return {
     totalIncome: totals.income,
     totalExpense: totals.expense,
@@ -105,6 +147,7 @@ function calculateSummary(transactions: Transaction[], month?: string): Transact
     periodLabel: month,
     categories: sortedCategories,
     accounts: sortedAccounts,
+    specialStats: specialStats.length > 0 ? specialStats : undefined,
   };
 }
 
@@ -137,6 +180,8 @@ function App() {
   const [isDeleting, setDeleting] = useState(false);
   const [apiAccounts, setApiAccounts] = useState<string[]>([]);
   const [apiCategories, setApiCategories] = useState<string[]>([]);
+  const [budgets, setBudgets] = useState<BudgetWithUsage[]>([]);
+  const [isBudgetLoading, setBudgetLoading] = useState(false);
 
   const hasLoadedRef = useRef(false);
 
@@ -151,8 +196,9 @@ function App() {
         const merged = distinct([...prev, ...list.map((item) => monthKey(item.date))]);
         return merged.sort((a, b) => (a > b ? -1 : 1));
       });
-      const remoteSummary = await fetchSummary(filters.month);
-      setSummary(remoteSummary ?? calculateSummary(list, filters.month));
+      // Always calculate summary from client-side transactions for accuracy
+      const calculatedSummary = calculateSummary(list, filters.month);
+      setSummary(calculatedSummary);
     } catch (err) {
       const message = err instanceof Error ? err.message : "데이터를 불러오지 못했어요.";
       setError(message);
@@ -175,17 +221,37 @@ function App() {
     }
   }, [availableMonths, filters.month]);
 
-  useEffect(() => {
-    const loadMasterData = async () => {
-      const [accounts, categories] = await Promise.all([
-        fetchAccounts(),
-        fetchCategories(),
-      ]);
-      setApiAccounts(accounts);
-      setApiCategories(categories);
-    };
-    loadMasterData();
+  const loadMasterData = useCallback(async () => {
+    const [accounts, categories] = await Promise.all([
+      fetchAccounts(),
+      fetchCategories(),
+    ]);
+    setApiAccounts(accounts);
+    setApiCategories(categories);
   }, []);
+
+  useEffect(() => {
+    loadMasterData();
+  }, [loadMasterData]);
+
+  const fetchBudgets = useCallback(async () => {
+    setBudgetLoading(true);
+    try {
+      const list = await fetchBudgetsByMonth(filters.month);
+      setBudgets(list);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "예산 데이터를 불러오지 못했어요.";
+      setError(message);
+    } finally {
+      setBudgetLoading(false);
+    }
+  }, [filters.month]);
+
+  useEffect(() => {
+    if (activeTab === "budget") {
+      fetchBudgets();
+    }
+  }, [activeTab, fetchBudgets]);
 
   const accounts = useMemo(() => {
     const defaultAccounts = [
@@ -257,6 +323,27 @@ function App() {
       .sort((a, b) => (a.date > b.date ? -1 : 1));
   }, [transactions, filters]);
 
+  // 필터링된 거래의 총합 계산
+  const filteredSummary = useMemo(() => {
+    const totals = filteredTransactions.reduce(
+      (acc, tx) => {
+        if (tx.type === "수입") {
+          acc.income += tx.amount;
+        } else {
+          acc.expense += tx.amount;
+        }
+        return acc;
+      },
+      { income: 0, expense: 0 }
+    );
+
+    return {
+      totalIncome: totals.income,
+      totalExpense: totals.expense,
+      balance: totals.income - totals.expense,
+    };
+  }, [filteredTransactions]);
+
   const handleCreate = async (draft: TransactionDraft) => {
     try {
       setSubmitting(true);
@@ -322,10 +409,211 @@ function App() {
     setFilters(next);
   };
 
+  const handleUpdateBudget = async (id: number, targetAmount: number) => {
+    try {
+      setBudgetLoading(true);
+      await updateBudget(id, { target_amount: targetAmount });
+      await fetchBudgets();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "예산을 수정하지 못했어요.";
+      setError(message);
+    } finally {
+      setBudgetLoading(false);
+    }
+  };
+
+  const handleDeleteBudget = async (id: number) => {
+    const confirmed = window.confirm("이 예산을 삭제할까요?");
+    if (!confirmed) {
+      return;
+    }
+    try {
+      setBudgetLoading(true);
+      await deleteBudget(id);
+      await fetchBudgets();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "예산을 삭제하지 못했어요.";
+      setError(message);
+    } finally {
+      setBudgetLoading(false);
+    }
+  };
+
+  const handleAddBudget = async (account: string, month: string, targetAmount: number) => {
+    try {
+      setBudgetLoading(true);
+      const color = getAccountColor(account);
+      await createOrUpdateBudget({
+        account,
+        month,
+        target_amount: targetAmount,
+        color,
+      });
+      await fetchBudgets();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "예산을 추가하지 못했어요.";
+      setError(message);
+    } finally {
+      setBudgetLoading(false);
+    }
+  };
+
+  const handleAccountClick = (account: string) => {
+    setActiveTab("history");
+    setFilters((prev) => ({
+      ...prev,
+      account: account,
+    }));
+  };
+
+  const handleExportCSV = () => {
+    try {
+      // CSV 헤더
+      const headers = ["날짜", "구분", "계좌/카드", "카테고리", "금액", "메모"];
+
+      // 데이터를 CSV 행으로 변환
+      const rows = transactions.map(tx => [
+        tx.date,
+        tx.type,
+        tx.account ?? "",
+        tx.category ?? "",
+        tx.amount.toString(),
+        (tx.memo ?? "").replace(/"/g, '""') // 큰따옴표 이스케이프
+      ]);
+
+      // CSV 문자열 생성
+      const csvContent = [
+        headers.join(","),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+      ].join("\n");
+
+      // BOM 추가 (한글 깨짐 방지)
+      const bom = "\uFEFF";
+      const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
+
+      // 다운로드
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `가계부_${filters.month}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "CSV 내보내기에 실패했어요.";
+      setError(message);
+    }
+  };
+
+  const handleImportCSV = () => {
+    try {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".csv";
+
+      input.onchange = async (event) => {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (!file) {
+          return;
+        }
+
+        try {
+          setLoading(true);
+          const text = await file.text();
+
+          // BOM 제거
+          const content = text.replace(/^\uFEFF/, "");
+
+          // CSV 파싱
+          const lines = content.split("\n").filter(line => line.trim());
+          if (lines.length < 2) {
+            throw new Error("CSV 파일이 비어있어요.");
+          }
+
+          // 헤더 제외하고 데이터 행만 파싱
+          const dataLines = lines.slice(1);
+          const drafts: TransactionDraft[] = [];
+
+          for (let i = 0; i < dataLines.length; i++) {
+            const line = dataLines[i];
+            // CSV 파싱 (큰따옴표로 감싸진 필드 처리)
+            const matches = line.match(/("(?:[^"]|"")*"|[^,]*)/g);
+            if (!matches || matches.length < 5) {
+              continue;
+            }
+
+            const cells = matches.map(cell =>
+              cell.replace(/^"|"$/g, "").replace(/""/g, '"').trim()
+            );
+
+            const [date, type, account, category, amountStr, memo] = cells;
+
+            // 유효성 검사
+            if (!date || !type || !amountStr) {
+              console.warn(`${i + 2}번째 줄 건너뛰기: 필수 필드 누락`);
+              continue;
+            }
+
+            if (type !== "수입" && type !== "지출") {
+              console.warn(`${i + 2}번째 줄 건너뛰기: 잘못된 구분 (${type})`);
+              continue;
+            }
+
+            const amount = parseFloat(amountStr.replace(/,/g, ""));
+            if (isNaN(amount) || amount <= 0) {
+              console.warn(`${i + 2}번째 줄 건너뛰기: 잘못된 금액 (${amountStr})`);
+              continue;
+            }
+
+            drafts.push({
+              date,
+              type: type as TransactionType,
+              account: account || "",
+              category: category || "",
+              amount,
+              memo: memo || "",
+            });
+          }
+
+          if (drafts.length === 0) {
+            throw new Error("가져올 수 있는 데이터가 없어요.");
+          }
+
+          // 서버에 저장
+          for (const draft of drafts) {
+            await createTransaction(normalizeDraft(draft));
+          }
+
+          // 데이터 새로고침
+          await refetch();
+
+          alert(`${drafts.length}개의 내역을 가져왔어요.`);
+          setActiveTab("history");
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "CSV 가져오기에 실패했어요.";
+          setError(message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      input.click();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "파일을 선택하지 못했어요.";
+      setError(message);
+    }
+  };
+
   return (
     <div className="app-shell">
       <div className="app-container">
-        <Header onClickTitle={() => setActiveTab("input")} />
+        <Header
+          onClickTitle={() => setActiveTab("input")}
+          onExportCSV={handleExportCSV}
+          onImportCSV={handleImportCSV}
+        />
         <TabNavigation tabs={tabs} activeTab={activeTab} onSelect={handleTabChange} />
 
         <section className={activeTab === "input" ? "tab-panel tab-panel--active tab-panel--input" : "tab-panel"}>
@@ -359,6 +647,9 @@ function App() {
                 isLoading={isLoading}
                 onEdit={handleEditRequest}
                 onDelete={handleDelete}
+                totalIncome={filteredSummary.totalIncome}
+                totalExpense={filteredSummary.totalExpense}
+                balance={filteredSummary.balance}
               />
             </div>
           ) : null}
@@ -366,7 +657,31 @@ function App() {
 
         <section className={activeTab === "summary" ? "tab-panel tab-panel--active tab-panel--summary" : "tab-panel"}>
           {activeTab === "summary" ? (
-            <SummaryPanel summary={summary} loading={isLoading} onRefresh={refetch} />
+            <SummaryPanel
+              summary={summary}
+              loading={isLoading}
+              currentMonth={filters.month}
+              availableMonths={availableMonths}
+              onMonthChange={(month) => setFilters((prev) => ({ ...prev, month }))}
+            />
+          ) : null}
+        </section>
+
+        <section className={activeTab === "budget" ? "tab-panel tab-panel--active tab-panel--budget" : "tab-panel"}>
+          {activeTab === "budget" ? (
+            <BudgetPanel
+              budgets={budgets}
+              loading={isBudgetLoading}
+              currentMonth={filters.month}
+              availableMonths={availableMonths}
+              accounts={accounts}
+              onMonthChange={(month) => setFilters((prev) => ({ ...prev, month }))}
+              onUpdateBudget={handleUpdateBudget}
+              onDeleteBudget={handleDeleteBudget}
+              onAddBudget={handleAddBudget}
+              onCategoryUpdate={loadMasterData}
+              onAccountClick={handleAccountClick}
+            />
           ) : null}
         </section>
       </div>

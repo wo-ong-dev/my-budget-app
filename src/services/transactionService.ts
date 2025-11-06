@@ -140,3 +140,50 @@ export async function fetchCategories(): Promise<string[]> {
   }
 }
 
+// Category Management APIs
+export interface CategoryItem {
+  id: number;
+  name: string;
+}
+
+export interface AccountItem {
+  id: number;
+  name: string;
+}
+
+export async function fetchAccountsWithId(): Promise<AccountItem[]> {
+  const response = await httpClient.get("/accounts");
+  const data = response.data;
+  ensureOk(data, "계좌 목록을 불러오지 못했어요.");
+  const accounts = Array.isArray(data?.rows) ? data.rows : [];
+  return accounts;
+}
+
+export async function fetchCategoriesWithId(): Promise<CategoryItem[]> {
+  const response = await httpClient.get("/categories");
+  const data = response.data;
+  ensureOk(data, "카테고리 목록을 불러오지 못했어요.");
+  const categories = Array.isArray(data?.rows) ? data.rows : [];
+  return categories;
+}
+
+export async function createAccount(name: string): Promise<void> {
+  const response = await httpClient.post("/accounts", { name });
+  ensureOk(response.data, "계좌를 생성하지 못했어요.");
+}
+
+export async function deleteAccount(id: number): Promise<void> {
+  const response = await httpClient.delete(`/accounts/${id}`);
+  ensureOk(response.data, "계좌를 삭제하지 못했어요.");
+}
+
+export async function createCategory(name: string): Promise<void> {
+  const response = await httpClient.post("/categories", { name });
+  ensureOk(response.data, "카테고리를 생성하지 못했어요.");
+}
+
+export async function deleteCategory(id: number): Promise<void> {
+  const response = await httpClient.delete(`/categories/${id}`);
+  ensureOk(response.data, "카테고리를 삭제하지 못했어요.");
+}
+

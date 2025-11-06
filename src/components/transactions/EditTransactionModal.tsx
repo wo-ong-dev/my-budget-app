@@ -1,6 +1,7 @@
 import type { Transaction, TransactionDraft } from "../../types";
 import Modal from "../common/Modal";
 import TransactionForm from "./TransactionForm";
+import { toInputDateValue } from "../../utils/formatters";
 
 type EditTransactionModalProps = {
   open: boolean;
@@ -27,7 +28,7 @@ function EditTransactionModal({
 }: EditTransactionModalProps) {
   const defaultValues = transaction
     ? {
-        date: transaction.date,
+        date: toInputDateValue(transaction.date),
         type: transaction.type,
         account: transaction.account ?? "",
         category: transaction.category ?? "",

@@ -1,0 +1,306 @@
+import { useState } from "react";
+import type { BudgetWithUsage } from "../../types";
+import { formatCurrency, monthLabel } from "../../utils/formatters";
+import { getAccountIcon } from "../../utils/iconMappings";
+import CategoryManagementModal from "../management/CategoryManagementModal";
+
+type BudgetPanelProps = {
+  budgets: BudgetWithUsage[];
+  loading?: boolean;
+  currentMonth?: string;
+  availableMonths?: string[];
+  accounts?: string[];
+  onMonthChange?: (month: string) => void;
+  onUpdateBudget?: (id: number, targetAmount: number) => void;
+  onDeleteBudget?: (id: number) => void;
+  onAddBudget?: (account: string, month: string, targetAmount: number) => void;
+  onCategoryUpdate?: () => void;
+  onAccountClick?: (account: string) => void;
+};
+
+function BudgetPanel({
+  budgets,
+  loading = false,
+  currentMonth,
+  availableMonths = [],
+  accounts = [],
+  onMonthChange,
+  onUpdateBudget,
+  onDeleteBudget,
+  onAddBudget,
+  onCategoryUpdate,
+  onAccountClick,
+}: BudgetPanelProps) {
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const [newAccount, setNewAccount] = useState("");
+  const [newAmount, setNewAmount] = useState("");
+  const [isManagementModalOpen, setManagementModalOpen] = useState(false);
+
+  if (loading) {
+    return <div className="list-placeholder">데이터를 불러오는 중입니다...</div>;
+  }
+
+  const currentMonthIndex = currentMonth ? availableMonths.indexOf(currentMonth) : -1;
+  const canGoPrev = currentMonthIndex > -1 && currentMonthIndex < availableMonths.length - 1;
+  const canGoNext = currentMonthIndex > 0;
+
+  const goToPrevMonth = () => {
+    if (canGoPrev && onMonthChange && currentMonthIndex > -1) {
+      onMonthChange(availableMonths[currentMonthIndex + 1]);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (canGoNext && onMonthChange && currentMonthIndex > -1) {
+      onMonthChange(availableMonths[currentMonthIndex - 1]);
+    }
+  };
+
+  const handleEdit = (id: number, currentAmount: number) => {
+    setEditingId(id);
+    setEditValue(currentAmount.toString());
+  };
+
+  const handleSaveEdit = (id: number) => {
+    const amount = parseFloat(editValue);
+    if (!isNaN(amount) && amount > 0 && onUpdateBudget) {
+      onUpdateBudget(id, amount);
+    }
+    setEditingId(null);
+    setEditValue("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditValue("");
+  };
+
+  const handleAddBudget = () => {
+    const amount = parseFloat(newAmount);
+    if (newAccount && !isNaN(amount) && amount > 0 && onAddBudget && currentMonth) {
+      onAddBudget(newAccount, currentMonth, amount);
+      setIsAdding(false);
+      setNewAccount("");
+      setNewAmount("");
+    }
+  };
+
+  const handleCancelAdd = () => {
+    setIsAdding(false);
+    setNewAccount("");
+    setNewAmount("");
+  };
+
+  // 이미 예산이 설정된 계좌 제외
+  const availableAccounts = accounts.filter(
+    (account) => !budgets.some((budget) => budget.account === account)
+  );
+
+  const getColorClass = (color: string) => {
+    if (color === "blue") return "budget-row--blue";
+    if (color === "yellow") return "budget-row--yellow";
+    if (color === "red") return "budget-row--red";
+    return "budget-row--blue";
+  };
+
+  return (
+    <div className="budget-panel">
+      <div className="budget-header">
+        {onMonthChange && currentMonth ? (
+          <div className="month-navigation">
+            <button
+              type="button"
+              className="month-nav-btn"
+              onClick={goToPrevMonth}
+              disabled={!canGoPrev}
+              aria-label="이전 달"
+            >
+              ‹
+            </button>
+            <h3 className="budget-header__title">{currentMonth ? monthLabel(currentMonth) : "예산 관리"}</h3>
+            <button
+              type="button"
+              className="month-nav-btn"
+              onClick={goToNextMonth}
+              disabled={!canGoNext}
+              aria-label="다음 달"
+            >
+              ›
+            </button>
+            <button
+              type="button"
+              className="budget-settings-btn"
+              onClick={() => setManagementModalOpen(true)}
+              title="카테고리 관리"
+              aria-label="카테고리 관리"
+            >
+              ⚙️
+            </button>
+          </div>
+        ) : (
+          <div className="budget-header-row">
+            <h3 className="budget-header__title">예산 관리</h3>
+            <button
+              type="button"
+              className="budget-settings-btn"
+              onClick={() => setManagementModalOpen(true)}
+              title="카테고리 관리"
+              aria-label="카테고리 관리"
+            >
+              ⚙️
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="budget-table">
+        <div className="budget-table__header">
+          <div className="budget-col budget-col--account">통장분류</div>
+          <div className="budget-col budget-col--target">월목표금액</div>
+          <div className="budget-col budget-col--used">사용금액</div>
+          <div className="budget-col budget-col--available">사용가능</div>
+        </div>
+
+        {budgets.map((budget) => (
+          <div key={budget.id} className={`budget-row ${getColorClass(budget.color)}`}>
+            <div className="budget-col budget-col--account">
+              <span className="budget-icon">{getAccountIcon(budget.account)}</span>
+              {onAccountClick ? (
+                <button
+                  type="button"
+                  className="budget-account-link"
+                  onClick={() => onAccountClick(budget.account)}
+                  title={`${budget.account} 내역 조회`}
+                >
+                  {budget.account}
+                </button>
+              ) : (
+                <span>{budget.account}</span>
+              )}
+            </div>
+            <div className="budget-col budget-col--target">
+              {editingId === budget.id ? (
+                <div className="budget-edit">
+                  <input
+                    type="number"
+                    className="budget-edit__input"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    className="budget-edit__btn budget-edit__btn--save"
+                    onClick={() => handleSaveEdit(budget.id)}
+                  >
+                    ✓
+                  </button>
+                  <button
+                    type="button"
+                    className="budget-edit__btn budget-edit__btn--cancel"
+                    onClick={handleCancelEdit}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="budget-amount">
+                  <span>{formatCurrency(budget.target_amount)}원</span>
+                  {onUpdateBudget && (
+                    <button
+                      type="button"
+                      className="budget-edit-btn"
+                      onClick={() => handleEdit(budget.id, budget.target_amount)}
+                    >
+                      ✏️
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="budget-col budget-col--used">
+              {formatCurrency(budget.used_amount)}원
+            </div>
+            <div className="budget-col budget-col--available">
+              <span className={budget.available_amount < 0 ? "budget-amount--negative" : ""}>
+                {formatCurrency(budget.available_amount)}원
+              </span>
+              {onDeleteBudget && (
+                <button
+                  type="button"
+                  className="budget-delete-btn"
+                  onClick={() => onDeleteBudget(budget.id)}
+                  title="삭제"
+                >
+                  🗑️
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {isAdding ? (
+          <div className="budget-row budget-row--adding">
+            <div className="budget-col budget-col--account">
+              <select
+                className="budget-add__select"
+                value={newAccount}
+                onChange={(e) => setNewAccount(e.target.value)}
+              >
+                <option value="">계좌 선택</option>
+                {availableAccounts.map((account) => (
+                  <option key={account} value={account}>
+                    {getAccountIcon(account)} {account}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="budget-col budget-col--target">
+              <input
+                type="number"
+                className="budget-add__input"
+                placeholder="목표금액"
+                value={newAmount}
+                onChange={(e) => setNewAmount(e.target.value)}
+              />
+            </div>
+            <div className="budget-col budget-col--used">-</div>
+            <div className="budget-col budget-col--available">
+              <button
+                type="button"
+                className="budget-edit__btn budget-edit__btn--save"
+                onClick={handleAddBudget}
+              >
+                추가
+              </button>
+              <button
+                type="button"
+                className="budget-edit__btn budget-edit__btn--cancel"
+                onClick={handleCancelAdd}
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        ) : (
+          onAddBudget &&
+          availableAccounts.length > 0 && (
+            <button type="button" className="budget-add-btn" onClick={() => setIsAdding(true)}>
+              + 예산 추가
+            </button>
+          )
+        )}
+      </div>
+
+      <CategoryManagementModal
+        open={isManagementModalOpen}
+        onClose={() => setManagementModalOpen(false)}
+        onUpdate={onCategoryUpdate}
+      />
+    </div>
+  );
+}
+
+export default BudgetPanel;

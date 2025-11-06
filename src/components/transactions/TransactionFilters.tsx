@@ -24,24 +24,60 @@ function TransactionFilters({ filters, onChange, months, accounts, categories }:
     update({ type: value });
   };
 
+  const currentMonthIndex = months.indexOf(filters.month);
+  const canGoPrev = currentMonthIndex < months.length - 1;
+  const canGoNext = currentMonthIndex > 0;
+
+  const goToPrevMonth = () => {
+    if (canGoPrev) {
+      update({ month: months[currentMonthIndex + 1] });
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (canGoNext) {
+      update({ month: months[currentMonthIndex - 1] });
+    }
+  };
+
   return (
     <section className="filters-panel">
       <div className="form-group">
         <label className="form-label" htmlFor="filter-month">
           조회 월
         </label>
-        <select
-          id="filter-month"
-          className="form-select"
-          value={filters.month}
-          onChange={(event) => update({ month: event.target.value })}
-        >
-          {months.map((month) => (
-            <option key={month} value={month}>
-              {monthLabel(month)}
-            </option>
-          ))}
-        </select>
+        <div className="month-navigation">
+          <button
+            type="button"
+            className="month-nav-btn"
+            onClick={goToPrevMonth}
+            disabled={!canGoPrev}
+            aria-label="이전 달"
+          >
+            ‹
+          </button>
+          <select
+            id="filter-month"
+            className="form-select"
+            value={filters.month}
+            onChange={(event) => update({ month: event.target.value })}
+          >
+            {months.map((month) => (
+              <option key={month} value={month}>
+                {monthLabel(month)}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="month-nav-btn"
+            onClick={goToNextMonth}
+            disabled={!canGoNext}
+            aria-label="다음 달"
+          >
+            ›
+          </button>
+        </div>
       </div>
 
       <div className="form-group">

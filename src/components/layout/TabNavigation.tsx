@@ -1,4 +1,4 @@
-﻿export type TabKey = "input" | "history" | "summary";
+﻿export type TabKey = "input" | "history" | "summary" | "budget";
 
 export interface TabDefinition {
   key: TabKey;
