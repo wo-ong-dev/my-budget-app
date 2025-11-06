@@ -37,7 +37,12 @@ jobs:
 
           echo "🔍 Connecting to ${SSH_USER}@${SSH_HOST}:${SSH_PORT}"
 
-          ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} bash << 'EOF'
+          ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} \
+            DB_HOST="${{ secrets.DB_HOST }}" \
+            DB_USER="${{ secrets.DB_USER }}" \
+            DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            DB_NAME="${{ secrets.DB_NAME }}" \
+            bash << 'EOF'
             set -e
 
             echo "📦 Installing MySQL client if needed..."
@@ -47,10 +52,10 @@ jobs:
 
             echo "🗄️ Setting up database..."
 
-            # Find backend directory and read DB credentials
-            if [ -f /var/www/backend/.env ]; then
+            # Find backend directory and read DB credentials from .env if secrets not provided
+            if [ -z "$DB_HOST" ] && [ -f /var/www/backend/.env ]; then
               source /var/www/backend/.env
-            elif [ -f ~/.env ]; then
+            elif [ -z "$DB_HOST" ] && [ -f ~/.env ]; then
               source ~/.env
             fi
 
@@ -93,12 +98,7 @@ EOSQL
 
             echo "✅ SQL file created"
 
-            # Try to find DB credentials from environment or use GitHub secrets
-            DB_HOST="${DB_HOST:-${{ secrets.DB_HOST }}}"
-            DB_USER="${DB_USER:-${{ secrets.DB_USER }}}"
-            DB_PASSWORD="${DB_PASSWORD:-${{ secrets.DB_PASSWORD }}}"
-            DB_NAME="${DB_NAME:-${{ secrets.DB_NAME }}}"
-
+            # Check if DB credentials are available
             if [ ! -z "$DB_HOST" ] && [ ! -z "$DB_USER" ] && [ ! -z "$DB_PASSWORD" ] && [ ! -z "$DB_NAME" ]; then
               echo "📊 Executing SQL..."
               mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /tmp/setup_db.sql 2>&1
