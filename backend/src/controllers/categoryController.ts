@@ -14,10 +14,15 @@ export class CategoryController {
 
   static async createCategory(req: Request, res: Response): Promise<void> {
     try {
-      const { name } = req.body;
+      const { name, type } = req.body;
 
       if (!name || !name.trim()) {
         res.status(400).json({ ok: false, error: '카테고리명은 필수 입력 항목입니다.' });
+        return;
+      }
+
+      if (!type || (type !== '수입' && type !== '지출')) {
+        res.status(400).json({ ok: false, error: '카테고리 타입은 "수입" 또는 "지출"이어야 합니다.' });
         return;
       }
 
@@ -28,7 +33,7 @@ export class CategoryController {
         return;
       }
 
-      const category = await CategoryModel.create(name);
+      const category = await CategoryModel.create(name, type);
       res.status(201).json({ ok: true, data: category });
     } catch (error) {
       console.error('카테고리 생성 실패:', error);

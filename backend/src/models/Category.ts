@@ -3,6 +3,7 @@ import pool from '../config/database';
 export interface Category {
   id: number;
   name: string;
+  type: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -10,7 +11,7 @@ export interface Category {
 export class CategoryModel {
   static async findAll(): Promise<Category[]> {
     const [rows] = await pool.execute(
-      'SELECT * FROM categories ORDER BY name'
+      'SELECT * FROM categories ORDER BY type, name'
     );
     return rows as Category[];
   }
@@ -24,10 +25,10 @@ export class CategoryModel {
     return categories[0] || null;
   }
 
-  static async create(name: string): Promise<Category> {
+  static async create(name: string, type: string): Promise<Category> {
     const [result] = await pool.execute(
-      'INSERT INTO categories (name) VALUES (?)',
-      [name]
+      'INSERT INTO categories (name, type) VALUES (?, ?)',
+      [name, type]
     );
 
     const insertId = (result as any).insertId;

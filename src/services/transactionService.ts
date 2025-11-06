@@ -144,6 +144,7 @@ export async function fetchCategories(): Promise<string[]> {
 export interface CategoryItem {
   id: number;
   name: string;
+  type: "수입" | "지출";
 }
 
 export interface AccountItem {
@@ -177,8 +178,8 @@ export async function deleteAccount(id: number): Promise<void> {
   ensureOk(response.data, "계좌를 삭제하지 못했어요.");
 }
 
-export async function createCategory(name: string): Promise<void> {
-  const response = await httpClient.post("/categories", { name });
+export async function createCategory(name: string, type: "수입" | "지출"): Promise<void> {
+  const response = await httpClient.post("/categories", { name, type });
   ensureOk(response.data, "카테고리를 생성하지 못했어요.");
 }
 
