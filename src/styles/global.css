@@ -921,7 +921,7 @@ body {
   }
 
   .tab-panel {
-    padding: 14px 10px 32px; /* 모바일에서 좌우 패딩 더 축소 */
+    padding: 14px 6px 32px; /* 모바일에서 좌우 패딩 최소화 */
     min-height: calc(100vh - 180px); /* 모바일에서 조정된 최소 높이 */
     height: calc(100vh - 180px); /* 모바일에서도 고정 높이 */
     overflow-x: hidden; /* 가로 스크롤 방지 */
@@ -969,7 +969,7 @@ body {
 
   .history-summary-card {
     gap: 10px;
-    padding: 14px 12px;
+    padding: 14px 10px;
   }
 
   .history-summary-item {
@@ -994,12 +994,12 @@ body {
   }
 
   .summary-card {
-    padding: 16px 12px;
+    padding: 16px 10px;
     border-radius: 14px;
   }
 
   .stats-card {
-    padding: 14px 10px;
+    padding: 14px 8px;
     border-radius: 14px;
   }
 
@@ -1014,7 +1014,7 @@ body {
   }
 
   .transaction-card {
-    padding: 12px 14px;
+    padding: 12px 12px;
   }
 }
 
