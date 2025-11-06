@@ -13,21 +13,48 @@ my-budget-app
   - HOST: bugetdb.cluw4caycgj9.ap-northeast-2.rds.amazonaws.com
   - PORT: 3306
   - SCHEMA: budgetdb
-  - APP USER: wo_ong_app / 030256dnd!
-  - MASTER: wo_ong / 030256dnd! (참고)
+  - APP USER: wo_ong_app / [비밀번호는 .env 파일 참조]
+  - MASTER: wo_ong / [비밀번호는 별도 관리]
 
-로컬 실행(선택)
-1) 설치/실행
-```powershell
+새로운 PC에서 시작하기
+1) 저장소 클론
+```bash
 git clone https://github.com/wo-ong-dev/my-budget-app.git
 cd my-budget-app
+```
+
+2) 환경 변수 설정
+```bash
+# 프론트엔드 (.env)
+cp .env.example .env
+# VITE_API_BASE_URL을 실제 API 주소로 수정
+
+# 백엔드 (backend/.env)
+cd backend
+cp env.example .env
+# DB_HOST, DB_USER, DB_PASSWORD 등을 실제 값으로 수정
+cd ..
+```
+
+3) 의존성 설치 및 실행
+```bash
+# 프론트엔드
 npm ci
 npm run dev  # http://localhost:5173
+
+# 백엔드 (별도 터미널)
+cd backend
+npm install
+npm run dev  # http://localhost:8080
 ```
-2) 원격 API로 붙이기
-- 루트에 `.env.development.local` 생성:
-```
+
+로컬 실행(원격 API 사용)
+- 백엔드 없이 배포된 API 사용:
+```bash
+# .env 파일에 설정
 VITE_API_BASE_URL=http://13.125.205.126/api
+
+npm run dev
 ```
 
 CI/CD (자동 배포)
@@ -44,7 +71,7 @@ CI/CD (자동 배포)
 DB 점검(읽기)
 ```bash
 mysql -h bugetdb.cluw4caycgj9.ap-northeast-2.rds.amazonaws.com -u wo_ong_app -p -P 3306 -D budgetdb
-# pw: 030256dnd!
+# pw: [.env 파일의 DB_PASSWORD 참조]
 # 예시 쿼리
 SELECT COUNT(*) FROM accounts; SELECT COUNT(*) FROM categories;
 ```
