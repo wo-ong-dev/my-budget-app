@@ -80,6 +80,38 @@ function SummaryPanel({
     }
   };
 
+  // 커스텀 라벨: 도넛 차트 조각 내부에 퍼센트 표시
+  const renderCustomLabel = (props: any) => {
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+
+    // 3% 미만은 표시 안 함 (겹침 방지)
+    if (percent * 100 < 3) return null;
+
+    // 조각의 중간 지점 계산
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
+    const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="var(--gray-800)"
+        textAnchor="middle"
+        dominantBaseline="central"
+        style={{
+          fontSize: '13px',
+          fontWeight: 'bold',
+          stroke: '#ffffff',
+          strokeWidth: 3,
+          paintOrder: 'stroke fill'
+        }}
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
+
   // 도넛 차트 데이터 준비 - 상위 7개만 표시, 나머지는 '그 외'로 묶기
   const chartData = useMemo(() => {
     const allCategories = summary.categories
@@ -232,12 +264,7 @@ function SummaryPanel({
                   dataKey="value"
                   animationDuration={100}
                   isAnimationActive={true}
-                  label={(entry: any) => {
-                    const percentage = entry.percent * 100;
-                    // 3% 미만 항목은 라벨 표시 안 함 (겹침 방지)
-                    if (percentage < 3) return '';
-                    return `${percentage.toFixed(0)}%`;
-                  }}
+                  label={renderCustomLabel}
                   labelLine={false}
                 >
                   {chartData.map((_entry, index) => (
