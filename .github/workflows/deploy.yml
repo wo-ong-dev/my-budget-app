@@ -233,7 +233,11 @@ jobs:
 
             echo "🗄️  Running database migrations..."
             if [ -f add_category_type.sql ]; then
-              mysql -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} ${{ secrets.DB_NAME }} < add_category_type.sql || echo "⚠️  Migration might have already been applied"
+              echo "Attempting to run migration..."
+              mysql -h "${{ secrets.DB_HOST }}" -u "${{ secrets.DB_USER }}" -p"${{ secrets.DB_PASSWORD }}" "${{ secrets.DB_NAME }}" < add_category_type.sql 2>&1 || echo "⚠️  Migration might have already been applied or credentials issue"
+              echo "Migration step completed"
+            else
+              echo "⚠️  Migration file not found"
             fi
 
             echo "🔄 Restarting backend service..."
