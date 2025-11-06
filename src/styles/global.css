@@ -968,11 +968,11 @@ body {
   .tab-panel {
     padding: 12px 8px 32px 8px !important;
     min-height: calc(100vh - 180px);
-    height: calc(100vh - 180px);
     overflow-x: hidden !important;
-    overflow-y: auto;
+    overflow-y: auto !important;
     width: 100% !important;
     max-width: 100% !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   .app-header {
@@ -991,7 +991,15 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
+    overflow-y: visible !important;
     box-sizing: border-box !important;
+  }
+
+  .transaction-list {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
   }
 
   .form-group {
@@ -1039,11 +1047,11 @@ body {
   .history-summary-card {
     gap: 10px;
     padding: 12px 8px !important;
-    margin: 0 !important;
+    margin: 0 0 12px 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .history-summary-item {
@@ -1070,29 +1078,34 @@ body {
   .summary-card {
     padding: 14px 8px !important;
     border-radius: 12px;
-    margin: 0 !important;
+    margin: 0 0 12px 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .stats-card {
     padding: 12px 8px !important;
     border-radius: 12px;
-    margin: 0 !important;
+    margin: 0 0 12px 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow: visible !important;
+  }
+
+  .stats-card--chart {
+    min-height: auto !important;
+    height: auto !important;
   }
 
   .chart-container {
     padding: 0 !important;
-    height: 180px !important;
+    height: 220px !important;
     width: 100% !important;
     max-width: 100% !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     margin: 0 auto !important;
     box-sizing: border-box !important;
   }
@@ -1100,12 +1113,17 @@ body {
   .chart-container svg {
     width: 100% !important;
     max-width: 100% !important;
+    height: auto !important;
     overflow: visible !important;
   }
 
   .chart-container .recharts-wrapper {
     width: 100% !important;
     max-width: 100% !important;
+  }
+
+  .chart-container .recharts-surface {
+    overflow: visible !important;
   }
 
   .chart-container text {
@@ -1115,17 +1133,11 @@ body {
 
   .transaction-card {
     padding: 10px 8px !important;
-    margin: 0 !important;
+    margin: 0 0 8px 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
-  }
-
-  .transaction-list {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
   }
 }
 
