@@ -66,22 +66,24 @@ INSERT IGNORE INTO accounts (name, type, created_at, updated_at) VALUES
 ('현금', 'cash', NOW(), NOW());
 
 INSERT IGNORE INTO categories (name, type, created_at, updated_at) VALUES
-('급여', 'income', NOW(), NOW()),
-('기타', 'expense', NOW(), NOW()),
-('교통비', 'expense', NOW(), NOW()),
-('구독/포인트', 'expense', NOW(), NOW()),
-('데이트', 'expense', NOW(), NOW()),
-('생활/마트', 'expense', NOW(), NOW()),
-('선물/경조사비', 'expense', NOW(), NOW()),
-('식비', 'expense', NOW(), NOW()),
-('여행/숙박', 'expense', NOW(), NOW()),
-('월세/관리비', 'expense', NOW(), NOW()),
-('저축/상조/보험', 'expense', NOW(), NOW()),
-('카페/음료', 'expense', NOW(), NOW()),
-('통신비/인터넷비', 'expense', NOW(), NOW()),
-('편의점', 'expense', NOW(), NOW()),
-('취미', 'expense', NOW(), NOW()),
-('상납금', 'expense', NOW(), NOW());
+('급여', '수입', NOW(), NOW()),
+('용돈', '수입', NOW(), NOW()),
+('그 외', '수입', NOW(), NOW()),
+('기타', '지출', NOW(), NOW()),
+('교통비', '지출', NOW(), NOW()),
+('구독/포인트', '지출', NOW(), NOW()),
+('데이트', '지출', NOW(), NOW()),
+('생활/마트', '지출', NOW(), NOW()),
+('선물/경조사비', '지출', NOW(), NOW()),
+('식비', '지출', NOW(), NOW()),
+('여행/숙박', '지출', NOW(), NOW()),
+('월세/관리비', '지출', NOW(), NOW()),
+('저축/상조/보험', '지출', NOW(), NOW()),
+('카페/음료', '지출', NOW(), NOW()),
+('통신비/인터넷비', '지출', NOW(), NOW()),
+('편의점', '지출', NOW(), NOW()),
+('취미', '지출', NOW(), NOW()),
+('상납금', '지출', NOW(), NOW());
 
 SELECT 'Accounts:' as '';
 SELECT * FROM accounts;
@@ -91,15 +93,20 @@ EOSQL
 
             echo "✅ SQL file created"
 
-            # Try to find DB credentials and execute
-            if [ ! -z "$DB_HOST" ] && [ ! -z "$DB_USER" ] && [ ! -z "$DB_PASSWORD" ]; then
+            # Try to find DB credentials from environment or use GitHub secrets
+            DB_HOST="${DB_HOST:-${{ secrets.DB_HOST }}}"
+            DB_USER="${DB_USER:-${{ secrets.DB_USER }}}"
+            DB_PASSWORD="${DB_PASSWORD:-${{ secrets.DB_PASSWORD }}}"
+            DB_NAME="${DB_NAME:-${{ secrets.DB_NAME }}}"
+
+            if [ ! -z "$DB_HOST" ] && [ ! -z "$DB_USER" ] && [ ! -z "$DB_PASSWORD" ] && [ ! -z "$DB_NAME" ]; then
               echo "📊 Executing SQL..."
-              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /tmp/setup_db.sql
+              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /tmp/setup_db.sql 2>&1
               echo "✅ Database setup complete!"
             else
-              echo "⚠️ DB credentials not found in .env files"
+              echo "⚠️ DB credentials not found in .env files or GitHub secrets"
               echo "SQL file saved at /tmp/setup_db.sql"
-              echo "Please run manually with: mysql -h <host> -u <user> -p <database> < /tmp/setup_db.sql"
+              echo "Please run manually with: mysql -h <host> -u <user> -p<password> <database> < /tmp/setup_db.sql"
             fi
 
             rm -f /tmp/setup_db.sql
