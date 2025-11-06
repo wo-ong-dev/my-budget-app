@@ -39,8 +39,8 @@ function Header({ onClickTitle, onExportCSV, onImportCSV }: HeaderProps) {
   return (
     <header className="app-header">
       <div className="app-header__content" onClick={onClickTitle}>
-        <h1 className="app-header__title">내 가계부 ✅</h1>
-        <p className="app-header__subtitle">📱 모바일 화면 넘침 수정 완료 (v2.0)</p>
+        <h1 className="app-header__title">내 가계부 ✅ v3.0</h1>
+        <p className="app-header__subtitle">📱 APP_DIR 수정 후 재배포 테스트</p>
       </div>
       {(onExportCSV || onImportCSV) && (
         <div className="app-header__menu" ref={menuRef}>
