@@ -966,8 +966,7 @@ body {
   }
 
   .tab-panel {
-    padding: 12px 8px 32px 8px !important;
-    min-height: calc(100vh - 180px);
+    padding: 10px 8px 20px 8px !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
     width: 100% !important;
@@ -985,24 +984,24 @@ body {
   .filters-panel,
   .summary-panel,
   .history-container {
-    gap: 12px;
+    gap: 10px !important;
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
-    overflow-y: visible !important;
     box-sizing: border-box !important;
   }
 
   .transaction-list {
     width: 100% !important;
     max-width: 100% !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 8px !important;
+    gap: 6px !important;
   }
 
   .form-group {
@@ -1028,7 +1027,7 @@ body {
 
   .filter-row {
     flex-direction: column; /* 모바일에서는 세로 배치 */
-    gap: 16px;
+    gap: 10px !important;
   }
 
   .filter-row .form-group {
@@ -1048,9 +1047,9 @@ body {
   }
 
   .history-summary-card {
-    gap: 10px;
-    padding: 12px 8px !important;
-    margin: 0 0 12px 0 !important;
+    gap: 6px !important;
+    padding: 10px 8px !important;
+    margin: 0 0 10px 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -1062,20 +1061,20 @@ body {
   }
 
   .history-summary-item--balance {
-    padding-top: 10px;
+    padding-top: 6px !important;
   }
 
   .history-summary-icon {
-    font-size: 18px;
-    margin-right: 6px;
+    font-size: 16px !important;
+    margin-right: 6px !important;
   }
 
   .history-summary-label {
-    font-size: 14px;
+    font-size: 13px !important;
   }
 
   .history-summary-amount {
-    font-size: 16px;
+    font-size: 15px !important;
   }
 
   .summary-card {
@@ -1095,19 +1094,17 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
   }
 
   .stats-card--chart {
-    min-height: auto !important;
-    height: auto !important;
+    min-height: 350px !important;
   }
 
   .chart-container {
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    overflow: visible !important;
+    height: 300px !important;
     margin: 0 auto !important;
     box-sizing: border-box !important;
   }
@@ -1115,16 +1112,11 @@ body {
   .chart-container svg {
     width: 100% !important;
     max-width: 100% !important;
-    overflow: visible !important;
   }
 
   .chart-container .recharts-wrapper {
     width: 100% !important;
     max-width: 100% !important;
-  }
-
-  .chart-container .recharts-surface {
-    overflow: visible !important;
   }
 
   .chart-container text {
@@ -1133,8 +1125,8 @@ body {
   }
 
   .transaction-card {
-    padding: 10px 8px !important;
-    margin: 0 0 8px 0 !important;
+    padding: 8px 8px !important;
+    margin: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
