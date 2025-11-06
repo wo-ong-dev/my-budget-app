@@ -256,14 +256,14 @@ function SummaryPanel({
         <section className="stats-card stats-card--chart">
           <h4 className="stats-card-title"><span className="stats-card-icon">📊</span>카테고리별 지출</h4>
           <div className="chart-container">
-            <ResponsiveContainer width="95%" height="100%" debounce={50}>
+            <ResponsiveContainer width="100%" height="100%" debounce={50}>
               <PieChart>
                 <Pie
                   data={chartData}
                   cx="50%"
                   cy="45%"
-                  innerRadius={35}
-                  outerRadius={55}
+                  innerRadius={30}
+                  outerRadius={50}
                   fill="#8884d8"
                   paddingAngle={5}
                   dataKey="value"
@@ -277,7 +277,7 @@ function SummaryPanel({
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} animationDuration={0} />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
