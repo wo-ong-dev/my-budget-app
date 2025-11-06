@@ -80,9 +80,9 @@ function SummaryPanel({
     }
   };
 
-  // 커스텀 라벨: 도넛 안에 퍼센트, 바깥에 카테고리명
+  // 커스텀 라벨: 도넛 안에 퍼센트만 표시 (모바일 화면 넘침 방지)
   const renderCustomLabel = (props: any) => {
-    const { cx, cy, midAngle, innerRadius, outerRadius, percent, name } = props;
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
 
     const RADIAN = Math.PI / 180;
 
@@ -94,14 +94,9 @@ function SummaryPanel({
     const innerX = cx + innerRadius_center * Math.cos(-midAngle * RADIAN);
     const innerY = cy + innerRadius_center * Math.sin(-midAngle * RADIAN);
 
-    // 바깥 라벨: 카테고리명 (조각 바깥)
-    const outerRadius_label = outerRadius + 25;
-    const outerX = cx + outerRadius_label * Math.cos(-midAngle * RADIAN);
-    const outerY = cy + outerRadius_label * Math.sin(-midAngle * RADIAN);
-
     return (
       <g>
-        {/* 안쪽: 퍼센트 */}
+        {/* 안쪽: 퍼센트만 표시 */}
         <text
           x={innerX}
           y={innerY}
@@ -117,21 +112,6 @@ function SummaryPanel({
           }}
         >
           {`${(percent * 100).toFixed(0)}%`}
-        </text>
-
-        {/* 바깥: 카테고리명 */}
-        <text
-          x={outerX}
-          y={outerY}
-          fill="var(--gray-700)"
-          textAnchor={outerX > cx ? 'start' : 'end'}
-          dominantBaseline="central"
-          style={{
-            fontSize: '12px',
-            fontWeight: '600'
-          }}
-        >
-          {name}
         </text>
       </g>
     );
@@ -276,14 +256,14 @@ function SummaryPanel({
         <section className="stats-card stats-card--chart">
           <h4 className="stats-card-title"><span className="stats-card-icon">📊</span>카테고리별 지출</h4>
           <div className="chart-container">
-            <ResponsiveContainer width="100%" height={300} debounce={50}>
+            <ResponsiveContainer width="100%" height="100%" debounce={50}>
               <PieChart>
                 <Pie
                   data={chartData}
                   cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
+                  cy="45%"
+                  innerRadius={50}
+                  outerRadius={75}
                   fill="#8884d8"
                   paddingAngle={5}
                   dataKey="value"
