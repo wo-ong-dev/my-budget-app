@@ -7,6 +7,9 @@ jobs:
   setup-database:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Add SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
@@ -35,8 +38,12 @@ jobs:
           SSH_PORT=${SSH_PORT:-22}
           SSH_USER=${SSH_USER:-ec2-user}
 
-          echo "🔍 Connecting to ${SSH_USER}@${SSH_HOST}:${SSH_PORT}"
+          echo "Connecting to ${SSH_USER}@${SSH_HOST}:${SSH_PORT}"
 
+          # Copy SQL file to server
+          scp -P ${SSH_PORT} -o StrictHostKeyChecking=no backend/init_data.sql ${SSH_USER}@${SSH_HOST}:/tmp/
+
+          # Execute SQL on server
           ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} \
             DB_HOST="${{ secrets.DB_HOST }}" \
             DB_USER="${{ secrets.DB_USER }}" \
@@ -45,12 +52,12 @@ jobs:
             bash << 'EOF'
             set -e
 
-            echo "📦 Installing MySQL client if needed..."
+            echo "Installing MySQL client if needed..."
             if ! command -v mysql &> /dev/null; then
               sudo yum install -y mysql || sudo apt-get install -y mysql-client
             fi
 
-            echo "🗄️ Setting up database..."
+            echo "Setting up database..."
 
             # Find backend directory and read DB credentials from .env if secrets not provided
             if [ -z "$DB_HOST" ] && [ -f /var/www/backend/.env ]; then
@@ -59,57 +66,18 @@ jobs:
               source ~/.env
             fi
 
-            # Create SQL file
-            cat > /tmp/setup_db.sql << 'EOSQL'
-INSERT IGNORE INTO accounts (name, type, created_at, updated_at) VALUES
-('국민은행', 'bank', NOW(), NOW()),
-('토스뱅크', 'bank', NOW(), NOW()),
-('우리은행', 'bank', NOW(), NOW()),
-('신용카드', 'card', NOW(), NOW()),
-('카카오페이', 'card', NOW(), NOW()),
-('카카오뱅크', 'bank', NOW(), NOW()),
-('현금', 'cash', NOW(), NOW());
-
-INSERT IGNORE INTO categories (name, type, created_at, updated_at) VALUES
-('급여', '수입', NOW(), NOW()),
-('용돈', '수입', NOW(), NOW()),
-('그 외', '수입', NOW(), NOW()),
-('기타', '지출', NOW(), NOW()),
-('교통비', '지출', NOW(), NOW()),
-('구독/포인트', '지출', NOW(), NOW()),
-('데이트', '지출', NOW(), NOW()),
-('생활/마트', '지출', NOW(), NOW()),
-('선물/경조사비', '지출', NOW(), NOW()),
-('식비', '지출', NOW(), NOW()),
-('여행/숙박', '지출', NOW(), NOW()),
-('월세/관리비', '지출', NOW(), NOW()),
-('저축/상조/보험', '지출', NOW(), NOW()),
-('카페/음료', '지출', NOW(), NOW()),
-('통신비/인터넷비', '지출', NOW(), NOW()),
-('편의점', '지출', NOW(), NOW()),
-('취미', '지출', NOW(), NOW()),
-('상납금', '지출', NOW(), NOW());
-
-SELECT 'Accounts:' as '';
-SELECT * FROM accounts;
-SELECT 'Categories:' as '';
-SELECT * FROM categories;
-EOSQL
-
-            echo "✅ SQL file created"
-
             # Check if DB credentials are available
             if [ ! -z "$DB_HOST" ] && [ ! -z "$DB_USER" ] && [ ! -z "$DB_PASSWORD" ] && [ ! -z "$DB_NAME" ]; then
-              echo "📊 Executing SQL..."
-              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /tmp/setup_db.sql 2>&1
-              echo "✅ Database setup complete!"
+              echo "Executing SQL..."
+              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /tmp/init_data.sql 2>&1
+              echo "Database setup complete"
             else
-              echo "⚠️ DB credentials not found in .env files or GitHub secrets"
-              echo "SQL file saved at /tmp/setup_db.sql"
-              echo "Please run manually with: mysql -h <host> -u <user> -p<password> <database> < /tmp/setup_db.sql"
+              echo "DB credentials not found in .env files or GitHub secrets"
+              echo "SQL file saved at /tmp/init_data.sql"
+              echo "Please run manually with: mysql -h <host> -u <user> -p<password> <database> < /tmp/init_data.sql"
             fi
 
-            rm -f /tmp/setup_db.sql
+            rm -f /tmp/init_data.sql
 EOF
 
-          echo "✅ Setup complete"
+          echo "Setup complete"
