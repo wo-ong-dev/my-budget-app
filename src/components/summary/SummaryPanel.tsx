@@ -232,7 +232,12 @@ function SummaryPanel({
                   dataKey="value"
                   animationDuration={100}
                   isAnimationActive={true}
-                  label={(entry: any) => `${entry.name} ${(entry.percent * 100).toFixed(0)}%`}
+                  label={(entry: any) => {
+                    const percentage = entry.percent * 100;
+                    // 3% 미만 항목은 라벨 표시 안 함 (겹침 방지)
+                    if (percentage < 3) return '';
+                    return `${percentage.toFixed(0)}%`;
+                  }}
                   labelLine={false}
                 >
                   {chartData.map((_entry, index) => (

@@ -731,9 +731,12 @@ body {
 }
 
 .chart-container text {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   fill: var(--gray-800);
+  stroke: #ffffff;
+  stroke-width: 3px;
+  paint-order: stroke fill;
 }
 
 .stats-card--special .summary-amount--highlight {
@@ -1007,6 +1010,7 @@ body {
 
   .chart-container text {
     font-size: 11px;
+    stroke-width: 2px;
   }
 
   .transaction-card {
