@@ -1000,6 +1000,9 @@ body {
     max-width: 100% !important;
     overflow-x: hidden !important;
     overflow-y: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
   }
 
   .form-group {
@@ -1102,7 +1105,6 @@ body {
 
   .chart-container {
     padding: 0 !important;
-    height: 220px !important;
     width: 100% !important;
     max-width: 100% !important;
     overflow: visible !important;
@@ -1113,7 +1115,6 @@ body {
   .chart-container svg {
     width: 100% !important;
     max-width: 100% !important;
-    height: auto !important;
     overflow: visible !important;
   }
 
@@ -1127,7 +1128,7 @@ body {
   }
 
   .chart-container text {
-    font-size: 10px !important;
+    font-size: 11px !important;
     stroke-width: 2px;
   }
 
