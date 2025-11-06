@@ -1090,38 +1090,64 @@ body {
   .stats-card {
     padding: 12px 8px !important;
     border-radius: 12px;
-    margin: 0 0 12px 0 !important;
+    margin: 0 0 10px 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    display: block !important;
+    overflow: visible !important;
   }
 
   .stats-card--chart {
-    min-height: 350px !important;
+    min-height: 380px !important;
+    display: block !important;
   }
 
   .chart-container {
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: 300px !important;
+    height: 320px !important;
+    min-height: 320px !important;
     margin: 0 auto !important;
     box-sizing: border-box !important;
+    display: block !important;
+    overflow: visible !important;
+    position: relative !important;
   }
 
   .chart-container svg {
     width: 100% !important;
     max-width: 100% !important;
+    height: 100% !important;
   }
 
   .chart-container .recharts-wrapper {
     width: 100% !important;
     max-width: 100% !important;
+    height: 100% !important;
   }
 
   .chart-container text {
     font-size: 11px !important;
     stroke-width: 2px;
+  }
+
+  .stats-list {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .stats-list li {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
   }
 
   .transaction-card {
