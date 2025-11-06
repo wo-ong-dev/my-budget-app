@@ -1416,6 +1416,12 @@ body {
 
   .budget-col {
     white-space: nowrap !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .budget-col span,
+  .budget-col div {
+    white-space: nowrap !important;
   }
 }
 
