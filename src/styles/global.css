@@ -1095,11 +1095,10 @@ body {
     max-width: 100% !important;
     box-sizing: border-box !important;
     display: block !important;
-    overflow: visible !important;
   }
 
   .stats-card--chart {
-    min-height: 380px !important;
+    min-height: 400px !important;
     display: block !important;
   }
 
@@ -1107,13 +1106,11 @@ body {
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: 320px !important;
-    min-height: 320px !important;
+    height: 350px !important;
+    min-height: 350px !important;
     margin: 0 auto !important;
     box-sizing: border-box !important;
     display: block !important;
-    overflow: visible !important;
-    position: relative !important;
   }
 
   .chart-container svg {
