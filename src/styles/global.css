@@ -967,7 +967,6 @@ body {
 
   .tab-panel {
     padding: 12px 8px 32px 8px !important;
-    min-height: calc(100vh - 180px);
     overflow-x: hidden !important;
     overflow-y: auto !important;
     width: 100% !important;
@@ -991,15 +990,15 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
-    overflow-y: visible !important;
     box-sizing: border-box !important;
   }
 
   .transaction-list {
     width: 100% !important;
     max-width: 100% !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
@@ -1095,19 +1094,17 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    overflow: visible !important;
   }
 
   .stats-card--chart {
-    min-height: auto !important;
-    height: auto !important;
+    min-height: 350px !important;
   }
 
   .chart-container {
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    overflow: visible !important;
+    height: 300px !important;
     margin: 0 auto !important;
     box-sizing: border-box !important;
   }
@@ -1115,16 +1112,11 @@ body {
   .chart-container svg {
     width: 100% !important;
     max-width: 100% !important;
-    overflow: visible !important;
   }
 
   .chart-container .recharts-wrapper {
     width: 100% !important;
     max-width: 100% !important;
-  }
-
-  .chart-container .recharts-surface {
-    overflow: visible !important;
   }
 
   .chart-container text {
