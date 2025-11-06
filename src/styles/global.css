@@ -1413,5 +1413,9 @@ body {
   .budget-col--account {
     font-size: 13px;
   }
+
+  .budget-col {
+    white-space: nowrap !important;
+  }
 }
 
