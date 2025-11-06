@@ -24,7 +24,8 @@ function CategoryManagementModal({
   const [accounts, setAccounts] = useState<AccountItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [newAccountName, setNewAccountName] = useState("");
-  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newIncomeCategoryName, setNewIncomeCategoryName] = useState("");
+  const [newExpenseCategoryName, setNewExpenseCategoryName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,14 +86,31 @@ function CategoryManagementModal({
     }
   };
 
-  const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) {
+  const handleAddIncomeCategory = async () => {
+    if (!newIncomeCategoryName.trim()) {
       return;
     }
     try {
       setLoading(true);
-      await createCategory(newCategoryName.trim());
-      setNewCategoryName("");
+      await createCategory(newIncomeCategoryName.trim(), "수입");
+      setNewIncomeCategoryName("");
+      await loadData();
+      onUpdate?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "카테고리를 추가하지 못했어요.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddExpenseCategory = async () => {
+    if (!newExpenseCategoryName.trim()) {
+      return;
+    }
+    try {
+      setLoading(true);
+      await createCategory(newExpenseCategoryName.trim(), "지출");
+      setNewExpenseCategoryName("");
       await loadData();
       onUpdate?.();
     } catch (err) {
@@ -164,28 +182,67 @@ function CategoryManagementModal({
         </section>
 
         <section className="management-section">
-          <h4>카테고리</h4>
+          <h4>수입 카테고리</h4>
           <div className="management-add-form">
             <input
               type="text"
               className="form-input"
-              placeholder="새 카테고리명 입력"
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleAddCategory()}
+              placeholder="새 수입 카테고리명 입력 (예: 급여, 용돈)"
+              value={newIncomeCategoryName}
+              onChange={(e) => setNewIncomeCategoryName(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleAddIncomeCategory()}
               disabled={loading}
             />
             <button
               type="button"
               className="btn btn-primary"
-              onClick={handleAddCategory}
-              disabled={loading || !newCategoryName.trim()}
+              onClick={handleAddIncomeCategory}
+              disabled={loading || !newIncomeCategoryName.trim()}
             >
               추가
             </button>
           </div>
           <ul className="management-list">
-            {categories.map((category) => (
+            {categories.filter(cat => cat.type === "수입").map((category) => (
+              <li key={category.id} className="management-item">
+                <span>{category.name}</span>
+                <button
+                  type="button"
+                  className="btn-icon btn-icon--delete"
+                  onClick={() => handleDeleteCategory(category.id, category.name)}
+                  disabled={loading}
+                  title="삭제"
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="management-section">
+          <h4>지출 카테고리</h4>
+          <div className="management-add-form">
+            <input
+              type="text"
+              className="form-input"
+              placeholder="새 지출 카테고리명 입력"
+              value={newExpenseCategoryName}
+              onChange={(e) => setNewExpenseCategoryName(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleAddExpenseCategory()}
+              disabled={loading}
+            />
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleAddExpenseCategory}
+              disabled={loading || !newExpenseCategoryName.trim()}
+            >
+              추가
+            </button>
+          </div>
+          <ul className="management-list">
+            {categories.filter(cat => cat.type === "지출").map((category) => (
               <li key={category.id} className="management-item">
                 <span>{category.name}</span>
                 <button
