@@ -189,7 +189,11 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const list = await fetchTransactionsByMonth(filters.month);
+      // 임시: 스켈레톤 UI 테스트를 위한 딜레이 (나중에 제거)
+      const [list] = await Promise.all([
+        fetchTransactionsByMonth(filters.month),
+        new Promise(resolve => setTimeout(resolve, 800))
+      ]);
       hasLoadedRef.current = true;
       setTransactions(list);
       setAvailableMonths((prev) => {

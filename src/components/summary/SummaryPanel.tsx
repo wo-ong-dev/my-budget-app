@@ -232,7 +232,7 @@ function SummaryPanel({
                   dataKey="value"
                   animationDuration={100}
                   isAnimationActive={true}
-                  label={(entry: any) => entry.name}
+                  label={(entry: any) => `${entry.name} ${(entry.percent * 100).toFixed(0)}%`}
                   labelLine={false}
                 >
                   {chartData.map((_entry, index) => (

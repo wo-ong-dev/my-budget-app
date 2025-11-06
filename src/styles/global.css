@@ -745,13 +745,14 @@ body {
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--gray-100) 0%,
-    var(--gray-200) 50%,
-    var(--gray-100) 100%
+    #e0e0e0 0%,
+    #f0f0f0 50%,
+    #e0e0e0 100%
   );
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: 8px;
+  border: 1px solid #d0d0d0;
 }
 
 @keyframes skeleton-loading {
