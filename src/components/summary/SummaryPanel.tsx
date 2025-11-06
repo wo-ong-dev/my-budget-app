@@ -80,35 +80,60 @@ function SummaryPanel({
     }
   };
 
-  // 커스텀 라벨: 도넛 차트 조각 내부에 퍼센트 표시
+  // 커스텀 라벨: 도넛 안에 퍼센트, 바깥에 카테고리명
   const renderCustomLabel = (props: any) => {
-    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent, name } = props;
+
+    const RADIAN = Math.PI / 180;
 
     // 3% 미만은 표시 안 함 (겹침 방지)
     if (percent * 100 < 3) return null;
 
-    // 조각의 중간 지점 계산
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
-    const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+    // 안쪽 라벨: 퍼센트 (조각 중간)
+    const innerRadius_center = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const innerX = cx + innerRadius_center * Math.cos(-midAngle * RADIAN);
+    const innerY = cy + innerRadius_center * Math.sin(-midAngle * RADIAN);
+
+    // 바깥 라벨: 카테고리명 (조각 바깥)
+    const outerRadius_label = outerRadius + 25;
+    const outerX = cx + outerRadius_label * Math.cos(-midAngle * RADIAN);
+    const outerY = cy + outerRadius_label * Math.sin(-midAngle * RADIAN);
 
     return (
-      <text
-        x={x}
-        y={y}
-        fill="var(--gray-800)"
-        textAnchor="middle"
-        dominantBaseline="central"
-        style={{
-          fontSize: '13px',
-          fontWeight: 'bold',
-          stroke: '#ffffff',
-          strokeWidth: 3,
-          paintOrder: 'stroke fill'
-        }}
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
+      <g>
+        {/* 안쪽: 퍼센트 */}
+        <text
+          x={innerX}
+          y={innerY}
+          fill="var(--gray-800)"
+          textAnchor="middle"
+          dominantBaseline="central"
+          style={{
+            fontSize: '13px',
+            fontWeight: 'bold',
+            stroke: '#ffffff',
+            strokeWidth: 3,
+            paintOrder: 'stroke fill'
+          }}
+        >
+          {`${(percent * 100).toFixed(0)}%`}
+        </text>
+
+        {/* 바깥: 카테고리명 */}
+        <text
+          x={outerX}
+          y={outerY}
+          fill="var(--gray-700)"
+          textAnchor={outerX > cx ? 'start' : 'end'}
+          dominantBaseline="central"
+          style={{
+            fontSize: '12px',
+            fontWeight: '600'
+          }}
+        >
+          {name}
+        </text>
+      </g>
     );
   };
 
