@@ -1111,23 +1111,22 @@ body {
     margin: 0 auto !important;
     box-sizing: border-box !important;
     display: block !important;
+    overflow: hidden !important;
   }
 
   .chart-container svg {
     width: 100% !important;
     max-width: 100% !important;
-    height: 100% !important;
   }
 
   .chart-container .recharts-wrapper {
     width: 100% !important;
     max-width: 100% !important;
-    height: 100% !important;
   }
 
   .chart-container text {
-    font-size: 11px !important;
-    stroke-width: 2px;
+    font-size: 10px !important;
+    stroke-width: 2px !important;
   }
 
   .stats-list {
