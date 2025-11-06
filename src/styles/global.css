@@ -741,6 +741,45 @@ body {
   font-weight: 700;
 }
 
+/* 스켈레톤 로딩 UI */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--gray-100) 0%,
+    var(--gray-200) 50%,
+    var(--gray-100) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-chart {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  margin: 50px auto;
+}
+
+.skeleton-line {
+  height: 16px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+}
+
+.skeleton-line--short {
+  width: 60%;
+}
+
 /* 차트 커스텀 툴팁 */
 .custom-tooltip {
   background: #fff;

@@ -18,8 +18,42 @@ function SummaryPanel({
   availableMonths = [],
   onMonthChange
 }: SummaryPanelProps) {
+  // 로딩 중일 때 스켈레톤 UI 표시
   if (loading) {
-    return <div className="list-placeholder">데이터를 불러오는 중입니다...</div>;
+    return (
+      <div className="summary-panel">
+        <section className="summary-card">
+          <header className="summary-card__header">
+            <div className="summary-card__title-row">
+              <div>
+                <h3>이번 달 요약</h3>
+              </div>
+            </div>
+          </header>
+          <ul className="summary-totals">
+            <li>
+              <span>총 수입</span>
+              <div className="skeleton skeleton-line skeleton-line--short"></div>
+            </li>
+            <li>
+              <span>총 지출</span>
+              <div className="skeleton skeleton-line skeleton-line--short"></div>
+            </li>
+            <li>
+              <span>잔액</span>
+              <div className="skeleton skeleton-line skeleton-line--short"></div>
+            </li>
+          </ul>
+        </section>
+
+        <section className="stats-card stats-card--chart">
+          <h4 className="stats-card-title"><span className="stats-card-icon">📊</span>카테고리별 지출</h4>
+          <div className="chart-container">
+            <div className="skeleton skeleton-chart"></div>
+          </div>
+        </section>
+      </div>
+    );
   }
 
   if (!summary) {
