@@ -724,6 +724,29 @@ function App() {
           const dataLines = lines.slice(1);
           const drafts: TransactionDraft[] = [];
 
+          // 날짜 파싱 헬퍼 함수
+          const parseDateFromCSV = (dateStr: string): string => {
+            // "5월 1일" 형식을 "2025-05-01"로 변환
+            const match = dateStr.match(/(\d+)월\s*(\d+)일/);
+            if (match) {
+              const month = match[1].padStart(2, '0');
+              const day = match[2].padStart(2, '0');
+              return `${filters.month.split('-')[0]}-${month}-${day}`;
+            }
+            // "2025-05-01" 형식은 그대로 반환
+            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              return dateStr;
+            }
+            return "";
+          };
+
+          // 금액 파싱 헬퍼 함수
+          const parseAmountFromCSV = (amountStr: string): number => {
+            // "₩10,000" 또는 "10000" 형식 처리
+            const cleaned = amountStr.replace(/[₩,\s]/g, "");
+            return parseFloat(cleaned);
+          };
+
           for (let i = 0; i < dataLines.length; i++) {
             const line = dataLines[i];
             // CSV 파싱 (큰따옴표로 감싸진 필드 처리)
@@ -736,10 +759,21 @@ function App() {
               cell.replace(/^"|"$/g, "").replace(/""/g, '"').trim()
             );
 
-            const [date, type, account, category, amountStr, memo] = cells;
+            // 새로운 순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목
+            let [dateStr, typeStr, amountStr, memo, account, category] = cells;
+
+            // 날짜 파싱
+            const date = parseDateFromCSV(dateStr);
+            if (!date) {
+              console.warn(`${i + 2}번째 줄 건너뛰기: 잘못된 날짜 형식 (${dateStr})`);
+              continue;
+            }
+
+            // 구분 정규화: "(주)지출" → "지출", "(주)수입" → "수입"
+            let type = typeStr.replace(/\(주\)/g, "").trim();
 
             // 유효성 검사
-            if (!date || !type || !amountStr) {
+            if (!type || !amountStr) {
               console.warn(`${i + 2}번째 줄 건너뛰기: 필수 필드 누락`);
               continue;
             }
@@ -749,7 +783,7 @@ function App() {
               continue;
             }
 
-            const amount = parseFloat(amountStr.replace(/,/g, ""));
+            const amount = parseAmountFromCSV(amountStr);
             if (isNaN(amount) || amount <= 0) {
               console.warn(`${i + 2}번째 줄 건너뛰기: 잘못된 금액 (${amountStr})`);
               continue;
