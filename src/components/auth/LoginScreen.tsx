@@ -25,7 +25,7 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
     e.preventDefault();
 
     // 비밀번호 확인 (환경변수 또는 고정값)
-    const correctPassword = import.meta.env.VITE_APP_PASSWORD || "1234";
+    const correctPassword = import.meta.env.VITE_APP_PASSWORD || "250222";
 
     if (password === correctPassword) {
       // 로그인 성공
@@ -71,7 +71,7 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
         </form>
 
         <div className="login-hint">
-          기본 비밀번호: 1234
+          기본 비밀번호: 250222
         </div>
       </div>
     </div>
