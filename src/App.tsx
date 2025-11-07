@@ -803,15 +803,43 @@ function App() {
             throw new Error("가져올 수 있는 데이터가 없어요.");
           }
 
+          // 기존 거래 내역 가져오기 (중복 체크용)
+          const existingTransactions = transactions;
+
+          // 중복 체크 함수
+          const isDuplicate = (draft: TransactionDraft): boolean => {
+            return existingTransactions.some(tx =>
+              tx.date === draft.date &&
+              tx.type === draft.type &&
+              tx.amount === draft.amount &&
+              (tx.account ?? "") === (draft.account ?? "") &&
+              (tx.category ?? "") === (draft.category ?? "")
+            );
+          };
+
+          // 중복 제거
+          const newDrafts = drafts.filter(draft => !isDuplicate(draft));
+          const duplicateCount = drafts.length - newDrafts.length;
+
+          if (newDrafts.length === 0) {
+            alert(`모든 항목이 이미 존재합니다. (중복 ${duplicateCount}개)`);
+            return;
+          }
+
           // 서버에 저장
-          for (const draft of drafts) {
+          for (const draft of newDrafts) {
             await createTransaction(normalizeDraft(draft));
           }
 
           // 데이터 새로고침
           await refetch();
 
-          alert(`${drafts.length}개의 내역을 가져왔어요.`);
+          // 결과 메시지
+          let message = `${newDrafts.length}개의 내역을 가져왔어요.`;
+          if (duplicateCount > 0) {
+            message += `\n(중복 ${duplicateCount}개는 건너뛰었어요.)`;
+          }
+          alert(message);
           setActiveTab("history");
         } catch (err) {
           const message = err instanceof Error ? err.message : "CSV 가져오기에 실패했어요.";
