@@ -79,3 +79,25 @@ export interface SummaryResponse {
     monthlyBalance?: number;
   };
 }
+
+export interface MonthlyComparisonData {
+  month: string; // yyyy-mm
+  income: number;
+  expense: number;
+  balance: number;
+}
+
+export interface MonthlyComparison {
+  current: MonthlyComparisonData;
+  previous: MonthlyComparisonData | null;
+  threeMonthAverage: {
+    income: number;
+    expense: number;
+    balance: number;
+  };
+  changes: {
+    income: number; // percentage change from previous month
+    expense: number; // percentage change from previous month
+    balance: number; // percentage change from previous month
+  } | null;
+}

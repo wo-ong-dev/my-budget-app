@@ -15,6 +15,7 @@ import type {
   TransactionSummary,
   TransactionType,
   BudgetWithUsage,
+  MonthlyComparison,
 } from "./types";
 import { buildRecentMonths, distinct, monthKey, todayInputValue } from "./utils/formatters";
 import {
@@ -159,6 +160,86 @@ function normalizeDraft(draft: TransactionDraft): TransactionDraft {
   };
 }
 
+// 월별 비교 데이터 계산 함수
+async function calculateMonthlyComparison(
+  currentMonth: string,
+  fetchTransactionsFn: (month: string) => Promise<Transaction[]>
+): Promise<MonthlyComparison | null> {
+  try {
+    // 현재 월 데이터
+    const currentTransactions = await fetchTransactionsFn(currentMonth);
+    const currentSummary = calculateSummary(currentTransactions, currentMonth);
+
+    // 이전 3개월 계산
+    const [year, month] = currentMonth.split('-').map(Number);
+    const previousMonths: string[] = [];
+
+    for (let i = 1; i <= 3; i++) {
+      let prevMonth = month - i;
+      let prevYear = year;
+
+      if (prevMonth <= 0) {
+        prevMonth += 12;
+        prevYear -= 1;
+      }
+
+      previousMonths.push(`${prevYear}-${String(prevMonth).padStart(2, '0')}`);
+    }
+
+    // 이전 3개월 데이터 가져오기
+    const previousMonthsData = await Promise.all(
+      previousMonths.map(async (m) => {
+        const transactions = await fetchTransactionsFn(m);
+        const summary = calculateSummary(transactions, m);
+        return {
+          month: m,
+          income: summary.totalIncome,
+          expense: summary.totalExpense,
+          balance: summary.balance,
+        };
+      })
+    );
+
+    // 전월 데이터
+    const previousMonth = previousMonthsData[0];
+
+    // 3개월 평균 계산
+    const threeMonthAverage = {
+      income: previousMonthsData.reduce((sum, data) => sum + data.income, 0) / 3,
+      expense: previousMonthsData.reduce((sum, data) => sum + data.expense, 0) / 3,
+      balance: previousMonthsData.reduce((sum, data) => sum + data.balance, 0) / 3,
+    };
+
+    // 전월 대비 증감률 계산
+    const changes = previousMonth ? {
+      income: previousMonth.income > 0
+        ? ((currentSummary.totalIncome - previousMonth.income) / previousMonth.income) * 100
+        : 0,
+      expense: previousMonth.expense > 0
+        ? ((currentSummary.totalExpense - previousMonth.expense) / previousMonth.expense) * 100
+        : 0,
+      balance: previousMonth.balance !== 0
+        ? ((currentSummary.balance - previousMonth.balance) / Math.abs(previousMonth.balance)) * 100
+        : 0,
+    } : null;
+
+    return {
+      current: {
+        month: currentMonth,
+        income: currentSummary.totalIncome,
+        expense: currentSummary.totalExpense,
+        balance: currentSummary.balance,
+      },
+      previous: previousMonth || null,
+      threeMonthAverage,
+      changes,
+    };
+  } catch (error) {
+    console.error('월별 비교 데이터 계산 실패:', error);
+    return null;
+  }
+}
+
 function App() {
   const initialMonths = useMemo(() => buildRecentMonths(12), []);
   const [availableMonths, setAvailableMonths] = useState<string[]>(initialMonths);
@@ -172,6 +253,7 @@ function App() {
   }));
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
+  const [monthlyComparison, setMonthlyComparison] = useState<MonthlyComparison | null>(null);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -319,6 +401,28 @@ function App() {
       fetchBudgets();
     }
   }, [activeTab, fetchBudgets]);
+
+  // 월별 비교 데이터 가져오기
+  const fetchMonthlyComparison = useCallback(async () => {
+    if (activeTab !== "summary") return;
+
+    try {
+      const comparison = await calculateMonthlyComparison(
+        filters.month,
+        fetchTransactionsByMonth
+      );
+      setMonthlyComparison(comparison);
+    } catch (err) {
+      console.error('월별 비교 데이터 조회 실패:', err);
+      setMonthlyComparison(null);
+    }
+  }, [filters.month, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "summary") {
+      fetchMonthlyComparison();
+    }
+  }, [activeTab, fetchMonthlyComparison]);
 
   const accounts = useMemo(() => {
     const defaultAccounts = [
@@ -736,6 +840,7 @@ function App() {
               currentMonth={filters.month}
               availableMonths={availableMonths}
               onMonthChange={(month) => setFilters((prev) => ({ ...prev, month }))}
+              monthlyComparison={monthlyComparison}
             />
           ) : null}
         </section>

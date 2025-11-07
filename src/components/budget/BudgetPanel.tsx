@@ -105,6 +105,17 @@ function BudgetPanel({
     return "budget-row--blue";
   };
 
+  const getProgressPercentage = (used: number, target: number) => {
+    if (target === 0) return 0;
+    return Math.min((used / target) * 100, 100);
+  };
+
+  const getProgressColor = (percentage: number) => {
+    if (percentage >= 100) return "budget-progress--danger";
+    if (percentage >= 80) return "budget-progress--warning";
+    return "budget-progress--success";
+  };
+
   return (
     <div className="budget-panel">
       <div className="budget-header">
@@ -163,83 +174,104 @@ function BudgetPanel({
           <div className="budget-col budget-col--available">사용가능</div>
         </div>
 
-        {budgets.map((budget) => (
-          <div key={budget.id} className={`budget-row ${getColorClass(budget.color)}`}>
-            <div className="budget-col budget-col--account">
-              <span className="budget-icon">{getAccountIcon(budget.account)}</span>
-              {onAccountClick ? (
-                <button
-                  type="button"
-                  className="budget-account-link"
-                  onClick={() => onAccountClick(budget.account)}
-                  title={`${budget.account} 내역 조회`}
-                >
-                  {budget.account}
-                </button>
-              ) : (
-                <span>{budget.account}</span>
-              )}
-            </div>
-            <div className="budget-col budget-col--target">
-              {editingId === budget.id ? (
-                <div className="budget-edit">
-                  <input
-                    type="number"
-                    className="budget-edit__input"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    className="budget-edit__btn budget-edit__btn--save"
-                    onClick={() => handleSaveEdit(budget.id)}
-                  >
-                    ✓
-                  </button>
-                  <button
-                    type="button"
-                    className="budget-edit__btn budget-edit__btn--cancel"
-                    onClick={handleCancelEdit}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <div className="budget-amount">
-                  <span>{formatCurrency(budget.target_amount)}원</span>
-                  {onUpdateBudget && (
+        {budgets.map((budget) => {
+          const percentage = getProgressPercentage(budget.used_amount, budget.target_amount);
+          const progressColor = getProgressColor(percentage);
+
+          return (
+            <div key={budget.id} className="budget-item">
+              <div className={`budget-row ${getColorClass(budget.color)}`}>
+                <div className="budget-col budget-col--account">
+                  <span className="budget-icon">{getAccountIcon(budget.account)}</span>
+                  {onAccountClick ? (
                     <button
                       type="button"
-                      className="budget-edit-btn"
-                      onClick={() => handleEdit(budget.id, budget.target_amount)}
+                      className="budget-account-link"
+                      onClick={() => onAccountClick(budget.account)}
+                      title={`${budget.account} 내역 조회`}
                     >
-                      ✏️
+                      {budget.account}
+                    </button>
+                  ) : (
+                    <span>{budget.account}</span>
+                  )}
+                </div>
+                <div className="budget-col budget-col--target">
+                  {editingId === budget.id ? (
+                    <div className="budget-edit">
+                      <input
+                        type="number"
+                        className="budget-edit__input"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        className="budget-edit__btn budget-edit__btn--save"
+                        onClick={() => handleSaveEdit(budget.id)}
+                      >
+                        ✓
+                      </button>
+                      <button
+                        type="button"
+                        className="budget-edit__btn budget-edit__btn--cancel"
+                        onClick={handleCancelEdit}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="budget-amount">
+                      <span>{formatCurrency(budget.target_amount)}원</span>
+                      {onUpdateBudget && (
+                        <button
+                          type="button"
+                          className="budget-edit-btn"
+                          onClick={() => handleEdit(budget.id, budget.target_amount)}
+                        >
+                          ✏️
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="budget-col budget-col--used">
+                  {formatCurrency(budget.used_amount)}원
+                </div>
+                <div className="budget-col budget-col--available">
+                  <span className={budget.available_amount < 0 ? "budget-amount--negative" : ""}>
+                    {formatCurrency(budget.available_amount)}원
+                  </span>
+                  {onDeleteBudget && (
+                    <button
+                      type="button"
+                      className="budget-delete-btn"
+                      onClick={() => onDeleteBudget(budget.id)}
+                      title="삭제"
+                    >
+                      🗑️
                     </button>
                   )}
                 </div>
-              )}
+              </div>
+
+              <div className="budget-progress-section">
+                <div className="budget-progress-info">
+                  <span className="budget-progress-percent">{percentage.toFixed(0)}% 사용</span>
+                  <span className="budget-progress-remaining">
+                    {budget.available_amount >= 0
+                      ? `${formatCurrency(budget.available_amount)}원 남음`
+                      : `${formatCurrency(Math.abs(budget.available_amount))}원 초과`}
+                  </span>
+                </div>
+                <div className="budget-progress-bar">
+                  <div className={`budget-progress-fill ${progressColor}`} style={{ width: `${percentage}%` }}></div>
+                </div>
+              </div>
             </div>
-            <div className="budget-col budget-col--used">
-              {formatCurrency(budget.used_amount)}원
-            </div>
-            <div className="budget-col budget-col--available">
-              <span className={budget.available_amount < 0 ? "budget-amount--negative" : ""}>
-                {formatCurrency(budget.available_amount)}원
-              </span>
-              {onDeleteBudget && (
-                <button
-                  type="button"
-                  className="budget-delete-btn"
-                  onClick={() => onDeleteBudget(budget.id)}
-                  title="삭제"
-                >
-                  🗑️
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {isAdding ? (
           <div className="budget-row budget-row--adding">

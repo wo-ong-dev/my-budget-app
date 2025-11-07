@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { TransactionSummary } from "../../types";
+import type { TransactionSummary, MonthlyComparison } from "../../types";
 import { formatCurrency, monthLabel } from "../../utils/formatters";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
@@ -9,6 +9,7 @@ type SummaryPanelProps = {
   currentMonth?: string;
   availableMonths?: string[];
   onMonthChange?: (month: string) => void;
+  monthlyComparison?: MonthlyComparison | null;
 };
 
 function SummaryPanel({
@@ -16,7 +17,8 @@ function SummaryPanel({
   loading = false,
   currentMonth,
   availableMonths = [],
-  onMonthChange
+  onMonthChange,
+  monthlyComparison
 }: SummaryPanelProps) {
   // 로딩 중일 때 스켈레톤 UI 표시
   if (loading) {
@@ -347,6 +349,84 @@ function SummaryPanel({
               </li>
             ))}
           </ul>
+        </section>
+      ) : null}
+
+      {monthlyComparison && monthlyComparison.previous ? (
+        <section className="stats-card stats-card--comparison">
+          <h4 className="stats-card-title"><span className="stats-card-icon">📈</span>월별 비교 분석</h4>
+
+          <div className="comparison-section">
+            <h5 className="comparison-subtitle">전월 대비</h5>
+            <ul className="comparison-list">
+              <li className="comparison-item">
+                <div className="comparison-label">
+                  <span>수입</span>
+                  <span className="comparison-values">
+                    {formatCurrency(monthlyComparison.previous.income)}원 → {formatCurrency(monthlyComparison.current.income)}원
+                  </span>
+                </div>
+                <div className={`comparison-change ${monthlyComparison.changes && monthlyComparison.changes.income >= 0 ? 'comparison-change--up' : 'comparison-change--down'}`}>
+                  {monthlyComparison.changes && (
+                    <>
+                      <span className="comparison-arrow">{monthlyComparison.changes.income >= 0 ? '↑' : '↓'}</span>
+                      <span>{Math.abs(monthlyComparison.changes.income).toFixed(1)}%</span>
+                    </>
+                  )}
+                </div>
+              </li>
+              <li className="comparison-item">
+                <div className="comparison-label">
+                  <span>지출</span>
+                  <span className="comparison-values">
+                    {formatCurrency(monthlyComparison.previous.expense)}원 → {formatCurrency(monthlyComparison.current.expense)}원
+                  </span>
+                </div>
+                <div className={`comparison-change ${monthlyComparison.changes && monthlyComparison.changes.expense >= 0 ? 'comparison-change--up' : 'comparison-change--down'}`}>
+                  {monthlyComparison.changes && (
+                    <>
+                      <span className="comparison-arrow">{monthlyComparison.changes.expense >= 0 ? '↑' : '↓'}</span>
+                      <span>{Math.abs(monthlyComparison.changes.expense).toFixed(1)}%</span>
+                    </>
+                  )}
+                </div>
+              </li>
+              <li className="comparison-item">
+                <div className="comparison-label">
+                  <span>잔액</span>
+                  <span className="comparison-values">
+                    {formatCurrency(monthlyComparison.previous.balance)}원 → {formatCurrency(monthlyComparison.current.balance)}원
+                  </span>
+                </div>
+                <div className={`comparison-change ${monthlyComparison.changes && monthlyComparison.changes.balance >= 0 ? 'comparison-change--up' : 'comparison-change--down'}`}>
+                  {monthlyComparison.changes && (
+                    <>
+                      <span className="comparison-arrow">{monthlyComparison.changes.balance >= 0 ? '↑' : '↓'}</span>
+                      <span>{Math.abs(monthlyComparison.changes.balance).toFixed(1)}%</span>
+                    </>
+                  )}
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div className="comparison-section">
+            <h5 className="comparison-subtitle">최근 3개월 평균</h5>
+            <ul className="comparison-list">
+              <li className="comparison-item comparison-item--average">
+                <span>평균 수입</span>
+                <strong>{formatCurrency(Math.round(monthlyComparison.threeMonthAverage.income))}원</strong>
+              </li>
+              <li className="comparison-item comparison-item--average">
+                <span>평균 지출</span>
+                <strong>{formatCurrency(Math.round(monthlyComparison.threeMonthAverage.expense))}원</strong>
+              </li>
+              <li className="comparison-item comparison-item--average">
+                <span>평균 잔액</span>
+                <strong>{formatCurrency(Math.round(monthlyComparison.threeMonthAverage.balance))}원</strong>
+              </li>
+            </ul>
+          </div>
         </section>
       ) : null}
     </div>
