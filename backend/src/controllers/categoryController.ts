@@ -26,8 +26,8 @@ export class CategoryController {
         return;
       }
 
-      // Check if category already exists
-      const existing = await CategoryModel.findByName(name);
+      // Check if category already exists with same name and type
+      const existing = await CategoryModel.findByNameAndType(name, type);
       if (existing) {
         res.status(409).json({ ok: false, error: '이미 존재하는 카테고리입니다.' });
         return;

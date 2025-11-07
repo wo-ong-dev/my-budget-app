@@ -25,6 +25,15 @@ export class CategoryModel {
     return categories[0] || null;
   }
 
+  static async findByNameAndType(name: string, type: string): Promise<Category | null> {
+    const [rows] = await pool.execute(
+      'SELECT * FROM categories WHERE name = ? AND type = ?',
+      [name, type]
+    );
+    const categories = rows as Category[];
+    return categories[0] || null;
+  }
+
   static async create(name: string, type: string): Promise<Category> {
     const [result] = await pool.execute(
       'INSERT INTO categories (name, type) VALUES (?, ?)',
