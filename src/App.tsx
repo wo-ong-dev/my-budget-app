@@ -648,10 +648,16 @@ function App() {
       // CSV 헤더 (원하는 순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목)
       const headers = ["날짜", "구분", "금액", "메모", "통장분류", "소비항목"];
 
-      // 날짜를 "M월 D일" 형식으로 변환
+      // 날짜를 "M월 D일 (요일)" 형식으로 변환
       const formatDateForCSV = (dateStr: string) => {
-        const [, month, day] = dateStr.split('-');
-        return `${parseInt(month)}월 ${parseInt(day)}일`;
+        const [year, month, day] = dateStr.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+        // 요일 한글 변환
+        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+        const dayOfWeek = dayNames[date.getDay()];
+
+        return `${parseInt(month)}월 ${parseInt(day)}일 (${dayOfWeek})`;
       };
 
       // 금액을 "₩#,###" 형식으로 변환
@@ -726,17 +732,36 @@ function App() {
 
           // 날짜 파싱 헬퍼 함수
           const parseDateFromCSV = (dateStr: string): string => {
-            // "5월 1일" 형식을 "2025-05-01"로 변환
-            const match = dateStr.match(/(\d+)월\s*(\d+)일/);
-            if (match) {
-              const month = match[1].padStart(2, '0');
-              const day = match[2].padStart(2, '0');
-              return `${filters.month.split('-')[0]}-${month}-${day}`;
-            }
             // "2025-05-01" 형식은 그대로 반환
             if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
               return dateStr;
             }
+
+            // "5월 1일" 또는 "5월 1일 (목)" 형식 파싱 (요일 제거)
+            const match = dateStr.match(/(\d+)월\s*(\d+)일/);
+            if (match) {
+              const monthNum = parseInt(match[1]);
+              const dayNum = parseInt(match[2]);
+              const month = String(monthNum).padStart(2, '0');
+              const day = String(dayNum).padStart(2, '0');
+
+              // 현재 화면의 연도/월 가져오기
+              const [currentYear, currentMonth] = filters.month.split('-').map(Number);
+
+              // 연도 추정 로직:
+              // 1. 입력된 월이 현재 화면 월과 같거나 이전이면 → 같은 연도
+              // 2. 입력된 월이 현재 화면 월보다 크면 → 이전 연도
+              // 예: 현재 11월인데 12월 데이터 입력 → 작년 12월
+              // 예: 현재 11월인데 5월 데이터 입력 → 올해 5월
+              let year = currentYear;
+              if (monthNum > currentMonth && currentMonth <= 3) {
+                // 현재가 1~3월인데 큰 월(예: 12월)이 입력되면 작년
+                year = currentYear - 1;
+              }
+
+              return `${year}-${month}-${day}`;
+            }
+
             return "";
           };
 
