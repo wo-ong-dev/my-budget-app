@@ -221,13 +221,53 @@ function App() {
     }
   }, [availableMonths, filters.month]);
 
+  // 사용 빈도 순으로 정렬하는 함수
+  const sortByUsageFrequency = (items: string[], priorityOrder: string[]) => {
+    const priorityMap = new Map(priorityOrder.map((item, index) => [item, index]));
+    return [...items].sort((a, b) => {
+      const aIndex = priorityMap.get(a) ?? Number.MAX_SAFE_INTEGER;
+      const bIndex = priorityMap.get(b) ?? Number.MAX_SAFE_INTEGER;
+      return aIndex - bIndex;
+    });
+  };
+
   const loadMasterData = useCallback(async () => {
     const [accounts, categories] = await Promise.all([
       fetchAccounts(),
       fetchCategories(),
     ]);
-    setApiAccounts(accounts);
-    setApiCategories(categories);
+
+    // 사용 빈도 기준 우선순위 (실제 사용 데이터 분석 결과)
+    const accountPriority = [
+      "토스뱅크",
+      "국민은행",
+      "우리은행",
+      "카카오페이",
+      "신용카드",
+      "카카오뱅크",
+      "현금"
+    ];
+
+    const categoryPriority = [
+      "식비",
+      "데이트",
+      "카페/음료",
+      "선물/경조사비",
+      "저축/상조/보험",
+      "교통비",
+      "취미",
+      "월세/관리비",
+      "상납금",
+      "여행/숙박",
+      "생활/마트",
+      "편의점",
+      "통신비/인터넷비",
+      "구독/포인트",
+      "기타"
+    ];
+
+    setApiAccounts(sortByUsageFrequency(accounts, accountPriority));
+    setApiCategories(sortByUsageFrequency(categories, categoryPriority));
   }, []);
 
   useEffect(() => {

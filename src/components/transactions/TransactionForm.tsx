@@ -16,8 +16,8 @@ type TransactionFormProps = {
 const blankDraft: TransactionDraft = {
   date: todayInputValue(),
   type: "지출",
-  account: "",
-  category: "",
+  account: "토스뱅크", // 가장 많이 사용하는 계좌
+  category: "식비", // 가장 많이 사용하는 카테고리
   amount: 0,
   memo: "",
 };
