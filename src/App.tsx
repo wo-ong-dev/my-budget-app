@@ -645,17 +645,28 @@ function App() {
 
   const handleExportCSV = () => {
     try {
-      // CSV 헤더
-      const headers = ["날짜", "구분", "계좌/카드", "카테고리", "금액", "메모"];
+      // CSV 헤더 (원하는 순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목)
+      const headers = ["날짜", "구분", "금액", "메모", "통장분류", "소비항목"];
 
-      // 데이터를 CSV 행으로 변환
+      // 날짜를 "M월 D일" 형식으로 변환
+      const formatDateForCSV = (dateStr: string) => {
+        const [, month, day] = dateStr.split('-');
+        return `${parseInt(month)}월 ${parseInt(day)}일`;
+      };
+
+      // 금액을 "₩#,###" 형식으로 변환
+      const formatAmountForCSV = (amount: number) => {
+        return `₩${amount.toLocaleString('ko-KR')}`;
+      };
+
+      // 데이터를 CSV 행으로 변환 (순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목)
       const rows = transactions.map(tx => [
-        tx.date,
+        formatDateForCSV(tx.date),
         tx.type,
+        formatAmountForCSV(tx.amount),
+        (tx.memo ?? "").replace(/"/g, '""'), // 큰따옴표 이스케이프
         tx.account ?? "",
-        tx.category ?? "",
-        tx.amount.toString(),
-        (tx.memo ?? "").replace(/"/g, '""') // 큰따옴표 이스케이프
+        tx.category ?? ""
       ]);
 
       // CSV 문자열 생성
