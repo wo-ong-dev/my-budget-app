@@ -23,7 +23,8 @@ import {
   fetchTransactionsByMonth,
   updateTransaction,
   fetchAccounts,
-  fetchCategories,
+  fetchCategoriesWithId,
+  type CategoryItem,
 } from "./services/transactionService";
 import {
   fetchBudgetsByMonth,
@@ -179,7 +180,7 @@ function App() {
   const [isSubmitting, setSubmitting] = useState(false);
   const [isDeleting, setDeleting] = useState(false);
   const [apiAccounts, setApiAccounts] = useState<string[]>([]);
-  const [apiCategories, setApiCategories] = useState<string[]>([]);
+  const [apiCategories, setApiCategories] = useState<CategoryItem[]>([]);
   const [budgets, setBudgets] = useState<BudgetWithUsage[]>([]);
   const [isBudgetLoading, setBudgetLoading] = useState(false);
 
@@ -231,24 +232,10 @@ function App() {
     });
   };
 
-  const loadMasterData = useCallback(async () => {
-    const [accounts, categories] = await Promise.all([
-      fetchAccounts(),
-      fetchCategories(),
-    ]);
-
+  // 카테고리 타입별 사용 빈도 순으로 정렬하는 함수
+  const sortCategoriesByUsageFrequency = (categories: CategoryItem[]) => {
     // 사용 빈도 기준 우선순위 (실제 사용 데이터 분석 결과)
-    const accountPriority = [
-      "토스뱅크",
-      "국민은행",
-      "우리은행",
-      "카카오페이",
-      "신용카드",
-      "카카오뱅크",
-      "현금"
-    ];
-
-    const categoryPriority = [
+    const expensePriority = [
       "식비",
       "데이트",
       "카페/음료",
@@ -266,8 +253,48 @@ function App() {
       "기타"
     ];
 
+    const incomePriority = [
+      "급여",
+      "용돈",
+      "그 외"
+    ];
+
+    const expenseMap = new Map(expensePriority.map((item, index) => [item, index]));
+    const incomeMap = new Map(incomePriority.map((item, index) => [item, index]));
+
+    return [...categories].sort((a, b) => {
+      // 먼저 타입별로 그룹화 (지출이 먼저)
+      if (a.type !== b.type) {
+        return a.type === "지출" ? -1 : 1;
+      }
+
+      // 같은 타입 내에서 우선순위 정렬
+      const priorityMap = a.type === "지출" ? expenseMap : incomeMap;
+      const aIndex = priorityMap.get(a.name) ?? Number.MAX_SAFE_INTEGER;
+      const bIndex = priorityMap.get(b.name) ?? Number.MAX_SAFE_INTEGER;
+      return aIndex - bIndex;
+    });
+  };
+
+  const loadMasterData = useCallback(async () => {
+    const [accounts, categories] = await Promise.all([
+      fetchAccounts(),
+      fetchCategoriesWithId(),
+    ]);
+
+    // 사용 빈도 기준 우선순위 (실제 사용 데이터 분석 결과)
+    const accountPriority = [
+      "토스뱅크",
+      "국민은행",
+      "우리은행",
+      "카카오페이",
+      "신용카드",
+      "카카오뱅크",
+      "현금"
+    ];
+
     setApiAccounts(sortByUsageFrequency(accounts, accountPriority));
-    setApiCategories(sortByUsageFrequency(categories, categoryPriority));
+    setApiCategories(sortCategoriesByUsageFrequency(categories));
   }, []);
 
   useEffect(() => {
@@ -312,30 +339,36 @@ function App() {
   }, [transactions, apiAccounts]);
 
   const categories = useMemo(() => {
-    const defaultCategories = [
-      "급여",
-      "기타",
-      "교통비",
-      "구독/포인트",
-      "데이트",
-      "생활/마트",
-      "선물/경조사비",
-      "식비",
-      "여행/숙박",
-      "월세/관리비",
-      "저축/상조/보험",
-      "카페/음료",
-      "통신비/인터넷비",
-      "편의점",
-      "취미",
-      "상납금",
-    ];
+    // apiCategories는 이미 타입별로 정렬되어 있음 (CategoryItem[])
+    const apiCategoryNames = apiCategories.map(cat => cat.name);
+
     const transactionCategories = distinct(
       transactions
         .map((tx) => tx.category ?? "")
         .filter((value): value is string => value.length > 0)
     );
-    return distinct([...defaultCategories, ...apiCategories, ...transactionCategories]).sort();
+
+    // API 카테고리 순서를 유지하고, 추가로 발견된 카테고리는 뒤에 추가
+    const orderedCategories: string[] = [];
+    const seen = new Set<string>();
+
+    // 먼저 API 카테고리 (이미 정렬됨)
+    for (const name of apiCategoryNames) {
+      if (!seen.has(name)) {
+        orderedCategories.push(name);
+        seen.add(name);
+      }
+    }
+
+    // 추가로 거래에서 발견된 카테고리
+    for (const name of transactionCategories) {
+      if (!seen.has(name)) {
+        orderedCategories.push(name);
+        seen.add(name);
+      }
+    }
+
+    return orderedCategories;
   }, [transactions, apiCategories]);
 
   const filteredTransactions = useMemo(() => {
@@ -662,7 +695,7 @@ function App() {
               {error && <div className="alert alert--error">{error}</div>}
               <TransactionForm
                 accounts={accounts}
-                categories={categories}
+                categories={apiCategories}
                 onSubmit={handleCreate}
                 submitting={isSubmitting && !isEditModalOpen}
                 submitLabel="내역 저장"
@@ -730,7 +763,7 @@ function App() {
         open={isEditModalOpen}
         transaction={editingTransaction}
         accounts={accounts}
-        categories={categories}
+        categories={apiCategories}
         onSubmit={handleUpdate}
         onDelete={() => {
           if (editingTransaction) {

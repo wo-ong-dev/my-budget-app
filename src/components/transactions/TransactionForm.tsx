@@ -1,11 +1,12 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useState, useMemo } from "react";
 import type { FormEvent } from "react";
 import type { TransactionDraft, TransactionType } from "../../types";
 import { formatCurrencyInput, parseCurrencyInput, todayInputValue } from "../../utils/formatters";
+import type { CategoryItem } from "../../services/transactionService";
 
 type TransactionFormProps = {
   accounts: string[];
-  categories: string[];
+  categories: CategoryItem[];
   defaultValues?: Partial<TransactionDraft>;
   onSubmit: (values: TransactionDraft) => Promise<void> | void;
   submitting?: boolean;
@@ -47,6 +48,11 @@ function TransactionForm({
     mergedDefaults.amount,
     mergedDefaults.memo,
   ]);
+
+  // 현재 선택된 거래 타입에 맞는 카테고리만 필터링
+  const filteredCategories = useMemo(() => {
+    return categories.filter(cat => cat.type === draft.type);
+  }, [categories, draft.type]);
 
   const handleChangeType = (type: TransactionType) => {
     setDraft((prev) => ({ ...prev, type }));
@@ -164,9 +170,9 @@ function TransactionForm({
           required
         >
           <option value="">선택해주세요</option>
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
+          {filteredCategories.map((category) => (
+            <option key={category.id} value={category.name}>
+              {category.name}
             </option>
           ))}
         </select>

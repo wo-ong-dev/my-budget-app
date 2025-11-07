@@ -2,12 +2,13 @@ import type { Transaction, TransactionDraft } from "../../types";
 import Modal from "../common/Modal";
 import TransactionForm from "./TransactionForm";
 import { toInputDateValue } from "../../utils/formatters";
+import type { CategoryItem } from "../../services/transactionService";
 
 type EditTransactionModalProps = {
   open: boolean;
   transaction: Transaction | null;
   accounts: string[];
-  categories: string[];
+  categories: CategoryItem[];
   onSubmit: (values: TransactionDraft) => Promise<void> | void;
   onDelete: () => Promise<void> | void;
   onClose: () => void;
