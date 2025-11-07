@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import LoginScreen from "./components/auth/LoginScreen";
 import Header from "./components/layout/Header";
 import TabNavigation from "./components/layout/TabNavigation";
 import type { TabDefinition, TabKey } from "./components/layout/TabNavigation";
@@ -241,6 +242,22 @@ async function calculateMonthlyComparison(
 }
 
 function App() {
+  // 인증 상태 관리
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handleLogin = useCallback(() => {
+    setIsAuthenticated(true);
+  }, []);
+
+  // 인증되지 않았으면 로그인 화면 표시
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
+  return <AuthenticatedApp />;
+}
+
+function AuthenticatedApp() {
   const initialMonths = useMemo(() => buildRecentMonths(12), []);
   const [availableMonths, setAvailableMonths] = useState<string[]>(initialMonths);
   const [activeTab, setActiveTab] = useState<TabKey>("input");
