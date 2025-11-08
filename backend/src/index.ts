@@ -7,6 +7,7 @@ import summaryRoutes from './routes/summary';
 import budgetRoutes from './routes/budgets';
 import accountRoutes from './routes/accounts';
 import categoryRoutes from './routes/categories';
+import expensePlanRoutes from './routes/expensePlans';
 
 // 환경 변수 로드
 dotenv.config();
@@ -29,6 +30,7 @@ app.use('/api/summary', summaryRoutes);
 app.use('/api/budgets', budgetRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/expense-plans', expensePlanRoutes);
 
 // 헬스 체크 엔드포인트
 app.get('/api/health', (req, res) => {
