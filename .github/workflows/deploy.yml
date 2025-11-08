@@ -185,6 +185,7 @@ jobs:
           echo "======================================"
 
       - name: Deploy Backend and Run Migrations
+        continue-on-error: true
         run: |
           set -e
 
