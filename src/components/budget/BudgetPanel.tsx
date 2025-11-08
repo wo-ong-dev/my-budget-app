@@ -3,6 +3,7 @@ import type { BudgetWithUsage } from "../../types";
 import { formatCurrency, monthLabel } from "../../utils/formatters";
 import { getAccountIcon } from "../../utils/iconMappings";
 import CategoryManagementModal from "../management/CategoryManagementModal";
+import { ExpensePlanList } from "./ExpensePlanList";
 
 type BudgetPanelProps = {
   budgets: BudgetWithUsage[];
@@ -331,6 +332,10 @@ function BudgetPanel({
         onClose={() => setManagementModalOpen(false)}
         onUpdate={onCategoryUpdate}
       />
+
+      {currentMonth && accounts.length > 0 && (
+        <ExpensePlanList month={currentMonth} accounts={accounts} />
+      )}
     </div>
   );
 }
