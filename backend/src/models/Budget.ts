@@ -6,6 +6,7 @@ export interface Budget {
   month: string; // yyyy-mm
   target_amount: number;
   color: string;
+  is_custom: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -24,22 +25,55 @@ export interface BudgetWithUsage extends Budget {
 
 export class BudgetModel {
   static async findByMonth(month: string): Promise<BudgetWithUsage[]> {
-    // 예산 정보 조회
-    const [budgetRows] = await pool.execute(
-      `SELECT * FROM budgets WHERE month = ? ORDER BY account`,
+    // 1. 현재 월의 커스텀 예산 조회
+    const [customBudgetRows] = await pool.execute(
+      `SELECT * FROM budgets WHERE month = ? AND is_custom = TRUE ORDER BY account`,
       [month]
     );
 
-    const budgets = (budgetRows as Budget[]).map(b => ({
+    const customBudgets = customBudgetRows as Budget[];
+
+    // 2. 전월 계산
+    const [year, monthNum] = month.split('-').map(Number);
+    const prevMonth = monthNum === 1
+      ? `${year - 1}-12`
+      : `${year}-${String(monthNum - 1).padStart(2, '0')}`;
+
+    // 3. 전월의 모든 예산 조회 (재귀적으로 findByMonth 호출하지 않고 직접 조회)
+    const [prevBudgetRows] = await pool.execute(
+      `SELECT * FROM budgets WHERE month = ? ORDER BY account`,
+      [prevMonth]
+    );
+
+    const prevBudgets = prevBudgetRows as Budget[];
+
+    // 4. 병합: 커스텀이 있으면 사용, 없으면 전월 데이터 사용
+    const accountMap = new Map<string, Budget>();
+
+    // 전월 데이터를 기본으로 (단, 현재 월로 변경)
+    for (const prevBudget of prevBudgets) {
+      accountMap.set(prevBudget.account, {
+        ...prevBudget,
+        id: 0, // 가상 ID (저장되지 않은 상태)
+        month, // 현재 월로 변경
+        is_custom: false
+      });
+    }
+
+    // 커스텀 데이터로 덮어쓰기
+    for (const customBudget of customBudgets) {
+      accountMap.set(customBudget.account, customBudget);
+    }
+
+    const budgets = Array.from(accountMap.values()).map(b => ({
       ...b,
       target_amount: Number(b.target_amount)
     }));
 
     // 월의 시작일과 종료일 계산
-    const [year, monthNum] = month.split('-').map(Number);
+    const [_year, _monthNum] = month.split('-').map(Number);
     const startDate = `${month}-01`;
-    // 다음 달의 0일 = 이번 달의 마지막 날
-    const lastDay = new Date(year, monthNum, 0).getDate();
+    const lastDay = new Date(_year, _monthNum, 0).getDate();
     const endDate = `${month}-${String(lastDay).padStart(2, '0')}`;
 
     // 각 계좌별 사용 금액 조회
@@ -88,11 +122,12 @@ export class BudgetModel {
 
   static async create(budget: BudgetDraft): Promise<Budget> {
     const [result] = await pool.execute(
-      `INSERT INTO budgets (account, month, target_amount, color)
-       VALUES (?, ?, ?, ?)
+      `INSERT INTO budgets (account, month, target_amount, color, is_custom)
+       VALUES (?, ?, ?, ?, TRUE)
        ON DUPLICATE KEY UPDATE
        target_amount = VALUES(target_amount),
-       color = VALUES(color)`,
+       color = VALUES(color),
+       is_custom = TRUE`,
       [
         budget.account,
         budget.month,

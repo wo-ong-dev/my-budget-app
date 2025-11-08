@@ -4,6 +4,7 @@ export interface Budget {
   month: string; // yyyy-mm
   target_amount: number;
   color: string;
+  is_custom: boolean;
   created_at?: string;
   updated_at?: string;
 }
