@@ -787,9 +787,11 @@ function AuthenticatedApp() {
 
           // 금액 파싱 헬퍼 함수
           const parseAmountFromCSV = (amountStr: string): number => {
-            // "₩10,000" 또는 "10000" 형식 처리
-            const cleaned = amountStr.replace(/[₩,\s]/g, "");
-            return parseFloat(cleaned);
+            if (!amountStr || amountStr.trim() === "") return 0;
+            const isNegative = amountStr.trim().startsWith("-");
+            const numStr = amountStr.replace(/[^0-9]/g, "");
+            const amount = parseFloat(numStr);
+            return isNaN(amount) ? 0 : (isNegative ? -amount : amount);
           };
 
           for (let i = 0; i < dataLines.length; i++) {
