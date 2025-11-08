@@ -820,7 +820,7 @@ function AuthenticatedApp() {
             let type = typeStr.replace(/\(주\)/g, "").trim();
 
             // 유효성 검사
-            if (!type || !amountStr) {
+            if (!type) {
               console.warn(`${i + 2}번째 줄 건너뛰기: 필수 필드 누락`);
               continue;
             }
@@ -831,7 +831,7 @@ function AuthenticatedApp() {
             }
 
             const amount = parseAmountFromCSV(amountStr);
-            if (isNaN(amount) || amount <= 0) {
+            if (isNaN(amount)) {
               console.warn(`${i + 2}번째 줄 건너뛰기: 잘못된 금액 (${amountStr})`);
               continue;
             }
