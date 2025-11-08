@@ -793,7 +793,7 @@ function AuthenticatedApp() {
             const line = dataLines[i];
             // CSV 파싱 (큰따옴표로 감싸진 필드 처리)
             const matches = line.match(/("(?:[^"]|"")*"|[^,]*)/g);
-            if (!matches || matches.length < 5) {
+            if (!matches || matches.length < 3) {
               continue;
             }
 
@@ -802,7 +802,7 @@ function AuthenticatedApp() {
             );
 
             // 새로운 순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목
-            let [dateStr, typeStr, amountStr, memo, account, category] = cells;
+            let [dateStr, typeStr, amountStr, memo = "", account = "", category = ""] = cells;
 
             // 날짜 파싱
             const date = parseDateFromCSV(dateStr);
