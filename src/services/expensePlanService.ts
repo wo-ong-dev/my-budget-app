@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { ExpensePlan, ExpensePlanDraft, ExpensePlanTotal } from '../types/expensePlan';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = '';
 
 export const expensePlanService = {
   async getPlans(month: string, account?: string): Promise<ExpensePlan[]> {
