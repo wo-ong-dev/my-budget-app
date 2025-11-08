@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSwipe } from "./hooks/useSwipe";
 import LoginScreen from "./components/auth/LoginScreen";
