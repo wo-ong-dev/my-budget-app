@@ -13,6 +13,7 @@ type TransactionFormProps = {
   submitLabel?: string;
   resetAfterSubmit?: boolean;
   quickInputMode?: boolean;
+  onQuickInputModeChange?: (enabled: boolean) => void;
 };
 
 const blankDraft: TransactionDraft = {
@@ -33,6 +34,7 @@ function TransactionForm({
   submitLabel = "기록하기",
   resetAfterSubmit = true,
   quickInputMode = false,
+  onQuickInputModeChange,
 }: TransactionFormProps) {
   const mergedDefaults = { ...blankDraft, ...defaultValues } as TransactionDraft;
 
@@ -98,9 +100,22 @@ function TransactionForm({
   return (
     <form className="transaction-form" onSubmit={handleSubmit}>
       <div className="form-group">
-        <label className="form-label" htmlFor="transaction-date">
-          날짜
-        </label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <label className="form-label" htmlFor="transaction-date" style={{ margin: 0 }}>
+            날짜
+          </label>
+          {onQuickInputModeChange && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', userSelect: 'none' }}>
+              <input
+                type="checkbox"
+                checked={quickInputMode}
+                onChange={(e) => onQuickInputModeChange(e.target.checked)}
+                style={{ cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: '13px', color: 'var(--gray-600)' }}>빠른 입력</span>
+            </label>
+          )}
+        </div>
         <input
           id="transaction-date"
           type="date"

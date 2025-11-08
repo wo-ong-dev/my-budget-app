@@ -262,7 +262,6 @@ function AuthenticatedApp() {
   const initialMonths = useMemo(() => buildRecentMonths(12), []);
   const [availableMonths, setAvailableMonths] = useState<string[]>(initialMonths);
   const [activeTab, setActiveTab] = useState<TabKey>("input");
-  const [previousTab, setPreviousTab] = useState<TabKey>("input");
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [quickInputMode, setQuickInputMode] = useState(false);
   const [filters, setFilters] = useState<TransactionFilterState>(() => ({
@@ -295,7 +294,6 @@ function AuthenticatedApp() {
   const handleSwipeLeft = () => {
     const currentIndex = tabOrder.indexOf(activeTab);
     if (currentIndex < tabOrder.length - 1) {
-      setPreviousTab(activeTab);
       setSlideDirection("left");
       setActiveTab(tabOrder[currentIndex + 1]);
     }
@@ -304,7 +302,6 @@ function AuthenticatedApp() {
   const handleSwipeRight = () => {
     const currentIndex = tabOrder.indexOf(activeTab);
     if (currentIndex > 0) {
-      setPreviousTab(activeTab);
       setSlideDirection("right");
       setActiveTab(tabOrder[currentIndex - 1]);
     }
@@ -639,7 +636,6 @@ function AuthenticatedApp() {
     const currentIndex = tabOrder.indexOf(activeTab);
     const nextIndex = tabOrder.indexOf(key);
 
-    setPreviousTab(activeTab);
     if (nextIndex > currentIndex) {
       setSlideDirection("left");
     } else if (nextIndex < currentIndex) {
@@ -969,17 +965,6 @@ function AuthenticatedApp() {
           {activeTab === "input" ? (
             <>
               {error && <div className="alert alert--error">{error}</div>}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', paddingRight: '10px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', userSelect: 'none' }}>
-                  <input
-                    type="checkbox"
-                    checked={quickInputMode}
-                    onChange={(e) => setQuickInputMode(e.target.checked)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                  <span style={{ fontSize: '14px' }}>빠른 입력 모드</span>
-                </label>
-              </div>
               <TransactionForm
                 accounts={accounts}
                 categories={apiCategories}
@@ -987,6 +972,7 @@ function AuthenticatedApp() {
                 submitting={isSubmitting && !isEditModalOpen}
                 submitLabel="내역 저장"
                 quickInputMode={quickInputMode}
+                onQuickInputModeChange={setQuickInputMode}
               />
             </>
           ) : null}
