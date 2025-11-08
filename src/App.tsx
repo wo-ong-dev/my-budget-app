@@ -802,9 +802,9 @@ function AuthenticatedApp() {
               continue;
             }
 
-            const cells = matches.map(cell =>
-              cell.replace(/^"|"$/g, "").replace(/""/g, '"').trim()
-            );
+            const cells = matches
+              .map(cell => cell.replace(/^"|"$/g, "").replace(/""/g, '"').trim())
+              .filter((_, index) => index % 2 === 0); // Remove comma matches
 
             // 새로운 순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목
             let [dateStr, typeStr, amountStr, memo = "", account = "", category = ""] = cells;
