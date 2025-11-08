@@ -177,8 +177,9 @@ body {
   gap: 4px;
   cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: color 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   min-width: 0; /* 텍스트 줄바꿈 방지 */
+  position: relative;
 }
 
 .tab-navigation__button small {
@@ -192,6 +193,12 @@ body {
 .tab-navigation__button--active {
   color: var(--primary-500);
   border-bottom-color: var(--primary-500);
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0) 100%);
+}
+
+.tab-navigation__button:hover:not(.tab-navigation__button--active) {
+  color: var(--primary-500);
+  background: rgba(16, 185, 129, 0.03);
 }
 
 .tab-panel {
@@ -201,6 +208,9 @@ body {
   height: calc(100vh - 200px); /* 고정 높이로 모든 탭 통일 */
   overflow-y: auto; /* 스크롤 가능 */
   box-sizing: border-box; /* 패딩을 포함한 전체 크기 계산 */
+  opacity: 0;
+  transform: translateX(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease;
 }
 
 .tab-panel--active {
@@ -208,6 +218,38 @@ body {
   flex-direction: column;
   justify-content: flex-start; /* 상단 정렬 */
   gap: 20px; /* 모든 탭에 일관된 간격 적용 */
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.tab-panel--slide-in-left {
+  animation: slideInFromLeft 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+.tab-panel--slide-in-right {
+  animation: slideInFromRight 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .transaction-form,

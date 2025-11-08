@@ -262,6 +262,8 @@ function AuthenticatedApp() {
   const initialMonths = useMemo(() => buildRecentMonths(12), []);
   const [availableMonths, setAvailableMonths] = useState<string[]>(initialMonths);
   const [activeTab, setActiveTab] = useState<TabKey>("input");
+  const [previousTab, setPreviousTab] = useState<TabKey>("input");
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [quickInputMode, setQuickInputMode] = useState(false);
   const [filters, setFilters] = useState<TransactionFilterState>(() => ({
     month: initialMonths[0],
@@ -293,6 +295,8 @@ function AuthenticatedApp() {
   const handleSwipeLeft = () => {
     const currentIndex = tabOrder.indexOf(activeTab);
     if (currentIndex < tabOrder.length - 1) {
+      setPreviousTab(activeTab);
+      setSlideDirection("left");
       setActiveTab(tabOrder[currentIndex + 1]);
     }
   };
@@ -300,6 +304,8 @@ function AuthenticatedApp() {
   const handleSwipeRight = () => {
     const currentIndex = tabOrder.indexOf(activeTab);
     if (currentIndex > 0) {
+      setPreviousTab(activeTab);
+      setSlideDirection("right");
       setActiveTab(tabOrder[currentIndex - 1]);
     }
   };
@@ -465,6 +471,16 @@ function AuthenticatedApp() {
     }
   }, [activeTab, fetchMonthlyComparison]);
 
+  // Clear slide direction after animation completes
+  useEffect(() => {
+    if (slideDirection) {
+      const timer = setTimeout(() => {
+        setSlideDirection(null);
+      }, 300); // Match animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [slideDirection]);
+
   const accounts = useMemo(() => {
     const defaultAccounts = [
       "국민은행",
@@ -620,6 +636,18 @@ function AuthenticatedApp() {
   };
 
   const handleTabChange = (key: TabKey) => {
+    const currentIndex = tabOrder.indexOf(activeTab);
+    const nextIndex = tabOrder.indexOf(key);
+
+    setPreviousTab(activeTab);
+    if (nextIndex > currentIndex) {
+      setSlideDirection("left");
+    } else if (nextIndex < currentIndex) {
+      setSlideDirection("right");
+    } else {
+      setSlideDirection(null);
+    }
+
     setActiveTab(key);
   };
 
@@ -937,7 +965,7 @@ function AuthenticatedApp() {
         />
         <TabNavigation tabs={tabs} activeTab={activeTab} onSelect={handleTabChange} />
 
-        <section className={activeTab === "input" ? "tab-panel tab-panel--active tab-panel--input" : "tab-panel"}>
+        <section className={`tab-panel tab-panel--input ${activeTab === "input" ? "tab-panel--active" : ""} ${activeTab === "input" && slideDirection ? `tab-panel--slide-in-${slideDirection}` : ""}`}>
           {activeTab === "input" ? (
             <>
               {error && <div className="alert alert--error">{error}</div>}
@@ -964,7 +992,7 @@ function AuthenticatedApp() {
           ) : null}
         </section>
 
-        <section className={activeTab === "history" ? "tab-panel tab-panel--active tab-panel--history" : "tab-panel"}>
+        <section className={`tab-panel tab-panel--history ${activeTab === "history" ? "tab-panel--active" : ""} ${activeTab === "history" && slideDirection ? `tab-panel--slide-in-${slideDirection}` : ""}`}>
           {activeTab === "history" ? (
             <div className="history-container">
               {error && <div className="alert alert--error">{error}</div>}
@@ -988,7 +1016,7 @@ function AuthenticatedApp() {
           ) : null}
         </section>
 
-        <section className={activeTab === "summary" ? "tab-panel tab-panel--active tab-panel--summary" : "tab-panel"}>
+        <section className={`tab-panel tab-panel--summary ${activeTab === "summary" ? "tab-panel--active" : ""} ${activeTab === "summary" && slideDirection ? `tab-panel--slide-in-${slideDirection}` : ""}`}>
           {activeTab === "summary" ? (
             <SummaryPanel
               summary={summary}
@@ -1001,7 +1029,7 @@ function AuthenticatedApp() {
           ) : null}
         </section>
 
-        <section className={activeTab === "budget" ? "tab-panel tab-panel--active tab-panel--budget" : "tab-panel"}>
+        <section className={`tab-panel tab-panel--budget ${activeTab === "budget" ? "tab-panel--active" : ""} ${activeTab === "budget" && slideDirection ? `tab-panel--slide-in-${slideDirection}` : ""}`}>
           {activeTab === "budget" ? (
             <BudgetPanel
               budgets={budgets}

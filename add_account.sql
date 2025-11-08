@@ -1,0 +1,2 @@
+ALTER TABLE transactions ADD COLUMN account VARCHAR(100) NULL;
+

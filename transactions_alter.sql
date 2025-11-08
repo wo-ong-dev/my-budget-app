@@ -1,0 +1,3 @@
+ALTER TABLE transactions ADD COLUMN account VARCHAR(100) NULL;
+ALTER TABLE transactions ADD COLUMN category VARCHAR(100) NULL;
+
