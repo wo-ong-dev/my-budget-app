@@ -1,4 +1,6 @@
+import * as XLSX from 'xlsx';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSwipe } from "./hooks/useSwipe";
 import LoginScreen from "./components/auth/LoginScreen";
 import Header from "./components/layout/Header";
 import TabNavigation from "./components/layout/TabNavigation";
@@ -261,6 +263,7 @@ function AuthenticatedApp() {
   const initialMonths = useMemo(() => buildRecentMonths(12), []);
   const [availableMonths, setAvailableMonths] = useState<string[]>(initialMonths);
   const [activeTab, setActiveTab] = useState<TabKey>("input");
+  const [quickInputMode, setQuickInputMode] = useState(false);
   const [filters, setFilters] = useState<TransactionFilterState>(() => ({
     month: initialMonths[0],
     type: "ALL",
@@ -284,6 +287,28 @@ function AuthenticatedApp() {
   const [isBudgetLoading, setBudgetLoading] = useState(false);
 
   const hasLoadedRef = useRef(false);
+
+  // Tab order for swipe navigation
+  const tabOrder: TabKey[] = ["input", "history", "summary", "budget"];
+
+  const handleSwipeLeft = () => {
+    const currentIndex = tabOrder.indexOf(activeTab);
+    if (currentIndex < tabOrder.length - 1) {
+      setActiveTab(tabOrder[currentIndex + 1]);
+    }
+  };
+
+  const handleSwipeRight = () => {
+    const currentIndex = tabOrder.indexOf(activeTab);
+    if (currentIndex > 0) {
+      setActiveTab(tabOrder[currentIndex - 1]);
+    }
+  };
+
+  const swipeHandlers = useSwipe({
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRight,
+  });
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -722,7 +747,7 @@ function AuthenticatedApp() {
     try {
       const input = document.createElement("input");
       input.type = "file";
-      input.accept = ".csv";
+      input.accept = ".csv,.xlsx,.xls";
 
       input.onchange = async (event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
@@ -905,7 +930,7 @@ function AuthenticatedApp() {
 
   return (
     <div className="app-shell">
-      <div className="app-container">
+      <div className="app-container" {...swipeHandlers}>
         <Header
           onClickTitle={() => setActiveTab("input")}
           onExportCSV={handleExportCSV}
@@ -917,12 +942,24 @@ function AuthenticatedApp() {
           {activeTab === "input" ? (
             <>
               {error && <div className="alert alert--error">{error}</div>}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', paddingRight: '10px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', userSelect: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={quickInputMode}
+                    onChange={(e) => setQuickInputMode(e.target.checked)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '14px' }}>빠른 입력 모드</span>
+                </label>
+              </div>
               <TransactionForm
                 accounts={accounts}
                 categories={apiCategories}
                 onSubmit={handleCreate}
                 submitting={isSubmitting && !isEditModalOpen}
                 submitLabel="내역 저장"
+                quickInputMode={quickInputMode}
               />
             </>
           ) : null}

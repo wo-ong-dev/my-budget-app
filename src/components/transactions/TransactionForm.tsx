@@ -12,6 +12,7 @@ type TransactionFormProps = {
   submitting?: boolean;
   submitLabel?: string;
   resetAfterSubmit?: boolean;
+  quickInputMode?: boolean;
 };
 
 const blankDraft: TransactionDraft = {
@@ -31,6 +32,7 @@ function TransactionForm({
   submitting = false,
   submitLabel = "기록하기",
   resetAfterSubmit = true,
+  quickInputMode = false,
 }: TransactionFormProps) {
   const mergedDefaults = { ...blankDraft, ...defaultValues } as TransactionDraft;
 
@@ -76,8 +78,20 @@ function TransactionForm({
     await onSubmit({ ...draft, amount: Math.abs(draft.amount) });
 
     if (resetAfterSubmit) {
-      setDraft(blankDraft);
-      setAmountInput(formatCurrencyInput(blankDraft.amount));
+      if (quickInputMode) {
+        // 빠른 입력 모드: 날짜, 구분, 통장은 유지, 카테고리/금액/메모만 초기화
+        setDraft((prev) => ({
+          ...prev,
+          category: blankDraft.category,
+          amount: 0,
+          memo: "",
+        }));
+        setAmountInput(formatCurrencyInput(0));
+      } else {
+        // 일반 모드: 전체 초기화
+        setDraft(blankDraft);
+        setAmountInput(formatCurrencyInput(blankDraft.amount));
+      }
     }
   };
 
