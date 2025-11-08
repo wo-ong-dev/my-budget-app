@@ -749,13 +749,16 @@ function AuthenticatedApp() {
 
           // 날짜 파싱 헬퍼 함수
           const parseDateFromCSV = (dateStr: string): string => {
+            // 줄바꿈, 공백 등 정리
+            const cleanedDateStr = dateStr.replace(/[\r\n\t]/g, ' ').trim();
+
             // "2025-05-01" 형식은 그대로 반환
-            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              return dateStr;
+            if (cleanedDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              return cleanedDateStr;
             }
 
             // "5월 1일" 또는 "5월 1일 (목)" 형식 파싱 (요일 제거)
-            const match = dateStr.match(/(\d+)월\s*(\d+)일/);
+            const match = cleanedDateStr.match(/(\d+)월\s*(\d+)일/);
             if (match) {
               const monthNum = parseInt(match[1]);
               const dayNum = parseInt(match[2]);
