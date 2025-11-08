@@ -233,12 +233,17 @@ jobs:
             npm install --production || true
 
             echo "🗄️  Running database migrations..."
-            if [ -f add_category_type.sql ]; then
-              echo "Attempting to run migration..."
-              mysql -h "${{ secrets.DB_HOST }}" -u "${{ secrets.DB_USER }}" -p"${{ secrets.DB_PASSWORD }}" "${{ secrets.DB_NAME }}" < add_category_type.sql 2>&1 || echo "⚠️  Migration might have already been applied or credentials issue"
-              echo "Migration step completed"
+            if [ -d migrations ]; then
+              echo "Found migrations directory"
+              for migration in migrations/*.sql; do
+                if [ -f "$migration" ]; then
+                  echo "Running migration: $migration"
+                  mysql -h "${{ secrets.DB_HOST }}" -u "${{ secrets.DB_USER }}" -p"${{ secrets.DB_PASSWORD }}" "${{ secrets.DB_NAME }}" < "$migration" 2>&1 || echo "⚠️  Migration $(basename $migration) might have already been applied"
+                fi
+              done
+              echo "All migrations completed"
             else
-              echo "⚠️  Migration file not found"
+              echo "⚠️  Migrations directory not found"
             fi
 
             echo "🔄 Restarting backend service..."
