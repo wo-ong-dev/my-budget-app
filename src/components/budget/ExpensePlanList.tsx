@@ -96,7 +96,11 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
     setEditValue(numeric.toLocaleString('ko-KR'));
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number, name: string) => {
+    const confirmed = window.confirm(`"${name}"을(를) 삭제하시겠습니까?`);
+    if (!confirmed) {
+      return;
+    }
     try {
       await expensePlanService.deletePlan(id);
       await loadPlans();
@@ -267,7 +271,7 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
                   </>
                 )}
                 <button
-                  onClick={() => handleDelete(plan.id)}
+                  onClick={() => handleDelete(plan.id, plan.name)}
                   style={{
                     padding: '4px 8px',
                     backgroundColor: '#f44336',
