@@ -1627,3 +1627,358 @@ body {
   }
 }
 
+
+/* Expense Plan Styles */
+.expense-plan-section {
+  margin-top: 32px;
+}
+
+.expense-plan-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0 0 16px 0;
+  padding: 0 4px;
+}
+
+.expense-plan-account {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+  background: #fff;
+}
+
+.expense-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.expense-plan-account-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0;
+}
+
+.expense-plan-totals {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.expense-plan-total-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.expense-plan-total-label {
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.expense-plan-total-value {
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.expense-plan-total-item--checked .expense-plan-total-value {
+  color: var(--gray-600);
+}
+
+.expense-plan-total-item--remaining .expense-plan-total-value {
+  color: var(--primary-600);
+}
+
+.expense-plan-list {
+  padding: 8px 12px;
+}
+
+.expense-plan-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--gray-100);
+  gap: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.expense-plan-item:last-child {
+  border-bottom: none;
+}
+
+.expense-plan-item:hover {
+  background: rgba(16, 185, 129, 0.02);
+}
+
+.expense-plan-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary-500);
+  flex-shrink: 0;
+}
+
+.expense-plan-name-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.expense-plan-name {
+  flex: 1;
+  font-size: 14px;
+  color: var(--gray-800);
+  transition: all 0.2s ease;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expense-plan-name--checked {
+  text-decoration: line-through;
+  color: var(--gray-500);
+  opacity: 0.6;
+}
+
+.expense-plan-edit-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1.5px solid var(--primary-500);
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  transition: all 0.2s ease;
+  min-width: 0;
+}
+
+.expense-plan-edit-input:focus {
+  border-color: var(--primary-600);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.expense-plan-edit-input--amount {
+  flex: initial;
+  width: 110px;
+  text-align: right;
+}
+
+.expense-plan-amount-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.expense-plan-amount {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-800);
+  white-space: nowrap;
+}
+
+.expense-plan-edit-btn {
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.expense-plan-edit-btn:hover {
+  background: rgba(16, 185, 129, 0.08);
+  transform: scale(1.1);
+}
+
+.expense-plan-save-btn,
+.expense-plan-cancel-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.expense-plan-save-btn {
+  background: var(--primary-500);
+  color: white;
+}
+
+.expense-plan-save-btn:hover {
+  background: var(--primary-600);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.expense-plan-cancel-btn {
+  background: var(--gray-300);
+  color: var(--gray-700);
+}
+
+.expense-plan-cancel-btn:hover {
+  background: var(--gray-400);
+}
+
+.expense-plan-delete-btn {
+  padding: 6px 12px;
+  background: var(--danger-500);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.expense-plan-delete-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.expense-plan-add-btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  background: transparent;
+  border: 2px dashed var(--gray-300);
+  border-radius: 10px;
+  color: var(--gray-600);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.expense-plan-add-btn:hover {
+  border-color: var(--primary-500);
+  color: var(--primary-500);
+  background: rgba(16, 185, 129, 0.02);
+}
+
+.expense-plan-add-form {
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 10px;
+  margin-top: 12px;
+  border: 1px solid var(--gray-200);
+}
+
+.expense-plan-form-group {
+  margin-bottom: 16px;
+}
+
+.expense-plan-form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.expense-plan-form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.expense-plan-form-input,
+.expense-plan-form-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.expense-plan-form-input:focus,
+.expense-plan-form-select:focus {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.expense-plan-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.expense-plan-form-submit,
+.expense-plan-form-cancel {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.expense-plan-form-submit {
+  background: var(--success-500);
+  color: white;
+}
+
+.expense-plan-form-submit:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.expense-plan-form-cancel {
+  background: var(--gray-300);
+  color: var(--gray-700);
+}
+
+.expense-plan-form-cancel:hover {
+  background: var(--gray-400);
+}
+
+@media (max-width: 768px) {
+  .expense-plan-totals {
+    font-size: 12px;
+    gap: 12px;
+  }
+
+  .expense-plan-item {
+    padding: 10px 4px;
+    gap: 8px;
+  }
+
+  .expense-plan-name {
+    font-size: 13px;
+  }
+
+  .expense-plan-amount {
+    font-size: 13px;
+  }
+
+  .expense-plan-edit-input--amount {
+    width: 90px;
+  }
+}

@@ -167,113 +167,68 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
   }, {} as Record<string, ExpensePlan[]>);
 
   return (
-    <div style={{ marginTop: '20px' }}>
-      <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>월간 지출 계획</h3>
+    <div className="expense-plan-section">
+      <h3 className="expense-plan-title">월간 지출 계획</h3>
 
       {accounts.map(account => (
-        <div key={account} style={{ marginBottom: '20px' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '10px',
-            padding: '10px',
-            backgroundColor: '#f5f5f5',
-            borderRadius: '5px'
-          }}>
-            <h4 style={{ fontSize: '16px', fontWeight: 'bold' }}>{account}</h4>
-            <div style={{ fontSize: '14px' }}>
-              <span>예정: {totals[account]?.total.toLocaleString() || 0}원</span>
-              <span style={{ marginLeft: '10px', color: '#666' }}>
-                체크됨: {totals[account]?.checked.toLocaleString() || 0}원
-              </span>
-              <span style={{ marginLeft: '10px', color: '#1976d2', fontWeight: 'bold' }}>
-                잔여: {totals[account]?.remaining.toLocaleString() || 0}원
-              </span>
+        <div key={account} className="expense-plan-account">
+          <div className="expense-plan-header">
+            <h4 className="expense-plan-account-name">{account}</h4>
+            <div className="expense-plan-totals">
+              <div className="expense-plan-total-item">
+                <span className="expense-plan-total-label">예정:</span>
+                <span className="expense-plan-total-value">{totals[account]?.total.toLocaleString() || 0}원</span>
+              </div>
+              <div className="expense-plan-total-item expense-plan-total-item--checked">
+                <span className="expense-plan-total-label">체크됨:</span>
+                <span className="expense-plan-total-value">{totals[account]?.checked.toLocaleString() || 0}원</span>
+              </div>
+              <div className="expense-plan-total-item expense-plan-total-item--remaining">
+                <span className="expense-plan-total-label">잔여:</span>
+                <span className="expense-plan-total-value">{totals[account]?.remaining.toLocaleString() || 0}원</span>
+              </div>
             </div>
           </div>
 
-          <div style={{ marginLeft: '10px' }}>
+          <div className="expense-plan-list">
             {groupedPlans[account]?.map(plan => (
-              <div
-                key={plan.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '8px 0',
-                  borderBottom: '1px solid #eee'
-                }}
-              >
+              <div key={plan.id} className="expense-plan-item">
                 <input
                   type="checkbox"
+                  className="expense-plan-checkbox"
                   checked={plan.is_checked}
                   onChange={() => handleCheck(plan)}
-                  style={{ marginRight: '10px', cursor: 'pointer' }}
                 />
                 {editingId === plan.id && editingField === 'name' ? (
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <div className="expense-plan-name-section">
                     <input
                       type="text"
+                      className="expense-plan-edit-input"
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
                       autoFocus
-                      style={{
-                        flex: 1,
-                        padding: '4px 8px',
-                        border: '1px solid #10b981',
-                        borderRadius: '3px'
-                      }}
                     />
                     <button
+                      className="expense-plan-save-btn"
                       onClick={() => handleSaveEdit(plan)}
-                      style={{
-                        padding: '4px 8px',
-                        backgroundColor: '#10b981',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
                     >
                       ✓
                     </button>
                     <button
+                      className="expense-plan-cancel-btn"
                       onClick={handleCancelEdit}
-                      style={{
-                        padding: '4px 8px',
-                        backgroundColor: '#999',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
                     >
                       ✕
                     </button>
                   </div>
                 ) : (
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span
-                      style={{
-                        flex: 1,
-                        textDecoration: plan.is_checked ? 'line-through' : 'none',
-                        color: plan.is_checked ? '#999' : '#000',
-                        opacity: plan.is_checked ? 0.6 : 1
-                      }}
-                    >
+                  <div className="expense-plan-name-section">
+                    <span className={`expense-plan-name ${plan.is_checked ? 'expense-plan-name--checked' : ''}`}>
                       {plan.name} ({plan.due_day}일)
                     </span>
                     <button
+                      className="expense-plan-edit-btn"
                       onClick={() => handleStartEditName(plan)}
-                      style={{
-                        padding: '4px 8px',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '14px'
-                      }}
                       title="항목명 수정"
                     >
                       ✏️
@@ -281,83 +236,43 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
                   </div>
                 )}
                 {editingId === plan.id && editingField === 'amount' ? (
-                  <>
+                  <div className="expense-plan-amount-section">
                     <input
                       type="text"
                       inputMode="numeric"
+                      className="expense-plan-edit-input expense-plan-edit-input--amount"
                       value={editValue}
                       onChange={(e) => handleEditInputChange(e.target.value)}
                       autoFocus
-                      style={{
-                        width: '100px',
-                        marginRight: '5px',
-                        padding: '4px 8px',
-                        border: '1px solid #10b981',
-                        borderRadius: '3px',
-                        textAlign: 'right'
-                      }}
                     />
                     <button
+                      className="expense-plan-save-btn"
                       onClick={() => handleSaveEdit(plan)}
-                      style={{
-                        padding: '4px 8px',
-                        backgroundColor: '#10b981',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        marginRight: '5px'
-                      }}
                     >
                       ✓
                     </button>
                     <button
+                      className="expense-plan-cancel-btn"
                       onClick={handleCancelEdit}
-                      style={{
-                        padding: '4px 8px',
-                        backgroundColor: '#999',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        marginRight: '10px'
-                      }}
                     >
                       ✕
                     </button>
-                  </>
+                  </div>
                 ) : (
-                  <>
-                    <span style={{ marginRight: '5px' }}>{plan.amount.toLocaleString('ko-KR')}원</span>
+                  <div className="expense-plan-amount-section">
+                    <span className="expense-plan-amount">{plan.amount.toLocaleString('ko-KR')}원</span>
                     <button
+                      className="expense-plan-edit-btn"
                       onClick={() => handleStartEditAmount(plan)}
-                      style={{
-                        padding: '4px 8px',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        marginRight: '10px'
-                      }}
                       title="금액 수정"
                     >
                       ✏️
                     </button>
-                  </>
+                  </div>
                 )}
                 <button
+                  className="expense-plan-delete-btn"
                   onClick={() => handleDelete(plan.id, plan.name)}
-                  style={{
-                    padding: '4px 8px',
-                    backgroundColor: '#f44336',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    fontSize: '12px'
-                  }}
                 >
                   삭제
                 </button>
@@ -369,96 +284,67 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
 
       {!isAdding ? (
         <button
+          className="expense-plan-add-btn"
           onClick={() => setIsAdding(true)}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: '#1976d2',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            marginTop: '10px'
-          }}
         >
           + 지출 계획 추가
         </button>
       ) : (
-        <div style={{
-          padding: '15px',
-          backgroundColor: '#f9f9f9',
-          borderRadius: '5px',
-          marginTop: '10px'
-        }}>
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>통장:</label>
+        <div className="expense-plan-add-form">
+          <div className="expense-plan-form-group">
+            <label className="expense-plan-form-label">통장:</label>
             <select
+              className="expense-plan-form-select"
               value={newPlan.account}
               onChange={(e) => setNewPlan({ ...newPlan, account: e.target.value })}
-              style={{ width: '100%', padding: '8px', borderRadius: '3px', border: '1px solid #ddd' }}
             >
               {accounts.map(acc => (
                 <option key={acc} value={acc}>{acc}</option>
               ))}
             </select>
           </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>항목명:</label>
+          <div className="expense-plan-form-group">
+            <label className="expense-plan-form-label">항목명:</label>
             <input
               type="text"
+              className="expense-plan-form-input"
               value={newPlan.name}
               onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
-              style={{ width: '100%', padding: '8px', borderRadius: '3px', border: '1px solid #ddd' }}
               placeholder="예: 여행계 1"
             />
           </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>금액:</label>
+          <div className="expense-plan-form-group">
+            <label className="expense-plan-form-label">금액:</label>
             <input
               type="text"
               inputMode="numeric"
+              className="expense-plan-form-input"
               value={newAmountInput}
               onChange={(e) => handleNewAmountChange(e.target.value)}
-              style={{ width: '100%', padding: '8px', borderRadius: '3px', border: '1px solid #ddd' }}
               placeholder="0"
             />
           </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>지출일:</label>
+          <div className="expense-plan-form-group">
+            <label className="expense-plan-form-label">지출일:</label>
             <input
               type="number"
+              className="expense-plan-form-input"
               value={newPlan.due_day}
               onChange={(e) => setNewPlan({ ...newPlan, due_day: parseInt(e.target.value) || 1 })}
-              style={{ width: '100%', padding: '8px', borderRadius: '3px', border: '1px solid #ddd' }}
               min="1"
               max="31"
             />
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div className="expense-plan-form-actions">
             <button
+              className="expense-plan-form-submit"
               onClick={handleAdd}
-              style={{
-                flex: 1,
-                padding: '8px',
-                backgroundColor: '#4caf50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer'
-              }}
             >
               추가
             </button>
             <button
+              className="expense-plan-form-cancel"
               onClick={() => setIsAdding(false)}
-              style={{
-                flex: 1,
-                padding: '8px',
-                backgroundColor: '#999',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer'
-              }}
             >
               취소
             </button>
