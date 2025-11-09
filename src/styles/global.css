@@ -1704,10 +1704,45 @@ body {
 .expense-plan-item {
   display: flex;
   align-items: center;
-  padding: 12px 8px;
+  padding: 12px 8px 12px 16px;
   border-bottom: 1px solid var(--gray-100);
+  border-left: 4px solid var(--primary-500);
   gap: 12px;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+.expense-plan-item--국민은행 {
+  border-left-color: #4263eb;
+  background: rgba(66, 99, 235, 0.02);
+}
+
+.expense-plan-item--신용카드 {
+  border-left-color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.02);
+}
+
+.expense-plan-item--토스뱅크 {
+  border-left-color: #0064ff;
+  background: rgba(0, 100, 255, 0.02);
+}
+
+.expense-plan-item--카카오페이 {
+  border-left-color: #fee500;
+  background: rgba(254, 229, 0, 0.05);
+}
+
+.expense-plan-item--카카오뱅크 {
+  border-left-color: #ffeb00;
+  background: rgba(255, 235, 0, 0.05);
+}
+
+.expense-plan-item--우리은행 {
+  border-left-color: #009591;
+  background: rgba(0, 149, 145, 0.02);
+}
+
+.expense-plan-item--checked {
+  opacity: 0.6;
 }
 
 .expense-plan-item:last-child {

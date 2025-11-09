@@ -192,7 +192,7 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
 
           <div className="expense-plan-list">
             {groupedPlans[account]?.map(plan => (
-              <div key={plan.id} className="expense-plan-item">
+              <div key={plan.id} className={`expense-plan-item expense-plan-item--${plan.account}${plan.is_checked ? ' expense-plan-item--checked' : ''}`}>
                 <input
                   type="checkbox"
                   className="expense-plan-checkbox"
