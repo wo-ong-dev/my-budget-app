@@ -11,6 +11,8 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
   const [plans, setPlans] = useState<ExpensePlan[]>([]);
   const [totals, setTotals] = useState<Record<string, { total: number; checked: number; remaining: number }>>({});
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState('');
   const [newPlan, setNewPlan] = useState<ExpensePlanDraft>({
     account: accounts[0] || '',
     month,
@@ -18,6 +20,7 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
     amount: 0,
     due_day: 1
   });
+  const [newAmountInput, setNewAmountInput] = useState('');
 
   useEffect(() => {
     loadPlans();
@@ -58,14 +61,39 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
     }
   };
 
-  const handleAmountChange = async (plan: ExpensePlan, newAmount: number) => {
+  const handleStartEdit = (plan: ExpensePlan) => {
+    setEditingId(plan.id);
+    setEditValue(plan.amount.toLocaleString('ko-KR'));
+  };
+
+  const handleSaveEdit = async (plan: ExpensePlan) => {
     try {
-      await expensePlanService.updatePlan(plan.id, { amount: newAmount });
-      await loadPlans();
-      await loadTotals();
+      const numericValue = parseFloat(editValue.replace(/,/g, ''));
+      if (!isNaN(numericValue) && numericValue >= 0) {
+        await expensePlanService.updatePlan(plan.id, { amount: numericValue });
+        await loadPlans();
+        await loadTotals();
+      }
+      setEditingId(null);
+      setEditValue('');
     } catch (error) {
       console.error('금액 변경 실패:', error);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  const handleEditInputChange = (value: string) => {
+    const cleaned = value.replace(/[^\d]/g, '');
+    if (cleaned === '') {
+      setEditValue('');
+      return;
+    }
+    const numeric = parseInt(cleaned, 10);
+    setEditValue(numeric.toLocaleString('ko-KR'));
   };
 
   const handleDelete = async (id: number) => {
@@ -89,11 +117,24 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
         amount: 0,
         due_day: 1
       });
+      setNewAmountInput('');
       await loadPlans();
       await loadTotals();
     } catch (error) {
       console.error('추가 실패:', error);
     }
+  };
+
+  const handleNewAmountChange = (value: string) => {
+    const cleaned = value.replace(/[^\d]/g, '');
+    if (cleaned === '') {
+      setNewAmountInput('');
+      setNewPlan({ ...newPlan, amount: 0 });
+      return;
+    }
+    const numeric = parseInt(cleaned, 10);
+    setNewAmountInput(numeric.toLocaleString('ko-KR'));
+    setNewPlan({ ...newPlan, amount: numeric });
   };
 
   const groupedPlans = plans.reduce((acc, plan) => {
@@ -158,20 +199,73 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
                 >
                   {plan.name} ({plan.due_day}일)
                 </span>
-                <input
-                  type="number"
-                  value={plan.amount}
-                  onChange={(e) => handleAmountChange(plan, parseInt(e.target.value) || 0)}
-                  style={{
-                    width: '100px',
-                    marginRight: '10px',
-                    padding: '4px 8px',
-                    border: '1px solid #ddd',
-                    borderRadius: '3px',
-                    textAlign: 'right'
-                  }}
-                />
-                <span style={{ marginRight: '10px' }}>원</span>
+                {editingId === plan.id ? (
+                  <>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={editValue}
+                      onChange={(e) => handleEditInputChange(e.target.value)}
+                      autoFocus
+                      style={{
+                        width: '100px',
+                        marginRight: '5px',
+                        padding: '4px 8px',
+                        border: '1px solid #10b981',
+                        borderRadius: '3px',
+                        textAlign: 'right'
+                      }}
+                    />
+                    <button
+                      onClick={() => handleSaveEdit(plan)}
+                      style={{
+                        padding: '4px 8px',
+                        backgroundColor: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        marginRight: '5px'
+                      }}
+                    >
+                      ✓
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      style={{
+                        padding: '4px 8px',
+                        backgroundColor: '#999',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        marginRight: '10px'
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ marginRight: '5px' }}>{plan.amount.toLocaleString('ko-KR')}원</span>
+                    <button
+                      onClick={() => handleStartEdit(plan)}
+                      style={{
+                        padding: '4px 8px',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        marginRight: '10px'
+                      }}
+                      title="수정"
+                    >
+                      ✏️
+                    </button>
+                  </>
+                )}
                 <button
                   onClick={() => handleDelete(plan.id)}
                   style={{
@@ -239,10 +333,12 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
           <div style={{ marginBottom: '10px' }}>
             <label style={{ display: 'block', marginBottom: '5px' }}>금액:</label>
             <input
-              type="number"
-              value={newPlan.amount}
-              onChange={(e) => setNewPlan({ ...newPlan, amount: parseInt(e.target.value) || 0 })}
+              type="text"
+              inputMode="numeric"
+              value={newAmountInput}
+              onChange={(e) => handleNewAmountChange(e.target.value)}
               style={{ width: '100%', padding: '8px', borderRadius: '3px', border: '1px solid #ddd' }}
+              placeholder="0"
             />
           </div>
           <div style={{ marginBottom: '10px' }}>

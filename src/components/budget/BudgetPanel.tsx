@@ -61,16 +61,27 @@ function BudgetPanel({
 
   const handleEdit = (id: number, currentAmount: number) => {
     setEditingId(id);
-    setEditValue(currentAmount.toString());
+    setEditValue(currentAmount.toLocaleString('ko-KR'));
   };
 
   const handleSaveEdit = (id: number) => {
-    const amount = parseFloat(editValue);
-    if (!isNaN(amount) && amount > 0 && onUpdateBudget) {
-      onUpdateBudget(id, amount);
+    const numericValue = parseFloat(editValue.replace(/,/g, ''));
+    if (!isNaN(numericValue) && numericValue > 0 && onUpdateBudget) {
+      onUpdateBudget(id, numericValue);
     }
     setEditingId(null);
     setEditValue("");
+  };
+
+  const handleEditInputChange = (value: string) => {
+    // 숫자와 쉼표만 허용
+    const cleaned = value.replace(/[^\d]/g, '');
+    if (cleaned === '') {
+      setEditValue('');
+      return;
+    }
+    const numeric = parseInt(cleaned, 10);
+    setEditValue(numeric.toLocaleString('ko-KR'));
   };
 
   const handleCancelEdit = () => {
@@ -79,13 +90,24 @@ function BudgetPanel({
   };
 
   const handleAddBudget = () => {
-    const amount = parseFloat(newAmount);
-    if (newAccount && !isNaN(amount) && amount > 0 && onAddBudget && currentMonth) {
-      onAddBudget(newAccount, currentMonth, amount);
+    const numericValue = parseFloat(newAmount.replace(/,/g, ''));
+    if (newAccount && !isNaN(numericValue) && numericValue > 0 && onAddBudget && currentMonth) {
+      onAddBudget(newAccount, currentMonth, numericValue);
       setIsAdding(false);
       setNewAccount("");
       setNewAmount("");
     }
+  };
+
+  const handleAddInputChange = (value: string) => {
+    // 숫자와 쉼표만 허용
+    const cleaned = value.replace(/[^\d]/g, '');
+    if (cleaned === '') {
+      setNewAmount('');
+      return;
+    }
+    const numeric = parseInt(cleaned, 10);
+    setNewAmount(numeric.toLocaleString('ko-KR'));
   };
 
   const handleCancelAdd = () => {
@@ -201,10 +223,11 @@ function BudgetPanel({
                   {editingId === budget.id ? (
                     <div className="budget-edit">
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         className="budget-edit__input"
                         value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
+                        onChange={(e) => handleEditInputChange(e.target.value)}
                         autoFocus
                       />
                       <button
@@ -292,11 +315,12 @@ function BudgetPanel({
             </div>
             <div className="budget-col budget-col--target">
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 className="budget-add__input"
                 placeholder="목표금액"
                 value={newAmount}
-                onChange={(e) => setNewAmount(e.target.value)}
+                onChange={(e) => handleAddInputChange(e.target.value)}
               />
             </div>
             <div className="budget-col budget-col--used">-</div>
