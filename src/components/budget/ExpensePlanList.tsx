@@ -12,6 +12,7 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
   const [totals, setTotals] = useState<Record<string, { total: number; checked: number; remaining: number }>>({});
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingField, setEditingField] = useState<'name' | 'amount' | null>(null);
   const [editValue, setEditValue] = useState('');
   const [newPlan, setNewPlan] = useState<ExpensePlanDraft>({
     account: accounts[0] || '',
@@ -61,28 +62,44 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
     }
   };
 
-  const handleStartEdit = (plan: ExpensePlan) => {
+  const handleStartEditName = (plan: ExpensePlan) => {
     setEditingId(plan.id);
+    setEditingField('name');
+    setEditValue(plan.name);
+  };
+
+  const handleStartEditAmount = (plan: ExpensePlan) => {
+    setEditingId(plan.id);
+    setEditingField('amount');
     setEditValue(plan.amount.toLocaleString('ko-KR'));
   };
 
   const handleSaveEdit = async (plan: ExpensePlan) => {
     try {
-      const numericValue = parseFloat(editValue.replace(/,/g, ''));
-      if (!isNaN(numericValue) && numericValue >= 0) {
-        await expensePlanService.updatePlan(plan.id, { amount: numericValue });
-        await loadPlans();
-        await loadTotals();
+      if (editingField === 'name') {
+        if (editValue.trim()) {
+          await expensePlanService.updatePlan(plan.id, { name: editValue.trim() });
+          await loadPlans();
+        }
+      } else if (editingField === 'amount') {
+        const numericValue = parseFloat(editValue.replace(/,/g, ''));
+        if (!isNaN(numericValue) && numericValue >= 0) {
+          await expensePlanService.updatePlan(plan.id, { amount: numericValue });
+          await loadPlans();
+          await loadTotals();
+        }
       }
       setEditingId(null);
+      setEditingField(null);
       setEditValue('');
     } catch (error) {
-      console.error('금액 변경 실패:', error);
+      console.error('수정 실패:', error);
     }
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
+    setEditingField(null);
     setEditValue('');
   };
 
@@ -193,17 +210,77 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
                   onChange={() => handleCheck(plan)}
                   style={{ marginRight: '10px', cursor: 'pointer' }}
                 />
-                <span
-                  style={{
-                    flex: 1,
-                    textDecoration: plan.is_checked ? 'line-through' : 'none',
-                    color: plan.is_checked ? '#999' : '#000',
-                    opacity: plan.is_checked ? 0.6 : 1
-                  }}
-                >
-                  {plan.name} ({plan.due_day}일)
-                </span>
-                {editingId === plan.id ? (
+                {editingId === plan.id && editingField === 'name' ? (
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <input
+                      type="text"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      autoFocus
+                      style={{
+                        flex: 1,
+                        padding: '4px 8px',
+                        border: '1px solid #10b981',
+                        borderRadius: '3px'
+                      }}
+                    />
+                    <button
+                      onClick={() => handleSaveEdit(plan)}
+                      style={{
+                        padding: '4px 8px',
+                        backgroundColor: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      ✓
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      style={{
+                        padding: '4px 8px',
+                        backgroundColor: '#999',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span
+                      style={{
+                        flex: 1,
+                        textDecoration: plan.is_checked ? 'line-through' : 'none',
+                        color: plan.is_checked ? '#999' : '#000',
+                        opacity: plan.is_checked ? 0.6 : 1
+                      }}
+                    >
+                      {plan.name} ({plan.due_day}일)
+                    </span>
+                    <button
+                      onClick={() => handleStartEditName(plan)}
+                      style={{
+                        padding: '4px 8px',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '14px'
+                      }}
+                      title="항목명 수정"
+                    >
+                      ✏️
+                    </button>
+                  </div>
+                )}
+                {editingId === plan.id && editingField === 'amount' ? (
                   <>
                     <input
                       type="text"
@@ -255,7 +332,7 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
                   <>
                     <span style={{ marginRight: '5px' }}>{plan.amount.toLocaleString('ko-KR')}원</span>
                     <button
-                      onClick={() => handleStartEdit(plan)}
+                      onClick={() => handleStartEditAmount(plan)}
                       style={{
                         padding: '4px 8px',
                         backgroundColor: 'transparent',
@@ -264,7 +341,7 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
                         fontSize: '14px',
                         marginRight: '10px'
                       }}
-                      title="수정"
+                      title="금액 수정"
                     >
                       ✏️
                     </button>
