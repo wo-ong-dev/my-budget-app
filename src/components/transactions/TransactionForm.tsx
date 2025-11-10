@@ -98,24 +98,25 @@ function TransactionForm({
   };
 
   return (
-    <form className="transaction-form" onSubmit={handleSubmit}>
-      <div className="form-group">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <label className="form-label" htmlFor="transaction-date" style={{ margin: 0 }}>
-            날짜
-          </label>
-          {onQuickInputModeChange && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', userSelect: 'none' }}>
-              <input
-                type="checkbox"
-                checked={quickInputMode}
-                onChange={(e) => onQuickInputModeChange(e.target.checked)}
-                style={{ cursor: 'pointer' }}
-              />
-              <span style={{ fontSize: '13px', color: 'var(--gray-600)' }}>빠른 입력</span>
+    <div className="stats-card">
+      <form className="transaction-form" onSubmit={handleSubmit}>
+        <div className="form-group">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <label className="form-label" htmlFor="transaction-date" style={{ margin: 0 }}>
+              날짜
             </label>
-          )}
-        </div>
+            {onQuickInputModeChange && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', userSelect: 'none' }}>
+                <input
+                  type="checkbox"
+                  checked={quickInputMode}
+                  onChange={(e) => onQuickInputModeChange(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '13px', color: 'var(--gray-600)' }}>빠른 입력</span>
+              </label>
+            )}
+          </div>
         <input
           id="transaction-date"
           type="date"
@@ -223,7 +224,8 @@ function TransactionForm({
       <button type="submit" className="btn btn-primary" disabled={submitting}>
         {submitting ? "저장 중..." : submitLabel}
       </button>
-    </form>
+      </form>
+    </div>
   );
 }
 
