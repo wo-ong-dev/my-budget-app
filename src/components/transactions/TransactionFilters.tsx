@@ -41,8 +41,9 @@ function TransactionFilters({ filters, onChange, months, accounts, categories }:
   };
 
   return (
-    <section className="filters-panel">
-      <div className="form-group">
+    <div className="stats-card">
+      <section className="filters-panel">
+        <div className="form-group">
         <label className="form-label" htmlFor="filter-month">
           조회 월
         </label>
@@ -153,8 +154,9 @@ function TransactionFilters({ filters, onChange, months, accounts, categories }:
           value={filters.keyword}
           onChange={(event) => update({ keyword: event.target.value })}
         />
-      </div>
-    </section>
+        </div>
+      </section>
+    </div>
   );
 }
 
