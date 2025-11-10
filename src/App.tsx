@@ -24,6 +24,7 @@ import {
   createTransaction,
   deleteTransaction,
   fetchTransactionsByMonth,
+  fetchTransactionsByDateRange,
   updateTransaction,
   fetchAccounts,
   fetchCategoriesWithId,
@@ -898,17 +899,24 @@ function AuthenticatedApp() {
             throw new Error("가져올 수 있는 데이터가 없어요.");
           }
 
-          // 기존 거래 내역 가져오기 (중복 체크용)
-          const existingTransactions = transactions;
+          // CSV 데이터의 날짜 범위 파악
+          const dates = drafts.map(d => d.date).sort();
+          const minDate = dates[0];
+          const maxDate = dates[dates.length - 1];
 
-          // 중복 체크 함수
+          // 서버에서 해당 기간의 모든 거래 내역 가져오기 (중복 체크용)
+          console.log(`중복 체크를 위해 ${minDate} ~ ${maxDate} 기간의 데이터를 서버에서 가져옵니다.`);
+          const existingTransactions = await fetchTransactionsByDateRange(minDate, maxDate);
+
+          // 중복 체크 함수 (날짜, 구분, 금액, 계좌, 카테고리, 메모 모두 확인)
           const isDuplicate = (draft: TransactionDraft): boolean => {
             return existingTransactions.some(tx =>
               tx.date === draft.date &&
               tx.type === draft.type &&
               tx.amount === draft.amount &&
               (tx.account ?? "") === (draft.account ?? "") &&
-              (tx.category ?? "") === (draft.category ?? "")
+              (tx.category ?? "") === (draft.category ?? "") &&
+              (tx.memo ?? "") === (draft.memo ?? "")
             );
           };
 

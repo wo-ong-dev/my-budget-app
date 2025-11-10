@@ -55,6 +55,20 @@ export async function fetchTransactionsByMonth(month: string): Promise<Transacti
   return rows.map(normalizeTransaction);
 }
 
+export async function fetchTransactionsByDateRange(fromDate: string, toDate: string): Promise<Transaction[]> {
+  const response = await httpClient.get("/transactions", { params: { from: fromDate, to: toDate } });
+  const { data } = response;
+  ensureOk(data, "거래 내역을 불러오지 못했어요.");
+
+  const rows: BackendTransaction[] = Array.isArray(data?.rows)
+    ? data.rows
+    : Array.isArray(data)
+      ? (data as BackendTransaction[])
+      : [];
+
+  return rows.map(normalizeTransaction);
+}
+
 export async function createTransaction(payload: TransactionDraft): Promise<void> {
   const body = {
     date: payload.date,
