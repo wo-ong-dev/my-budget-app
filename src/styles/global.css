@@ -488,12 +488,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #fff;
-  border: 1px solid var(--gray-200);
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-500) 100%);
   padding: 20px;
   border-radius: 18px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.25);
   max-width: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -509,7 +508,7 @@ body {
 
 .history-summary-item--balance {
   padding-top: 12px;
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .history-summary-icon {
@@ -527,14 +526,14 @@ body {
 
 .history-summary-label {
   font-size: 15px;
-  color: var(--gray-600);
+  color: rgba(255, 255, 255, 0.95);
   font-weight: 600;
   flex-shrink: 0;
 }
 
 .history-summary-amount {
   font-size: 18px;
-  color: var(--gray-900);
+  color: #fff;
   font-weight: 700;
   text-align: right;
 }
