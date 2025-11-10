@@ -69,10 +69,6 @@ function LoginScreen({ onLogin }: LoginScreenProps) {
             로그인
           </button>
         </form>
-
-        <div className="login-hint">
-          기본 비밀번호: 250222
-        </div>
       </div>
     </div>
   );
