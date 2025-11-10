@@ -12,7 +12,7 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
   const [totals, setTotals] = useState<Record<string, { total: number; checked: number; remaining: number }>>({});
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingField, setEditingField] = useState<'name' | 'amount' | null>(null);
+  const [editingField, setEditingField] = useState<'name' | 'amount' | 'due_day' | null>(null);
   const [editValue, setEditValue] = useState('');
   const [newPlan, setNewPlan] = useState<ExpensePlanDraft>({
     account: accounts[0] || '',
@@ -74,6 +74,12 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
     setEditValue(plan.amount.toLocaleString('ko-KR'));
   };
 
+  const handleStartEditDueDay = (plan: ExpensePlan) => {
+    setEditingId(plan.id);
+    setEditingField('due_day');
+    setEditValue(plan.due_day.toString());
+  };
+
   const handleSaveEdit = async (plan: ExpensePlan) => {
     try {
       if (editingField === 'name') {
@@ -87,6 +93,12 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
           await expensePlanService.updatePlan(plan.id, { amount: numericValue });
           await loadPlans();
           await loadTotals();
+        }
+      } else if (editingField === 'due_day') {
+        const dueDay = parseInt(editValue, 10);
+        if (!isNaN(dueDay) && dueDay >= 1 && dueDay <= 31) {
+          await expensePlanService.updatePlan(plan.id, { due_day: dueDay });
+          await loadPlans();
         }
       }
       setEditingId(null);
@@ -221,10 +233,40 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
                       ✕
                     </button>
                   </div>
+                ) : editingId === plan.id && editingField === 'due_day' ? (
+                  <div className="expense-plan-name-section">
+                    <span className={`expense-plan-name ${plan.is_checked ? 'expense-plan-name--checked' : ''}`}>
+                      {plan.name}
+                    </span>
+                    <span> (</span>
+                    <input
+                      type="number"
+                      className="expense-plan-edit-input expense-plan-edit-input--day"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      min="1"
+                      max="31"
+                      autoFocus
+                      style={{ width: '40px', display: 'inline-block' }}
+                    />
+                    <span>일)</span>
+                    <button
+                      className="expense-plan-save-btn"
+                      onClick={() => handleSaveEdit(plan)}
+                    >
+                      ✓
+                    </button>
+                    <button
+                      className="expense-plan-cancel-btn"
+                      onClick={handleCancelEdit}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ) : (
                   <div className="expense-plan-name-section">
                     <span className={`expense-plan-name ${plan.is_checked ? 'expense-plan-name--checked' : ''}`}>
-                      {plan.name} ({plan.due_day}일)
+                      {plan.name}
                     </span>
                     <button
                       className="expense-plan-edit-btn"
@@ -232,6 +274,18 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
                       title="항목명 수정"
                     >
                       ✏️
+                    </button>
+                    <span> (</span>
+                    <span className={`expense-plan-due-day ${plan.is_checked ? 'expense-plan-name--checked' : ''}`}>
+                      {plan.due_day}
+                    </span>
+                    <span>일)</span>
+                    <button
+                      className="expense-plan-edit-btn"
+                      onClick={() => handleStartEditDueDay(plan)}
+                      title="지출일 수정"
+                    >
+                      📅
                     </button>
                   </div>
                 )}
