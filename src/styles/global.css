@@ -1703,11 +1703,11 @@ body {
 
 .expense-plan-item {
   display: flex;
-  align-items: center;
-  padding: 12px 8px 12px 16px;
+  flex-direction: column;
+  padding: 14px 12px 14px 16px;
   border-bottom: 1px solid var(--gray-100);
   border-left: 4px solid var(--primary-500);
-  gap: 12px;
+  gap: 10px;
   transition: all 0.2s ease;
 }
 
@@ -1753,9 +1753,25 @@ body {
   background: rgba(16, 185, 129, 0.02);
 }
 
+.expense-plan-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.expense-plan-row--top {
+  justify-content: space-between;
+}
+
+.expense-plan-row--bottom {
+  justify-content: space-between;
+  padding-left: 30px;
+}
+
 .expense-plan-checkbox {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
   accent-color: var(--primary-500);
   flex-shrink: 0;
@@ -1893,6 +1909,36 @@ body {
   box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
+.expense-plan-edit-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.expense-plan-edit-btn-text {
+  padding: 6px 12px;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.expense-plan-edit-btn-text:hover {
+  background: var(--primary-100);
+  color: var(--primary-700);
+  border-color: var(--primary-300);
+  transform: translateY(-1px);
+}
+
+.expense-plan-edit-btn-text:active {
+  transform: translateY(0);
+}
+
 .expense-plan-add-btn {
   width: 100%;
   padding: 14px;
@@ -1996,24 +2042,52 @@ body {
 
 @media (max-width: 768px) {
   .expense-plan-totals {
-    font-size: 12px;
-    gap: 12px;
-  }
-
-  .expense-plan-item {
-    padding: 10px 4px;
+    font-size: 11px;
     gap: 8px;
   }
 
+  .expense-plan-item {
+    padding: 12px 8px 12px 12px;
+    gap: 10px;
+  }
+
+  .expense-plan-row {
+    gap: 10px;
+  }
+
+  .expense-plan-row--bottom {
+    padding-left: 32px;
+  }
+
+  .expense-plan-checkbox {
+    width: 20px;
+    height: 20px;
+  }
+
   .expense-plan-name {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .expense-plan-amount {
-    font-size: 13px;
+    font-size: 15px;
+    font-weight: 700;
   }
 
   .expense-plan-edit-input--amount {
-    width: 90px;
+    width: 100px;
+  }
+
+  .expense-plan-delete-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .expense-plan-edit-btn-text {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .expense-plan-edit-actions {
+    gap: 6px;
   }
 }

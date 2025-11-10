@@ -205,131 +205,127 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
           <div className="expense-plan-list">
             {groupedPlans[account]?.map(plan => (
               <div key={plan.id} className={`expense-plan-item expense-plan-item--${plan.account}${plan.is_checked ? ' expense-plan-item--checked' : ''}`}>
-                <input
-                  type="checkbox"
-                  className="expense-plan-checkbox"
-                  checked={plan.is_checked}
-                  onChange={() => handleCheck(plan)}
-                />
-                {editingId === plan.id && editingField === 'name' ? (
-                  <div className="expense-plan-name-section">
-                    <input
-                      type="text"
-                      className="expense-plan-edit-input"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      autoFocus
-                    />
+                <div className="expense-plan-row expense-plan-row--top">
+                  <input
+                    type="checkbox"
+                    className="expense-plan-checkbox"
+                    checked={plan.is_checked}
+                    onChange={() => handleCheck(plan)}
+                  />
+                  {editingId === plan.id && editingField === 'name' ? (
+                    <div className="expense-plan-name-section">
+                      <input
+                        type="text"
+                        className="expense-plan-edit-input"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        autoFocus
+                      />
+                      <button
+                        className="expense-plan-save-btn"
+                        onClick={() => handleSaveEdit(plan)}
+                      >
+                        ✓
+                      </button>
+                      <button
+                        className="expense-plan-cancel-btn"
+                        onClick={handleCancelEdit}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : editingId === plan.id && editingField === 'due_day' ? (
+                    <div className="expense-plan-name-section">
+                      <span className={`expense-plan-name ${plan.is_checked ? 'expense-plan-name--checked' : ''}`}>
+                        {plan.name} (
+                      </span>
+                      <input
+                        type="number"
+                        className="expense-plan-edit-input expense-plan-edit-input--day"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        min="1"
+                        max="31"
+                        autoFocus
+                      />
+                      <span>일)</span>
+                      <button
+                        className="expense-plan-save-btn"
+                        onClick={() => handleSaveEdit(plan)}
+                      >
+                        ✓
+                      </button>
+                      <button
+                        className="expense-plan-cancel-btn"
+                        onClick={handleCancelEdit}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="expense-plan-name-section">
+                      <span className={`expense-plan-name ${plan.is_checked ? 'expense-plan-name--checked' : ''}`}>
+                        {plan.name} ({plan.due_day}일)
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    className="expense-plan-delete-btn"
+                    onClick={() => handleDelete(plan.id, plan.name)}
+                  >
+                    삭제
+                  </button>
+                </div>
+                <div className="expense-plan-row expense-plan-row--bottom">
+                  {editingId === plan.id && editingField === 'amount' ? (
+                    <div className="expense-plan-amount-section">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className="expense-plan-edit-input expense-plan-edit-input--amount"
+                        value={editValue}
+                        onChange={(e) => handleEditInputChange(e.target.value)}
+                        autoFocus
+                      />
+                      <button
+                        className="expense-plan-save-btn"
+                        onClick={() => handleSaveEdit(plan)}
+                      >
+                        ✓
+                      </button>
+                      <button
+                        className="expense-plan-cancel-btn"
+                        onClick={handleCancelEdit}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="expense-plan-amount-section">
+                      <span className="expense-plan-amount">{plan.amount.toLocaleString('ko-KR')}원</span>
+                    </div>
+                  )}
+                  <div className="expense-plan-edit-actions">
                     <button
-                      className="expense-plan-save-btn"
-                      onClick={() => handleSaveEdit(plan)}
-                    >
-                      ✓
-                    </button>
-                    <button
-                      className="expense-plan-cancel-btn"
-                      onClick={handleCancelEdit}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : editingId === plan.id && editingField === 'due_day' ? (
-                  <div className="expense-plan-name-section">
-                    <span className={`expense-plan-name ${plan.is_checked ? 'expense-plan-name--checked' : ''}`}>
-                      {plan.name}
-                    </span>
-                    <span> (</span>
-                    <input
-                      type="number"
-                      className="expense-plan-edit-input expense-plan-edit-input--day"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      min="1"
-                      max="31"
-                      autoFocus
-                      style={{ width: '40px', display: 'inline-block' }}
-                    />
-                    <span>일)</span>
-                    <button
-                      className="expense-plan-save-btn"
-                      onClick={() => handleSaveEdit(plan)}
-                    >
-                      ✓
-                    </button>
-                    <button
-                      className="expense-plan-cancel-btn"
-                      onClick={handleCancelEdit}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <div className="expense-plan-name-section">
-                    <span className={`expense-plan-name ${plan.is_checked ? 'expense-plan-name--checked' : ''}`}>
-                      {plan.name}
-                    </span>
-                    <button
-                      className="expense-plan-edit-btn"
+                      className="expense-plan-edit-btn-text"
                       onClick={() => handleStartEditName(plan)}
-                      title="항목명 수정"
                     >
-                      ✏️
+                      항목명
                     </button>
-                    <span> (</span>
-                    <span className={`expense-plan-due-day ${plan.is_checked ? 'expense-plan-name--checked' : ''}`}>
-                      {plan.due_day}
-                    </span>
-                    <span>일)</span>
                     <button
-                      className="expense-plan-edit-btn"
+                      className="expense-plan-edit-btn-text"
                       onClick={() => handleStartEditDueDay(plan)}
-                      title="지출일 수정"
                     >
-                      📅
-                    </button>
-                  </div>
-                )}
-                {editingId === plan.id && editingField === 'amount' ? (
-                  <div className="expense-plan-amount-section">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="expense-plan-edit-input expense-plan-edit-input--amount"
-                      value={editValue}
-                      onChange={(e) => handleEditInputChange(e.target.value)}
-                      autoFocus
-                    />
-                    <button
-                      className="expense-plan-save-btn"
-                      onClick={() => handleSaveEdit(plan)}
-                    >
-                      ✓
+                      날짜
                     </button>
                     <button
-                      className="expense-plan-cancel-btn"
-                      onClick={handleCancelEdit}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <div className="expense-plan-amount-section">
-                    <span className="expense-plan-amount">{plan.amount.toLocaleString('ko-KR')}원</span>
-                    <button
-                      className="expense-plan-edit-btn"
+                      className="expense-plan-edit-btn-text"
                       onClick={() => handleStartEditAmount(plan)}
-                      title="금액 수정"
                     >
-                      ✏️
+                      금액
                     </button>
                   </div>
-                )}
-                <button
-                  className="expense-plan-delete-btn"
-                  onClick={() => handleDelete(plan.id, plan.name)}
-                >
-                  삭제
-                </button>
+                </div>
               </div>
             ))}
           </div>
