@@ -391,22 +391,6 @@ function SummaryPanel({
                   )}
                 </div>
               </li>
-              <li className="comparison-item">
-                <div className="comparison-label">
-                  <span>잔액</span>
-                  <span className="comparison-values">
-                    {formatCurrency(monthlyComparison.previous.balance)}원 → {formatCurrency(monthlyComparison.current.balance)}원
-                  </span>
-                </div>
-                <div className={`comparison-change ${monthlyComparison.changes && monthlyComparison.changes.balance >= 0 ? 'comparison-change--up' : 'comparison-change--down'}`}>
-                  {monthlyComparison.changes && (
-                    <>
-                      <span className="comparison-arrow">{monthlyComparison.changes.balance >= 0 ? '↑' : '↓'}</span>
-                      <span>{Math.abs(monthlyComparison.changes.balance).toFixed(1)}%</span>
-                    </>
-                  )}
-                </div>
-              </li>
             </ul>
           </div>
 
@@ -420,10 +404,6 @@ function SummaryPanel({
               <li className="comparison-item comparison-item--average">
                 <span>평균 지출</span>
                 <strong>{formatCurrency(Math.round(monthlyComparison.threeMonthAverage.expense))}원</strong>
-              </li>
-              <li className="comparison-item comparison-item--average">
-                <span>평균 잔액</span>
-                <strong>{formatCurrency(Math.round(monthlyComparison.threeMonthAverage.balance))}원</strong>
               </li>
             </ul>
           </div>
