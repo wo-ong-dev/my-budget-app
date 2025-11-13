@@ -562,6 +562,52 @@ body {
   flex: 1; /* 남은 공간 채우기 */
 }
 
+.transaction-list-by-date {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.daily-transaction-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.daily-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary-500);
+}
+
+.daily-header-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.daily-header-summary {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.daily-summary-income {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--success-600);
+}
+
+.daily-summary-expense {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--danger-600);
+}
+
 .transaction-card {
   border: 1px solid var(--gray-200);
   border-radius: 14px;
@@ -1046,6 +1092,32 @@ body {
     display: flex !important;
     flex-direction: column !important;
     gap: 6px !important;
+  }
+
+  .transaction-list-by-date {
+    gap: 20px;
+  }
+
+  .daily-transaction-group {
+    gap: 10px;
+  }
+
+  .daily-header {
+    padding: 8px 12px;
+    border-left-width: 3px;
+  }
+
+  .daily-header-date {
+    font-size: 13px;
+  }
+
+  .daily-header-summary {
+    gap: 10px;
+  }
+
+  .daily-summary-income,
+  .daily-summary-expense {
+    font-size: 13px;
   }
 
   .form-group {
