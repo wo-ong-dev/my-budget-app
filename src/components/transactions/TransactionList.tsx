@@ -148,6 +148,8 @@ function TransactionList({
                       <div className="transaction-card__title">
                         <span className="transaction-card__icon">{getCategoryIcon(transaction.category ?? "기타")}</span>
                         <span className="transaction-card__category">{transaction.category ?? "-"}</span>
+                        <span className="transaction-card__separator">|</span>
+                        <span className="transaction-card__account">{transaction.account ?? "-"}</span>
                       </div>
                       <span
                         className={`transaction-card__amount${
@@ -158,10 +160,6 @@ function TransactionList({
                       >
                         {transaction.type === "수입" ? "+" : "-"}{formatCurrency(transaction.amount)}원
                       </span>
-                    </div>
-
-                    <div className="transaction-card__details">
-                      <span className="transaction-card__account">{transaction.account ?? "-"}</span>
                     </div>
 
                     {transaction.memo ? (
