@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { ExpensePlanModel, ExpensePlanDraft } from '../models/ExpensePlan';
 
+const TEMPLATE_MONTH = process.env.EXPENSE_PLAN_TEMPLATE_MONTH || '2025-11';
+
 export class ExpensePlanController {
   static async getPlans(req: Request, res: Response): Promise<void> {
     try {
@@ -14,11 +16,26 @@ export class ExpensePlanController {
         return;
       }
 
+      const targetMonth = month as string;
+
       let plans;
       if (account) {
-        plans = await ExpensePlanModel.findByAccountAndMonth(account as string, month as string);
+        plans = await ExpensePlanModel.findByAccountAndMonth(account as string, targetMonth);
       } else {
-        plans = await ExpensePlanModel.findByMonth(month as string);
+        plans = await ExpensePlanModel.findByMonth(targetMonth);
+      }
+
+      if ((!plans || plans.length === 0) && targetMonth !== TEMPLATE_MONTH) {
+        const clonedPlans = await ExpensePlanModel.cloneMonthPlans(
+          TEMPLATE_MONTH,
+          targetMonth
+        );
+
+        if (clonedPlans.length > 0) {
+          plans = account
+            ? clonedPlans.filter((plan) => plan.account === account)
+            : clonedPlans;
+        }
       }
 
       res.json({
