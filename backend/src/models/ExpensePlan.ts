@@ -156,25 +156,11 @@ export class ExpensePlanModel {
   }
 
   static async cloneMonthPlans(sourceMonth: string, targetMonth: string): Promise<ExpensePlan[]> {
-    const [templateRows] = await pool.execute(
-      `SELECT COUNT(*) as count FROM expense_plans WHERE month = ?`,
-      [sourceMonth]
-    );
-    const templateCount = Number((templateRows as any[])[0]?.count || 0);
-
-    if (templateCount === 0) {
-      return [];
-    }
-
     await pool.execute(
-      `INSERT INTO expense_plans (account, month, name, amount, due_day, is_checked)
+      `INSERT IGNORE INTO expense_plans (account, month, name, amount, due_day, is_checked)
        SELECT account, ?, name, amount, due_day, FALSE
        FROM expense_plans
-       WHERE month = ?
-       ON DUPLICATE KEY UPDATE
-         amount = VALUES(amount),
-         due_day = VALUES(due_day),
-         is_checked = FALSE`,
+       WHERE month = ?`,
       [targetMonth, sourceMonth]
     );
 

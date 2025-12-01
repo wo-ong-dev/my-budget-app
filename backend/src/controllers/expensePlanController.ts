@@ -18,24 +18,19 @@ export class ExpensePlanController {
 
       const targetMonth = month as string;
 
+      // 템플릿 월이 아니면 먼저 템플릿 기반 항목을 복제 (이미 있는 건 그대로 두고, 없는 것만 생성)
+      if (targetMonth !== TEMPLATE_MONTH) {
+        await ExpensePlanModel.cloneMonthPlans(
+          TEMPLATE_MONTH,
+          targetMonth
+        );
+      }
+
       let plans;
       if (account) {
         plans = await ExpensePlanModel.findByAccountAndMonth(account as string, targetMonth);
       } else {
         plans = await ExpensePlanModel.findByMonth(targetMonth);
-      }
-
-      if ((!plans || plans.length === 0) && targetMonth !== TEMPLATE_MONTH) {
-        const clonedPlans = await ExpensePlanModel.cloneMonthPlans(
-          TEMPLATE_MONTH,
-          targetMonth
-        );
-
-        if (clonedPlans.length > 0) {
-          plans = account
-            ? clonedPlans.filter((plan) => plan.account === account)
-            : clonedPlans;
-        }
       }
 
       res.json({
