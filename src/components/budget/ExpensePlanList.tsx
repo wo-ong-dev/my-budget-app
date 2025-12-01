@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ExpensePlan, ExpensePlanDraft } from '../../types/expensePlan';
 import { expensePlanService } from '../../services/expensePlanService';
+import { getDefaultExpensePlans } from '../../utils/defaultExpensePlans';
 
 interface Props {
   month: string;
@@ -31,7 +32,22 @@ export const ExpensePlanList: React.FC<Props> = ({ month, accounts }) => {
   const loadPlans = async () => {
     try {
       const data = await expensePlanService.getPlans(month);
-      setPlans(data);
+
+      if (!data || data.length === 0) {
+        // 해당 달에 계획이 없으면 2025-11 템플릿을 기반으로 기본 항목을 생성
+        try {
+          const defaults = getDefaultExpensePlans(month);
+          await Promise.all(defaults.map((plan) => expensePlanService.createPlan(plan)));
+
+          const seeded = await expensePlanService.getPlans(month);
+          setPlans(seeded);
+        } catch (seedError) {
+          console.error('기본 지출 계획 생성 실패:', seedError);
+          setPlans([]);
+        }
+      } else {
+        setPlans(data);
+      }
     } catch (error) {
       console.error('지출 계획 로드 실패:', error);
     }
