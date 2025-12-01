@@ -232,6 +232,13 @@ jobs:
             echo "📦 Installing backend dependencies..."
             npm install --production || true
 
+            echo "🏗  Building backend (TypeScript -> dist)..."
+            if npm run build; then
+              echo "✅ Backend build completed"
+            else
+              echo "⚠️  Backend build failed, continuing with existing dist if available"
+            fi
+
             echo "🗄️  Running database migrations..."
             if [ -d migrations ]; then
               echo "Found migrations directory"
@@ -248,7 +255,12 @@ jobs:
 
             echo "🔄 Restarting backend service..."
             if command -v pm2 >/dev/null 2>&1; then
-              pm2 restart budget-backend || pm2 start src/index.ts --name budget-backend
+              # Prefer compiled JS from dist; fall back to TypeScript entry if needed
+              if [ -f dist/index.js ]; then
+                pm2 restart budget-backend || pm2 start dist/index.js --name budget-backend
+              else
+                pm2 restart budget-backend || pm2 start src/index.ts --name budget-backend
+              fi
             else
               echo "⚠️  PM2 not found, skipping restart"
             fi
