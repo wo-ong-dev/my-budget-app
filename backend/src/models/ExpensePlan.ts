@@ -156,13 +156,24 @@ export class ExpensePlanModel {
   }
 
   static async cloneMonthPlans(sourceMonth: string, targetMonth: string): Promise<ExpensePlan[]> {
-    await pool.execute(
-      `INSERT IGNORE INTO expense_plans (account, month, name, amount, due_day, is_checked)
-       SELECT account, ?, name, amount, due_day, FALSE
-       FROM expense_plans
-       WHERE month = ?`,
-      [targetMonth, sourceMonth]
-    );
+    if (sourceMonth === targetMonth) {
+      return this.findByMonth(targetMonth);
+    }
+
+    const templates = await this.findByMonth(sourceMonth);
+    if (!templates.length) {
+      return [];
+    }
+
+    for (const template of templates) {
+      await this.create({
+        account: template.account,
+        month: targetMonth,
+        name: template.name,
+        amount: template.amount,
+        due_day: template.due_day ?? undefined
+      });
+    }
 
     return this.findByMonth(targetMonth);
   }
