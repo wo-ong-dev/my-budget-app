@@ -1023,6 +1023,14 @@ body {
   min-height: 0;
 }
 
+.modal__footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .modal__destructive {
   margin-top: 12px;
   width: 100%;
