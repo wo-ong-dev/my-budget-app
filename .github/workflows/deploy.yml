@@ -193,9 +193,10 @@ jobs:
           SSH_USER="${{ secrets.USER }}"
           SSH_PORT="${{ secrets.PORT }}"
 
-          SSH_HOST=$(echo "$SSH_HOST" | tr -d '[:space:]')
-          SSH_USER=$(echo "$SSH_USER" | tr -d '[:space:]')
-          SSH_PORT=$(echo "$SSH_PORT" | tr -d '[:space:]')
+          # Remove any prefixes like "SSH_HOST:", "SSH_USER:", etc.
+          SSH_HOST=$(echo "$SSH_HOST" | sed 's/^[^:]*://g' | tr -d '[:space:]')
+          SSH_USER=$(echo "$SSH_USER" | sed 's/^[^:]*://g' | tr -d '[:space:]')
+          SSH_PORT=$(echo "$SSH_PORT" | sed 's/^[^:]*://g' | tr -d '[:space:]')
           SSH_PORT=${SSH_PORT:-22}
           SSH_USER=${SSH_USER:-ec2-user}
 
