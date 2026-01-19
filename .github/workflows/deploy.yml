@@ -219,7 +219,7 @@ jobs:
             mkdir backend-temp
             tar -xzf backend-deploy.tar.gz -C backend-temp/
 
-            BACKEND_DIR="/var/www/budget-backend"
+            BACKEND_DIR="/opt/my-budget-api"
 
             echo "📁 Preparing backend directory..."
             sudo mkdir -p ${BACKEND_DIR}
@@ -257,9 +257,9 @@ jobs:
             if command -v pm2 >/dev/null 2>&1; then
               # Prefer compiled JS from dist; fall back to TypeScript entry if needed
               if [ -f dist/index.js ]; then
-                pm2 restart budget-backend || pm2 start dist/index.js --name budget-backend
+                pm2 restart my-budget-api || pm2 start dist/index.js --name my-budget-api
               else
-                pm2 restart budget-backend || pm2 start src/index.ts --name budget-backend
+                pm2 restart my-budget-api || pm2 start src/index.ts --name my-budget-api
               fi
             else
               echo "⚠️  PM2 not found, skipping restart"
