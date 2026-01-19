@@ -185,7 +185,7 @@ jobs:
           echo "======================================"
 
       - name: Deploy Backend and Run Migrations
-        continue-on-error: true
+        continue-on-error: false
         run: |
           set -e
 
@@ -202,6 +202,9 @@ jobs:
           echo "======================================"
           echo "🔧 Deploying Backend & Running Migrations"
           echo "======================================"
+          echo "DEBUG: SSH_HOST=${SSH_HOST}"
+          echo "DEBUG: SSH_USER=${SSH_USER}"
+          echo "DEBUG: SSH_PORT=${SSH_PORT}"
 
           # Create backend deployment package
           tar -czf backend-deploy.tar.gz backend/
