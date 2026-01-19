@@ -1019,6 +1019,8 @@ body {
 .modal__body {
   padding: 0 24px 24px;
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .modal__destructive {
