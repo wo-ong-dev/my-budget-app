@@ -234,7 +234,7 @@ jobs:
             cd ${BACKEND_DIR}
 
             echo "📦 Installing backend dependencies..."
-            npm install --production || true
+            npm install || true
 
             echo "🏗  Building backend (TypeScript -> dist)..."
             if npm run build; then
