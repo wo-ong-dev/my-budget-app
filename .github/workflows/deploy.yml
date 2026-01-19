@@ -255,12 +255,22 @@ jobs:
 
             echo "🔄 Restarting backend service..."
             if command -v pm2 >/dev/null 2>&1; then
-              # Prefer compiled JS from dist; fall back to TypeScript entry if needed
+              echo "Current PM2 processes:"
+              pm2 list
+
+              # Delete and restart to ensure new code is loaded
+              pm2 delete my-budget-api 2>/dev/null || echo "Process my-budget-api not found"
+
+              # Start with the new code
               if [ -f dist/index.js ]; then
-                pm2 restart my-budget-api || pm2 start dist/index.js --name my-budget-api
+                pm2 start dist/index.js --name my-budget-api
               else
-                pm2 restart my-budget-api || pm2 start src/index.ts --name my-budget-api
+                pm2 start src/index.ts --name my-budget-api
               fi
+
+              pm2 save
+              echo "PM2 process restarted:"
+              pm2 list
             else
               echo "⚠️  PM2 not found, skipping restart"
             fi
