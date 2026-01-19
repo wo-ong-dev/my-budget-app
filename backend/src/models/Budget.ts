@@ -39,15 +39,27 @@ export class BudgetModel {
       ? `${year - 1}-12`
       : `${year}-${String(monthNum - 1).padStart(2, '0')}`;
 
-    // 3. 전월의 모든 예산 조회 (재귀적으로 findByMonth 호출하지 않고 직접 조회)
-    const [prevBudgetRows] = await pool.execute(
+    // 3. 전월의 모든 예산 조회
+    let [prevBudgetRows] = await pool.execute(
       `SELECT * FROM budgets WHERE month = ? ORDER BY account`,
       [prevMonth]
     );
 
-    const prevBudgets = prevBudgetRows as Budget[];
+    let prevBudgets = prevBudgetRows as Budget[];
 
-    // 4. 병합: 커스텀이 있으면 사용, 없으면 전월 데이터 사용
+    // 4. 전월에 데이터가 없으면 가장 최근 월의 데이터 조회
+    if (prevBudgets.length === 0) {
+      const [latestBudgetRows] = await pool.execute(
+        `SELECT * FROM budgets
+         WHERE month < ?
+         ORDER BY month DESC, account
+         LIMIT 100`,
+        [month]
+      );
+      prevBudgets = latestBudgetRows as Budget[];
+    }
+
+    // 5. 병합: 커스텀이 있으면 사용, 없으면 전월 데이터 사용
     const accountMap = new Map<string, Budget>();
 
     // 전월 데이터를 기본으로 (단, 현재 월로 변경)
