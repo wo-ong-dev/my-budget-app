@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { SettlementData } from "../../types";
 import { formatCurrency } from "../../utils/formatters";
 import { getAccountIcon } from "../../utils/iconMappings";
+import { fetchSettlement } from "../../services/settlementService";
 
 type SettlementSectionProps = {
   month: string;
@@ -22,17 +23,8 @@ function SettlementSection({ month }: SettlementSectionProps) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/settlements?month=${month}`
-      );
-
-      const data = await response.json();
-
-      if (!data.ok) {
-        throw new Error(data.error || "정산 정보를 불러오는데 실패했습니다.");
-      }
-
-      setSettlementData(data.data);
+      const data = await fetchSettlement(month);
+      setSettlementData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.");
     } finally {
