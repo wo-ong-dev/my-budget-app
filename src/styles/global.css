@@ -29,7 +29,8 @@ body {
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #10b981 0%, #34d399 100%); /* 초록색 배경으로 변경 */
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  /* 초록색 배경으로 변경 */
   display: flex;
   justify-content: center;
   align-items: stretch;
@@ -67,7 +68,8 @@ body {
 .app-header {
   background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-500) 100%);
   color: #fff;
-  padding: 16px 20px 20px; /* 컴팩트한 패딩 */
+  padding: 16px 20px 20px;
+  /* 컴팩트한 패딩 */
   text-align: center;
   cursor: pointer;
   position: relative;
@@ -150,7 +152,7 @@ body {
   background: var(--gray-200);
 }
 
-.dropdown-menu__item + .dropdown-menu__item {
+.dropdown-menu__item+.dropdown-menu__item {
   border-top: 1px solid var(--gray-100);
 }
 
@@ -167,7 +169,8 @@ body {
   flex: 1;
   background: transparent;
   border: none;
-  padding: 16px 12px; /* 좌우 패딩 증가 */
+  padding: 16px 12px;
+  /* 좌우 패딩 증가 */
   font-size: 15px;
   font-weight: 600;
   color: var(--gray-500);
@@ -178,7 +181,8 @@ body {
   cursor: pointer;
   border-bottom: 2px solid transparent;
   transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  min-width: 0; /* 텍스트 줄바꿈 방지 */
+  min-width: 0;
+  /* 텍스트 줄바꿈 방지 */
   position: relative;
 }
 
@@ -186,7 +190,8 @@ body {
   font-size: 11px;
   font-weight: 500;
   color: var(--gray-500);
-  white-space: nowrap; /* 한 줄로 강제 표시 */
+  white-space: nowrap;
+  /* 한 줄로 강제 표시 */
   text-align: center;
 }
 
@@ -203,11 +208,16 @@ body {
 
 .tab-panel {
   display: none;
-  padding: 20px; /* 모든 탭에 동일한 패딩 적용 */
-  min-height: calc(100vh - 200px); /* 최소 높이 보장 */
-  height: calc(100vh - 200px); /* 고정 높이로 모든 탭 통일 */
-  overflow-y: auto; /* 스크롤 가능 */
-  box-sizing: border-box; /* 패딩을 포함한 전체 크기 계산 */
+  padding: 20px;
+  /* 모든 탭에 동일한 패딩 적용 */
+  min-height: calc(100vh - 200px);
+  /* 최소 높이 보장 */
+  height: calc(100vh - 200px);
+  /* 고정 높이로 모든 탭 통일 */
+  overflow-y: auto;
+  /* 스크롤 가능 */
+  box-sizing: border-box;
+  /* 패딩을 포함한 전체 크기 계산 */
   opacity: 0;
   transform: translateX(0);
   transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease;
@@ -216,8 +226,10 @@ body {
 .tab-panel--active {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* 상단 정렬 */
-  gap: 20px; /* 모든 탭에 일관된 간격 적용 */
+  justify-content: flex-start;
+  /* 상단 정렬 */
+  gap: 20px;
+  /* 모든 탭에 일관된 간격 적용 */
   opacity: 1;
   transform: translateX(0);
 }
@@ -235,6 +247,7 @@ body {
     opacity: 0;
     transform: translateX(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -246,6 +259,7 @@ body {
     opacity: 0;
     transform: translateX(30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -303,7 +317,8 @@ body {
 .tab-panel--input,
 .tab-panel--history,
 .tab-panel--summary {
-  overflow-x: hidden; /* 가로 스크롤 방지 */
+  overflow-x: hidden;
+  /* 가로 스크롤 방지 */
 }
 
 
@@ -413,7 +428,8 @@ body {
   padding: 10px 18px;
   border-radius: 10px;
   cursor: pointer;
-  flex: 1; /* 균등하게 분배 */
+  flex: 1;
+  /* 균등하게 분배 */
   text-align: center;
 }
 
@@ -478,7 +494,8 @@ body {
 
 .filter-row .form-group {
   flex: 1;
-  min-width: 0; /* flex item이 축소될 수 있도록 */
+  min-width: 0;
+  /* flex item이 축소될 수 있도록 */
 }
 
 /* 필터 패널 스타일은 위의 공통 스타일에서 처리됨 */
@@ -559,7 +576,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  flex: 1; /* 남은 공간 채우기 */
+  flex: 1;
+  /* 남은 공간 채우기 */
 }
 
 .transaction-list-by-date {
@@ -758,7 +776,7 @@ body {
   gap: 12px;
 }
 
-.summary-card__title-row > div {
+.summary-card__title-row>div {
   flex: 1;
   text-align: center;
 }
@@ -770,13 +788,15 @@ body {
 }
 
 .summary-card__period {
-  white-space: nowrap; /* 날짜가 한 줄로 표시되도록 강제 */
+  white-space: nowrap;
+  /* 날짜가 한 줄로 표시되도록 강제 */
 }
 
 .summary-card__subtitle {
   font-size: 12px;
   opacity: 0.85;
-  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  white-space: nowrap;
+  /* 텍스트 줄바꿈 방지 */
 }
 
 .summary-totals {
@@ -869,12 +889,10 @@ body {
 
 /* 스켈레톤 로딩 UI */
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    #e0e0e0 0%,
-    #f0f0f0 50%,
-    #e0e0e0 100%
-  );
+  background: linear-gradient(90deg,
+      #e0e0e0 0%,
+      #f0f0f0 50%,
+      #e0e0e0 100%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: 8px;
@@ -885,6 +903,7 @@ body {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -1036,15 +1055,14 @@ body {
   width: 100%;
 }
 
-/* 큰 화면에서 더 넓은 최대 너비 */
-@media (min-width: 1200px) {
-  .app-container {
-    max-width: 700px; /* 더 큰 화면에서는 더 넓게 */
-  }
-}
+
 
 @media (max-width: 520px) {
-  html, body, #root, .app-shell {
+
+  html,
+  body,
+  #root,
+  .app-shell {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
@@ -1158,24 +1176,32 @@ body {
   }
 
   .filter-row {
-    flex-direction: column; /* 모바일에서는 세로 배치 */
+    flex-direction: column;
+    /* 모바일에서는 세로 배치 */
     gap: 10px !important;
   }
 
   .filter-row .form-group {
-    flex: none; /* 모바일에서는 고정 크기 */
+    flex: none;
+    /* 모바일에서는 고정 크기 */
   }
 
   .radio-group {
-    flex-direction: row; /* 모바일에서도 좌우 배치 유지 */
-    gap: 4px; /* 간격 줄임 */
+    flex-direction: row;
+    /* 모바일에서도 좌우 배치 유지 */
+    gap: 4px;
+    /* 간격 줄임 */
   }
 
   .radio-item {
-    flex: 1; /* 모바일에서도 균등 분배 */
-    padding: 10px 4px; /* 패딩 최소화 */
-    font-size: 12px; /* 폰트 크기 축소 */
-    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    flex: 1;
+    /* 모바일에서도 균등 분배 */
+    padding: 10px 4px;
+    /* 패딩 최소화 */
+    font-size: 12px;
+    /* 폰트 크기 축소 */
+    white-space: nowrap;
+    /* 텍스트 줄바꿈 방지 */
   }
 
   .history-summary-card {
@@ -1640,7 +1666,7 @@ body {
   min-width: 0;
 }
 
-.comparison-label > span:first-child {
+.comparison-label>span:first-child {
   font-weight: 600;
   font-size: 14px;
   color: var(--gray-800);
@@ -1689,6 +1715,7 @@ body {
 }
 
 @media (max-width: 768px) {
+
   .budget-table__header,
   .budget-row {
     grid-template-columns: 1.5fr 1fr 1fr 1fr;
