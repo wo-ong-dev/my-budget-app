@@ -13,7 +13,7 @@ type BudgetPanelProps = {
   availableMonths?: string[];
   accounts?: string[];
   onMonthChange?: (month: string) => void;
-  onUpdateBudget?: (id: number, targetAmount: number) => void;
+  onUpdateBudget?: (id: number, targetAmount: number, account?: string) => void;
   onDeleteBudget?: (id: number) => void;
   onAddBudget?: (account: string, month: string, targetAmount: number) => void;
   onCategoryUpdate?: () => void;
@@ -33,7 +33,7 @@ function BudgetPanel({
   onCategoryUpdate,
   onAccountClick,
 }: BudgetPanelProps) {
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [newAccount, setNewAccount] = useState("");
@@ -60,17 +60,17 @@ function BudgetPanel({
     }
   };
 
-  const handleEdit = (id: number, currentAmount: number) => {
-    setEditingId(id);
+  const handleEdit = (account: string, currentAmount: number) => {
+    setEditingAccount(account);
     setEditValue(currentAmount.toLocaleString('ko-KR'));
   };
 
-  const handleSaveEdit = (id: number) => {
+  const handleSaveEdit = (id: number, account: string) => {
     const numericValue = parseFloat(editValue.replace(/,/g, ''));
     if (!isNaN(numericValue) && numericValue > 0 && onUpdateBudget) {
-      onUpdateBudget(id, numericValue);
+      onUpdateBudget(id, numericValue, account);
     }
-    setEditingId(null);
+    setEditingAccount(null);
     setEditValue("");
   };
 
@@ -86,7 +86,7 @@ function BudgetPanel({
   };
 
   const handleCancelEdit = () => {
-    setEditingId(null);
+    setEditingAccount(null);
     setEditValue("");
   };
 
@@ -221,7 +221,7 @@ function BudgetPanel({
                   )}
                 </div>
                 <div className="budget-col budget-col--target">
-                  {editingId === budget.id ? (
+                  {editingAccount === budget.account ? (
                     <div className="budget-edit">
                       <input
                         type="text"
@@ -234,7 +234,7 @@ function BudgetPanel({
                       <button
                         type="button"
                         className="budget-edit__btn budget-edit__btn--save"
-                        onClick={() => handleSaveEdit(budget.id)}
+                        onClick={() => handleSaveEdit(budget.id, budget.account)}
                       >
                         ✓
                       </button>
@@ -253,7 +253,7 @@ function BudgetPanel({
                         <button
                           type="button"
                           className="budget-edit-btn"
-                          onClick={() => handleEdit(budget.id, budget.target_amount)}
+                          onClick={() => handleEdit(budget.account, budget.target_amount)}
                         >
                           ✏️
                         </button>

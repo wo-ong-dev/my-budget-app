@@ -652,10 +652,21 @@ function AuthenticatedApp() {
     setFilters(next);
   };
 
-  const handleUpdateBudget = async (id: number, targetAmount: number) => {
+  const handleUpdateBudget = async (id: number, targetAmount: number, account?: string) => {
     try {
       setBudgetLoading(true);
-      await updateBudget(id, { target_amount: targetAmount });
+      if (id === 0 && account) {
+        // ID가 0이면 아직 데이터베이스에 없는 가상 예산이므로 생성(upsert) 호출
+        const color = getAccountColor(account);
+        await createOrUpdateBudget({
+          account,
+          month: filters.month,
+          target_amount: targetAmount,
+          color,
+        });
+      } else {
+        await updateBudget(id, { target_amount: targetAmount });
+      }
       await fetchBudgets();
     } catch (err) {
       const message = err instanceof Error ? err.message : "예산을 수정하지 못했어요.";
