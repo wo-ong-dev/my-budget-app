@@ -43,41 +43,46 @@ jobs:
           # Copy SQL file to server
           scp -P ${SSH_PORT} -o StrictHostKeyChecking=no backend/init_data.sql ${SSH_USER}@${SSH_HOST}:/tmp/
 
-          # Execute SQL on server
+          # Create remote script
+          cat > /tmp/setup_db.sh << 'SCRIPT_EOF'
+          set -e
+
+          echo "Installing MySQL client if needed..."
+          if ! command -v mysql &> /dev/null; then
+            sudo yum install -y mysql || sudo apt-get install -y mysql-client
+          fi
+
+          echo "Setting up database..."
+
+          # Find backend directory and read DB credentials from .env if secrets not provided
+          if [ -z "$DB_HOST" ] && [ -f /var/www/backend/.env ]; then
+            source /var/www/backend/.env
+          elif [ -z "$DB_HOST" ] && [ -f ~/.env ]; then
+            source ~/.env
+          fi
+
+          # Check if DB credentials are available
+          if [ ! -z "$DB_HOST" ] && [ ! -z "$DB_USER" ] && [ ! -z "$DB_PASSWORD" ] && [ ! -z "$DB_NAME" ]; then
+            echo "Executing SQL..."
+            mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /tmp/init_data.sql 2>&1
+            echo "Database setup complete"
+          else
+            echo "DB credentials not found in .env files or GitHub secrets"
+            echo "SQL file saved at /tmp/init_data.sql"
+            echo "Please run manually with: mysql -h <host> -u <user> -p<password> <database> < /tmp/init_data.sql"
+          fi
+
+          rm -f /tmp/init_data.sql
+          SCRIPT_EOF
+
+          # Copy script to server
+          scp -P ${SSH_PORT} -o StrictHostKeyChecking=no /tmp/setup_db.sh ${SSH_USER}@${SSH_HOST}:/tmp/
+
+          # Execute script on server
           ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} \
-            DB_HOST="${{ secrets.DB_HOST }}" \
-            DB_USER="${{ secrets.DB_USER }}" \
-            DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-            DB_NAME="${{ secrets.DB_NAME }}" \
-            bash << 'EOF'
-            set -e
+            "DB_HOST='${{ secrets.DB_HOST }}' DB_USER='${{ secrets.DB_USER }}' DB_PASSWORD='${{ secrets.DB_PASSWORD }}' DB_NAME='${{ secrets.DB_NAME }}' bash /tmp/setup_db.sh && rm -f /tmp/setup_db.sh"
 
-            echo "Installing MySQL client if needed..."
-            if ! command -v mysql &> /dev/null; then
-              sudo yum install -y mysql || sudo apt-get install -y mysql-client
-            fi
-
-            echo "Setting up database..."
-
-            # Find backend directory and read DB credentials from .env if secrets not provided
-            if [ -z "$DB_HOST" ] && [ -f /var/www/backend/.env ]; then
-              source /var/www/backend/.env
-            elif [ -z "$DB_HOST" ] && [ -f ~/.env ]; then
-              source ~/.env
-            fi
-
-            # Check if DB credentials are available
-            if [ ! -z "$DB_HOST" ] && [ ! -z "$DB_USER" ] && [ ! -z "$DB_PASSWORD" ] && [ ! -z "$DB_NAME" ]; then
-              echo "Executing SQL..."
-              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < /tmp/init_data.sql 2>&1
-              echo "Database setup complete"
-            else
-              echo "DB credentials not found in .env files or GitHub secrets"
-              echo "SQL file saved at /tmp/init_data.sql"
-              echo "Please run manually with: mysql -h <host> -u <user> -p<password> <database> < /tmp/init_data.sql"
-            fi
-
-            rm -f /tmp/init_data.sql
-EOF
+          # Clean up local script
+          rm -f /tmp/setup_db.sh
 
           echo "Setup complete"

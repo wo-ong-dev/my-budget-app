@@ -2179,3 +2179,272 @@ body {
     gap: 6px;
   }
 }
+
+/* ===================================
+   정산 섹션 (Settlement Section)
+   =================================== */
+
+.settlement-section {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid var(--gray-300);
+}
+
+.settlement-header {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-700);
+}
+
+.settlement-loading,
+.settlement-error {
+  padding: 16px;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 14px;
+}
+
+.settlement-error {
+  color: var(--danger-500);
+  background: rgba(220, 53, 69, 0.1);
+  border-radius: 8px;
+}
+
+/* 요약 정보 */
+.settlement-summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.settlement-summary-item {
+  flex: 1;
+  min-width: 150px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settlement-summary-label {
+  font-size: 12px;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.settlement-summary-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-700);
+}
+
+.settlement-summary-value--danger {
+  color: var(--danger-500);
+}
+
+.settlement-summary-value--success {
+  color: var(--success-500);
+}
+
+.settlement-summary-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settlement-summary-badge--balanced {
+  background: rgba(40, 167, 69, 0.1);
+  color: var(--success-500);
+}
+
+.settlement-summary-badge--unbalanced {
+  background: rgba(255, 193, 7, 0.1);
+  color: #d39e00;
+}
+
+/* 서브타이틀 */
+.settlement-subtitle {
+  margin: 16px 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+/* 정산 리스트 */
+.settlement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 정산 제안 아이템 */
+.settlement-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: white;
+  border: 2px solid var(--gray-200);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.settlement-item:hover {
+  border-color: var(--primary-500);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
+.settlement-item--checked {
+  background: rgba(16, 185, 129, 0.05);
+  border-color: var(--primary-500);
+}
+
+.settlement-checkbox {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--primary-500);
+}
+
+.settlement-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.settlement-transfer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settlement-account {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.settlement-arrow {
+  font-size: 16px;
+  color: var(--gray-500);
+}
+
+.settlement-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.settlement-amount {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary-600);
+}
+
+.settlement-reason {
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+/* 이체 내역 */
+.settlement-suggestions {
+  margin-bottom: 20px;
+}
+
+.settlement-transfers {
+  margin-top: 16px;
+}
+
+.settlement-transfer-item {
+  padding: 12px;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settlement-transfer-date {
+  font-size: 12px;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.settlement-transfer-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.settlement-transfer-memo {
+  font-size: 13px;
+  color: var(--gray-500);
+  padding: 8px;
+  background: var(--gray-100);
+  border-radius: 6px;
+}
+
+.settlement-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 14px;
+  line-height: 1.6;
+  background: white;
+  border-radius: 8px;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .settlement-section {
+    padding: 16px;
+  }
+
+  .settlement-summary {
+    gap: 8px;
+  }
+
+  .settlement-summary-item {
+    min-width: 120px;
+    padding: 10px;
+  }
+
+  .settlement-summary-value {
+    font-size: 14px;
+  }
+
+  .settlement-item {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .settlement-account {
+    font-size: 13px;
+  }
+
+  .settlement-amount {
+    font-size: 14px;
+  }
+
+  .settlement-reason {
+    font-size: 12px;
+  }
+}
