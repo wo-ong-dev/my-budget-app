@@ -4,6 +4,7 @@ import { formatCurrency, monthLabel } from "../../utils/formatters";
 import { getAccountIcon } from "../../utils/iconMappings";
 import CategoryManagementModal from "../management/CategoryManagementModal";
 import { ExpensePlanList } from "./ExpensePlanList";
+import SettlementSection from "./SettlementSection";
 
 type BudgetPanelProps = {
   budgets: BudgetWithUsage[];
@@ -356,6 +357,8 @@ function BudgetPanel({
         onClose={() => setManagementModalOpen(false)}
         onUpdate={onCategoryUpdate}
       />
+
+      {currentMonth && <SettlementSection month={currentMonth} />}
 
       {currentMonth && accounts.length > 0 && (
         <ExpensePlanList month={currentMonth} accounts={accounts} />
