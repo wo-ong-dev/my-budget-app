@@ -67,9 +67,18 @@ function BudgetPanel({
 
   const handleSaveEdit = (id: number, account: string) => {
     const numericValue = parseFloat(editValue.replace(/,/g, ''));
-    if (!isNaN(numericValue) && numericValue > 0 && onUpdateBudget) {
+
+    // 검증 로직 개선
+    if (isNaN(numericValue) || numericValue <= 0) {
+      setEditingAccount(null);
+      setEditValue("");
+      return;
+    }
+
+    if (onUpdateBudget) {
       onUpdateBudget(id, numericValue, account);
     }
+
     setEditingAccount(null);
     setEditValue("");
   };
