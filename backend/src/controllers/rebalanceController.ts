@@ -164,7 +164,7 @@ export class RebalanceController {
             await upsertOverride(category, normalizedPatternKey, chosenAccount);
           }
 
-          // 3) 적용(완료)
+          // 3) 적용(완료): 보정 이체 거래는 생성하지 않고, 원 거래의 통장분류만 변경
           if (d.decision === 'APPLY') {
             const finalAccount = chosenAccount ?? suggested;
             if (!finalAccount || !originalAccount) {
@@ -172,21 +172,7 @@ export class RebalanceController {
               continue;
             }
 
-            // (A) 보정 이체 거래 생성: from=originalAccount, memo에 to 계좌를 넣어 기존 transfer 표시 로직 재사용
-            await conn.execute(
-              `INSERT INTO transactions (date, type, account, category, amount, memo)
-               VALUES (?, '지출', ?, '정산', ?, ?)`,
-              [
-                tx.date,
-                originalAccount,
-                Number(tx.amount),
-                `${finalAccount}로 이체 (리밸런싱: ${txId})`
-              ]
-            );
-
-            // (B) 원 거래의 통장분류를 finalAccount로 변경
-            // account_id 갱신을 위해 모델 로직을 쓰는 대신, 여기선 계정 테이블 연동이 필요하므로 업데이트를 TransactionModel로 위임
-            // 트랜잭션 내에서 처리하기 위해 동일 커넥션으로 계정 id upsert를 수행
+            // 원 거래의 통장분류를 finalAccount로 변경
             // accounts 테이블에 없으면 생성
             const [accRows] = await conn.execute('SELECT id FROM accounts WHERE name = ?', [finalAccount]);
             let accountId: number | null = (accRows as any[])[0]?.id ?? null;
