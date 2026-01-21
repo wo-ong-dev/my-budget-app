@@ -1,4 +1,4 @@
-﻿import type { PropsWithChildren } from "react";
+﻿import { useEffect, type PropsWithChildren } from "react";
 
 type ModalProps = PropsWithChildren<{
   open: boolean;
@@ -7,6 +7,19 @@ type ModalProps = PropsWithChildren<{
 }>;
 
 function Modal({ open, title, onClose, children }: ModalProps) {
+  // 모달이 열릴 때 body 스크롤 방지
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   if (!open) {
     return null;
   }
