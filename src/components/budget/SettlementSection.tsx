@@ -1,8 +1,16 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { SettlementData } from "../../types";
 import { formatCurrency } from "../../utils/formatters";
 import { getAccountIcon } from "../../utils/iconMappings";
-import { fetchSettlement } from "../../services/settlementService";
+import { commitRebalance, fetchRebalanceSuggestions, fetchSettlement } from "../../services/settlementService";
+import { fetchAccounts } from "../../services/transactionService";
+import type {
+  CommitRebalanceDecision,
+  RebalanceLearningScope,
+  RebalanceSuggestionItem,
+  RebalanceSuggestionsResponse,
+} from "../../types";
+import Modal from "../common/Modal";
 
 type SettlementSectionProps = {
   month: string;
@@ -14,8 +22,27 @@ function SettlementSection({ month }: SettlementSectionProps) {
   const [error, setError] = useState<string | null>(null);
   const [checkedSuggestions, setCheckedSuggestions] = useState<Set<string>>(new Set());
 
+  // Rebalance session state
+  const [rebalanceLoading, setRebalanceLoading] = useState(false);
+  const [rebalanceError, setRebalanceError] = useState<string | null>(null);
+  const [accounts, setAccounts] = useState<string[]>([]);
+  const [rebalance, setRebalance] = useState<RebalanceSuggestionsResponse | null>(null);
+  const [chosenAccounts, setChosenAccounts] = useState<Record<number, string>>({});
+  const [appliedIds, setAppliedIds] = useState<Set<number>>(new Set());
+  const [deferredIds, setDeferredIds] = useState<Set<number>>(new Set());
+  const [wrongIds, setWrongIds] = useState<Set<number>>(new Set());
+
+  // UX 확장: 학습 범위 선택 모달
+  const [learnModalOpen, setLearnModalOpen] = useState(false);
+  const [learnModalMode, setLearnModalMode] = useState<"WRONG" | "APPLY_DIFF">("WRONG");
+  const [learnTarget, setLearnTarget] = useState<RebalanceSuggestionItem | null>(null);
+  const [learnScope, setLearnScope] = useState<RebalanceLearningScope>("PATTERN");
+  const [learnChosenAccount, setLearnChosenAccount] = useState<string>("");
+
   useEffect(() => {
     fetchSettlementData();
+    fetchRebalanceData();
+    fetchAccounts().then(setAccounts).catch(() => setAccounts([]));
   }, [month]);
 
   const fetchSettlementData = async () => {
@@ -31,6 +58,96 @@ function SettlementSection({ month }: SettlementSectionProps) {
       setLoading(false);
     }
   };
+
+  const fetchRebalanceData = async () => {
+    try {
+      setRebalanceLoading(true);
+      setRebalanceError(null);
+      const data = await fetchRebalanceSuggestions(month);
+      setRebalance(data);
+      const initial: Record<number, string> = {};
+      for (const s of data.suggestions) {
+        if (s.suggested_account) initial[s.transaction_id] = s.suggested_account;
+      }
+      setChosenAccounts(initial);
+      setAppliedIds(new Set());
+      setDeferredIds(new Set());
+      setWrongIds(new Set());
+    } catch (err) {
+      setRebalanceError(err instanceof Error ? err.message : "리밸런싱 정산을 불러오지 못했습니다.");
+    } finally {
+      setRebalanceLoading(false);
+    }
+  };
+
+  const setChosenAccount = (transactionId: number, value: string) => {
+    setChosenAccounts((prev) => ({ ...prev, [transactionId]: value }));
+  };
+
+  const markSet = (setter: React.Dispatch<React.SetStateAction<Set<number>>>, id: number) => {
+    setter((prev) => new Set(prev).add(id));
+  };
+
+  const commitOne = async (item: RebalanceSuggestionItem, decision: CommitRebalanceDecision["decision"]) => {
+    const chosenAccount = chosenAccounts[item.transaction_id] ?? item.suggested_account ?? null;
+    const payload: CommitRebalanceDecision = {
+      transactionId: item.transaction_id,
+      decision,
+      chosenAccount,
+    };
+    await commitRebalance(month, [payload]);
+
+    if (decision === "APPLY") markSet(setAppliedIds, item.transaction_id);
+    if (decision === "DEFER") markSet(setDeferredIds, item.transaction_id);
+    if (decision === "WRONG") markSet(setWrongIds, item.transaction_id);
+  };
+
+  const openLearnModalForWrong = (item: RebalanceSuggestionItem) => {
+    setLearnModalMode("WRONG");
+    setLearnTarget(item);
+    setLearnChosenAccount(chosenAccounts[item.transaction_id] ?? item.suggested_account ?? "");
+    setLearnScope("PATTERN"); // 기본: 패턴 단위 학습
+    setLearnModalOpen(true);
+  };
+
+  const openLearnModalForApplyDiff = (item: RebalanceSuggestionItem) => {
+    setLearnModalMode("APPLY_DIFF");
+    setLearnTarget(item);
+    setLearnChosenAccount(chosenAccounts[item.transaction_id] ?? item.suggested_account ?? "");
+    setLearnScope("PATTERN");
+    setLearnModalOpen(true);
+  };
+
+  const closeLearnModal = () => {
+    setLearnModalOpen(false);
+    setLearnTarget(null);
+  };
+
+  const confirmLearnModal = async () => {
+    if (!learnTarget) return;
+    const chosenAccount = learnChosenAccount || (learnTarget.suggested_account ?? "");
+
+    const payload: CommitRebalanceDecision = {
+      transactionId: learnTarget.transaction_id,
+      decision: learnModalMode === "WRONG" ? "WRONG" : "APPLY",
+      chosenAccount: chosenAccount || null,
+      learningScope: learnScope,
+    };
+
+    await commitRebalance(month, [payload]);
+
+    if (payload.decision === "APPLY") markSet(setAppliedIds, learnTarget.transaction_id);
+    if (payload.decision === "WRONG") markSet(setWrongIds, learnTarget.transaction_id);
+
+    closeLearnModal();
+  };
+
+  const patternLabel = useMemo(() => {
+    if (!learnTarget) return "";
+    const pk = learnTarget.pattern_key;
+    if (!pk) return "메모 패턴(추출 실패)";
+    return `메모 패턴: ${pk}`;
+  }, [learnTarget]);
 
   const toggleSuggestion = (key: string) => {
     setCheckedSuggestions((prev) => {
@@ -173,6 +290,201 @@ function SettlementSection({ month }: SettlementSectionProps) {
           이번 달은 정산이 필요하지 않습니다. 모든 계좌가 예산 내에서 잘 관리되고 있습니다! 👍
         </div>
       )}
+
+      {/* 리밸런싱 정산 세션 */}
+      <div className="settlement-transfers">
+        <h5 className="settlement-subtitle">🔁 리밸런싱 정산 세션</h5>
+
+        {rebalanceLoading && <div className="settlement-loading">리밸런싱 제안을 불러오는 중...</div>}
+        {rebalanceError && <div className="settlement-error">{rebalanceError}</div>}
+
+        {!rebalanceLoading && !rebalanceError && rebalance && (
+          <div className="settlement-list">
+            {rebalance.suggestions.length === 0 && (
+              <div className="settlement-empty">이번 달은 리밸런싱이 필요하지 않습니다.</div>
+            )}
+
+            {rebalance.suggestions.map((item) => {
+              const id = item.transaction_id;
+              const chosen = chosenAccounts[id] ?? item.suggested_account ?? "";
+              const isChosenDifferent = !!item.suggested_account && chosen && chosen !== item.suggested_account;
+              const done = appliedIds.has(id) || deferredIds.has(id) || wrongIds.has(id);
+              const statusLabel = appliedIds.has(id) ? "완료" : deferredIds.has(id) ? "보류" : wrongIds.has(id) ? "틀림" : "";
+
+              return (
+                <div key={id} className="settlement-transfer-item" style={{ opacity: done ? 0.7 : 1 }}>
+                  <div className="settlement-transfer-date">
+                    {new Date(item.date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
+                    {statusLabel ? ` · ${statusLabel}` : ""}
+                  </div>
+
+                  <div className="settlement-transfer-info">
+                    <div className="settlement-transfer">
+                      <span className="settlement-account">
+                        {getAccountIcon(item.original_account ?? "")} {item.original_account}
+                      </span>
+                      <span className="settlement-arrow">→</span>
+                      <span className="settlement-account">
+                        {getAccountIcon(item.suggested_account ?? "")} {item.suggested_account}
+                      </span>
+                    </div>
+                    <span className="settlement-amount">{formatCurrency(item.amount)}원</span>
+                  </div>
+
+                  <div className="settlement-transfer-memo">
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                      <span>
+                        {item.category ? `[${item.category}] ` : ""}
+                        {item.memo ?? ""}
+                      </span>
+                      <span className="settlement-reason">{item.reason}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
+                      <label className="form-label" style={{ margin: 0 }}>
+                        적용 통장
+                      </label>
+                      <select
+                        className="form-select"
+                        value={chosen}
+                        onChange={(e) => setChosenAccount(id, e.target.value)}
+                        disabled={done}
+                        style={{ width: 180 }}
+                      >
+                        <option value="" disabled>
+                          선택
+                        </option>
+                        {accounts.map((acc) => (
+                          <option key={acc} value={acc}>
+                            {acc}
+                          </option>
+                        ))}
+                      </select>
+
+                      <button
+                        type="button"
+                        className="month-nav-btn"
+                        disabled={done}
+                        onClick={() => (isChosenDifferent ? openLearnModalForApplyDiff(item) : commitOne(item, "APPLY"))}
+                        title="보정 이체 생성 + 원거래 통장분류 변경"
+                      >
+                        완료
+                      </button>
+                      <button
+                        type="button"
+                        className="month-nav-btn"
+                        disabled={done}
+                        onClick={() => commitOne(item, "DEFER")}
+                        title="이번엔 반영하지 않음(학습도 안 함)"
+                      >
+                        보류
+                      </button>
+                      <button
+                        type="button"
+                        className="month-nav-btn"
+                        disabled={done}
+                        onClick={() => openLearnModalForWrong(item)}
+                        title="추천이 틀림(학습 범위를 선택할 수 있어요)"
+                      >
+                        틀림
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <Modal
+        open={learnModalOpen}
+        title={learnModalMode === "WRONG" ? "정산 제안이 틀렸나요?" : "수정한 선택을 학습할까요?"}
+        onClose={closeLearnModal}
+      >
+        {learnTarget ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="settlement-transfer-memo">
+              <div>
+                <strong>원거래</strong>: {learnTarget.original_account} · {formatCurrency(learnTarget.amount)}원
+              </div>
+              <div>
+                <strong>메모</strong>: {learnTarget.memo ?? ""}
+              </div>
+              <div>
+                <strong>카테고리</strong>: {learnTarget.category ?? "미입력"}
+              </div>
+              <div>
+                <strong>추천</strong>: {learnTarget.suggested_account ?? "없음"} ({learnTarget.reason})
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <label className="form-label" style={{ margin: 0 }}>
+                적용/수정 통장
+              </label>
+              <select
+                className="form-select"
+                value={learnChosenAccount}
+                onChange={(e) => setLearnChosenAccount(e.target.value)}
+                style={{ width: 220 }}
+              >
+                <option value="" disabled>
+                  선택
+                </option>
+                {accounts.map((acc) => (
+                  <option key={acc} value={acc}>
+                    {acc}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="form-label">학습 범위</div>
+              <label className="radio-item radio-item--active" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="radio"
+                  name="learn-scope"
+                  checked={learnScope === "NONE"}
+                  onChange={() => setLearnScope("NONE")}
+                />
+                이번만 (학습 안 함)
+              </label>
+              <label className="radio-item" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="radio"
+                  name="learn-scope"
+                  checked={learnScope === "PATTERN"}
+                  onChange={() => setLearnScope("PATTERN")}
+                />
+                {patternLabel} 기준으로 학습
+              </label>
+              <label className="radio-item" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="radio"
+                  name="learn-scope"
+                  checked={learnScope === "CATEGORY"}
+                  onChange={() => setLearnScope("CATEGORY")}
+                />
+                카테고리 전체({learnTarget.category ?? "미입력"}) 기준으로 학습
+              </label>
+              <div style={{ fontSize: 12, color: "var(--gray-500)" }}>
+                - <strong>보류</strong>는 학습에 반영되지 않아요.<br />
+                - 여행처럼 케이스가 다양하면 “이번만” 또는 “패턴”을 추천해요.
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button type="button" className="btn btn-secondary" onClick={closeLearnModal}>
+                취소
+              </button>
+              <button type="button" className="btn btn-primary" onClick={confirmLearnModal}>
+                {learnModalMode === "WRONG" ? "틀림으로 기록" : "완료 반영"}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 }

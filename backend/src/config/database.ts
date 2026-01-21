@@ -47,6 +47,40 @@ export const initializeTables = async (): Promise<void> => {
       ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
     `);
     console.log('✅ budgets 테이블 확인/생성 완료');
+
+    // rebalance_overrides: 사용자 피드백 기반(틀림/수정완료) 추천 보정 규칙
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS rebalance_overrides (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        category VARCHAR(100) NOT NULL,
+        pattern_key VARCHAR(100) NOT NULL,
+        expected_account VARCHAR(100) NOT NULL,
+        confidence INT NOT NULL DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_category_pattern (category, pattern_key)
+      ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    `);
+    console.log('✅ rebalance_overrides 테이블 확인/생성 완료');
+
+    // rebalance_feedback: 정산 세션에서의 사용자 응답 로그 (완료/보류/틀림)
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS rebalance_feedback (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        month VARCHAR(7) NOT NULL,
+        transaction_id INT NOT NULL,
+        original_account VARCHAR(100) NULL,
+        category VARCHAR(100) NULL,
+        memo VARCHAR(255) NULL,
+        suggested_account VARCHAR(100) NULL,
+        decision ENUM('APPLY','DEFER','WRONG') NOT NULL,
+        corrected_account VARCHAR(100) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_month (month),
+        KEY idx_transaction_id (transaction_id)
+      ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    `);
+    console.log('✅ rebalance_feedback 테이블 확인/생성 완료');
   } catch (error) {
     console.error('❌ 테이블 초기화 실패:', error);
   }

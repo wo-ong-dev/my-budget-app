@@ -157,6 +157,25 @@ export class TransactionModel {
     return (rows as Transaction[])[0];
   }
 
+  static async updateAccountOnly(id: number, nextAccount: string | null): Promise<Transaction> {
+    const [rows] = await pool.execute('SELECT * FROM transactions WHERE id = ?', [id]);
+    const existing = (rows as Transaction[])[0];
+    if (!existing) {
+      throw new Error('거래 내역을 찾을 수 없습니다.');
+    }
+
+    const nextDraft: TransactionDraft = {
+      date: existing.date,
+      type: existing.type,
+      account: nextAccount,
+      category: existing.category ?? null,
+      amount: Number(existing.amount),
+      memo: existing.memo ?? null
+    };
+
+    return await this.update(id, nextDraft);
+  }
+
   static async delete(id: number): Promise<void> {
     await pool.execute('DELETE FROM transactions WHERE id = ?', [id]);
   }
