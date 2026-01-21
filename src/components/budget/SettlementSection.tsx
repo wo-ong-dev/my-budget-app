@@ -398,7 +398,7 @@ function SettlementSection({ month }: SettlementSectionProps) {
                         className="rebalance-session-btn rebalance-session-btn--apply"
                         disabled={done}
                         onClick={() => (isChosenDifferent ? openLearnModalForApplyDiff(item) : commitOne(item, "APPLY"))}
-                        title="보정 이체 생성 + 원거래 통장분류 변경"
+                        title="원거래 통장분류 변경"
                       >
                         완료
                       </button>
