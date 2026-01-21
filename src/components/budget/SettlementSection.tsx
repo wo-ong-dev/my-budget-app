@@ -312,57 +312,54 @@ function SettlementSection({ month }: SettlementSectionProps) {
               const statusLabel = appliedIds.has(id) ? "완료" : deferredIds.has(id) ? "보류" : wrongIds.has(id) ? "틀림" : "";
 
               return (
-                <div key={id} className="settlement-transfer-item" style={{ opacity: done ? 0.7 : 1 }}>
-                  <div className="settlement-transfer-date">
-                    {new Date(item.date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
-                    {statusLabel ? ` · ${statusLabel}` : ""}
+                <div key={id} className={`rebalance-session-item ${done ? "rebalance-session-item--done" : ""}`}>
+                  <div className="rebalance-session-header">
+                    <div className="rebalance-session-date">
+                      {new Date(item.date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
+                    </div>
+                    {statusLabel && <span className="rebalance-session-status">{statusLabel}</span>}
                   </div>
 
-                  <div className="settlement-transfer-info">
-                    <div className="settlement-transfer">
-                      <span className="settlement-account">
-                        {getAccountIcon(item.original_account ?? "")} {item.original_account}
-                      </span>
-                      <span className="settlement-arrow">→</span>
-                      <span className="settlement-account">
-                        {getAccountIcon(item.suggested_account ?? "")} {item.suggested_account}
-                      </span>
-                    </div>
-                    <span className="settlement-amount">{formatCurrency(item.amount)}원</span>
+                  <div className="rebalance-session-transfer">
+                    <span className="rebalance-session-account">
+                      {getAccountIcon(item.original_account ?? "")} {item.original_account}
+                    </span>
+                    <span className="rebalance-session-arrow">→</span>
+                    <span className="rebalance-session-account">
+                      {getAccountIcon(item.suggested_account ?? "")} {item.suggested_account}
+                    </span>
+                    <span className="rebalance-session-amount">{formatCurrency(item.amount)}원</span>
                   </div>
 
-                  <div className="settlement-transfer-memo">
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                      <span>
-                        {item.category ? `[${item.category}] ` : ""}
-                        {item.memo ?? ""}
-                      </span>
-                      <span className="settlement-reason">{item.reason}</span>
+                  <div className="rebalance-session-memo">
+                    <div>
+                      {item.category && <span className="rebalance-session-memo-category">{item.category}</span>}
+                      <span className="rebalance-session-memo-text">{item.memo ?? ""}</span>
                     </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
-                      <label className="form-label" style={{ margin: 0 }}>
-                        적용 통장
-                      </label>
-                      <select
-                        className="form-select"
-                        value={chosen}
-                        onChange={(e) => setChosenAccount(id, e.target.value)}
-                        disabled={done}
-                        style={{ width: 180 }}
-                      >
-                        <option value="" disabled>
-                          선택
+                    {item.reason && <div className="rebalance-session-reason">{item.reason}</div>}
+                  </div>
+
+                  <div className="rebalance-session-actions">
+                    <label>적용 통장</label>
+                    <select
+                      value={chosen}
+                      onChange={(e) => setChosenAccount(id, e.target.value)}
+                      disabled={done}
+                    >
+                      <option value="" disabled>
+                        선택
+                      </option>
+                      {accounts.map((acc) => (
+                        <option key={acc} value={acc}>
+                          {acc}
                         </option>
-                        {accounts.map((acc) => (
-                          <option key={acc} value={acc}>
-                            {acc}
-                          </option>
-                        ))}
-                      </select>
+                      ))}
+                    </select>
 
+                    <div className="rebalance-session-btn-group">
                       <button
                         type="button"
-                        className="month-nav-btn"
+                        className="rebalance-session-btn rebalance-session-btn--apply"
                         disabled={done}
                         onClick={() => (isChosenDifferent ? openLearnModalForApplyDiff(item) : commitOne(item, "APPLY"))}
                         title="보정 이체 생성 + 원거래 통장분류 변경"
@@ -371,7 +368,7 @@ function SettlementSection({ month }: SettlementSectionProps) {
                       </button>
                       <button
                         type="button"
-                        className="month-nav-btn"
+                        className="rebalance-session-btn rebalance-session-btn--defer"
                         disabled={done}
                         onClick={() => commitOne(item, "DEFER")}
                         title="이번엔 반영하지 않음(학습도 안 함)"
@@ -380,7 +377,7 @@ function SettlementSection({ month }: SettlementSectionProps) {
                       </button>
                       <button
                         type="button"
-                        className="month-nav-btn"
+                        className="rebalance-session-btn rebalance-session-btn--wrong"
                         disabled={done}
                         onClick={() => openLearnModalForWrong(item)}
                         title="추천이 틀림(학습 범위를 선택할 수 있어요)"
