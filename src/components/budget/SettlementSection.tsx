@@ -323,7 +323,7 @@ function SettlementSection({ month }: SettlementSectionProps) {
 
       {suggestions.length === 0 && transfers.length === 0 && (
         <div className="settlement-empty">
-          이번 달은 정산이 필요하지 않습니다. 모든 계좌가 예산 내에서 잘 관리되고 있습니다! 👍
+          현재는 통장 간 정산이 필요하지 않습니다 👍
         </div>
       )}
 
