@@ -3,60 +3,6 @@ name: Build and Deploy (EC2 Nginx)
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: {}
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install
-        run: npm ci
-
-      - name: Build
-        env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-        run: npm run build
-
-      - name: Upload dist to EC2 (/tmp/my-budget-app)
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.KEY }}
-          port: ${{ secrets.PORT }}
-          source: "dist/*"
-          target: "/tmp/my-budget-app"
-          strip_components: 1
-
-      - name: Sync to APP_DIR and restart Nginx
-        uses: appleboy/ssh-action@v1.1.0
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.KEY }}
-          port: ${{ secrets.PORT }}
-          script: |
-            set -e
-            APP_DIR="${{ secrets.APP_DIR }}"
-            if [ -z "$APP_DIR" ]; then APP_DIR="/var/www/html"; fi
-            sudo mkdir -p "$APP_DIR"
-            sudo rsync -av --delete /tmp/my-budget-app/ "$APP_DIR/"
-            sudo systemctl restart nginx
-
-name: Build and Deploy (EC2 Nginx)
-
-on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -254,6 +200,12 @@ jobs:
           SSH_PORT=${SSH_PORT:-22}
           SSH_USER=${SSH_USER:-ec2-user}
 
+          # Extract DB secrets (with prefix removal)
+          DB_HOST_VALUE=$(echo "${{ secrets.DB_HOST }}" | sed 's/^[^:]*://g' | tr -d '[:space:]')
+          DB_USER_VALUE=$(echo "${{ secrets.DB_USER }}" | sed 's/^[^:]*://g' | tr -d '[:space:]')
+          DB_PASSWORD_VALUE=$(echo "${{ secrets.DB_PASSWORD }}" | sed 's/^[^:]*://g' | tr -d '[:space:]')
+          DB_NAME_VALUE=$(echo "${{ secrets.DB_NAME }}" | sed 's/^[^:]*://g' | tr -d '[:space:]')
+
           echo "======================================"
           echo "🔧 Deploying Backend & Running Migrations"
           echo "======================================"
@@ -268,8 +220,13 @@ jobs:
           scp -P ${SSH_PORT} -o StrictHostKeyChecking=no backend-deploy.tar.gz ${SSH_USER}@${SSH_HOST}:/tmp/backend-deploy.tar.gz
 
           # Deploy backend and run migrations
-          ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} bash << 'EOF'
+          ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} bash << EOF
             set -e
+
+            DB_HOST="${DB_HOST_VALUE}"
+            DB_USER="${DB_USER_VALUE}"
+            DB_PASSWORD="${DB_PASSWORD_VALUE}"
+            DB_NAME="${DB_NAME_VALUE}"
 
             echo "📦 Extracting backend files..."
             cd /tmp
@@ -280,12 +237,12 @@ jobs:
             BACKEND_DIR="/opt/my-budget-api"
 
             echo "📁 Preparing backend directory..."
-            sudo mkdir -p ${BACKEND_DIR}
+            sudo mkdir -p \${BACKEND_DIR}
 
             echo "📋 Copying backend files..."
-            sudo cp -r backend-temp/backend/* ${BACKEND_DIR}/
+            sudo cp -r backend-temp/backend/* \${BACKEND_DIR}/
 
-            cd ${BACKEND_DIR}
+            cd \${BACKEND_DIR}
 
             echo "📦 Installing backend dependencies..."
             npm install || true
@@ -301,9 +258,9 @@ jobs:
             if [ -d migrations ]; then
               echo "Found migrations directory"
               for migration in migrations/*.sql; do
-                if [ -f "$migration" ]; then
-                  echo "Running migration: $migration"
-                  mysql -h "${{ secrets.DB_HOST }}" -u "${{ secrets.DB_USER }}" -p"${{ secrets.DB_PASSWORD }}" "${{ secrets.DB_NAME }}" < "$migration" 2>&1 || echo "⚠️  Migration $(basename $migration) might have already been applied"
+                if [ -f "\$migration" ]; then
+                  echo "Running migration: \$migration"
+                  mysql -h "\${DB_HOST}" -u "\${DB_USER}" -p"\${DB_PASSWORD}" "\${DB_NAME}" < "\$migration" 2>&1 || echo "⚠️  Migration \$(basename \$migration) might have already been applied"
                 fi
               done
               echo "All migrations completed"
