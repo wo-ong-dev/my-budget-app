@@ -33,10 +33,19 @@ export class RebalanceController {
       const { from, to } = monthToRange(month);
       const txs = await TransactionModel.findByMonthRange(from, to);
 
+      // 이미 리밸런싱 완료된 항목(decision='APPLY') 제외
+      const [completedRows] = await pool.execute(
+        `SELECT transaction_id FROM rebalance_feedback
+         WHERE month = ? AND decision = 'APPLY'`,
+        [month]
+      );
+      const completedTxIds = new Set((completedRows as any[]).map(r => r.transaction_id));
+
       const suggestions: RebalanceSuggestionItem[] = [];
       for (const tx of txs) {
         if (tx.type !== '지출') continue;
         if (!tx.account) continue;
+        if (completedTxIds.has(tx.id)) continue; // 이미 리밸런싱 완료된 항목 제외
 
         // 이체/정산 카테고리는 리밸런싱 대상에서 제외
         if (tx.category === '이체' || tx.category === '정산') continue;

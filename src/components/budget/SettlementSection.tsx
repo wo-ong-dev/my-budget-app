@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import type { SettlementData } from "../../types";
 import { formatCurrency } from "../../utils/formatters";
 import { getAccountIcon } from "../../utils/iconMappings";
-import { commitRebalance, fetchRebalanceSuggestions, fetchSettlement } from "../../services/settlementService";
+import { commitRebalance, fetchRebalanceSuggestions, fetchSettlement, applySettlement } from "../../services/settlementService";
 import { fetchAccounts } from "../../services/transactionService";
 import type {
   CommitRebalanceDecision,
@@ -97,9 +97,16 @@ function SettlementSection({ month }: SettlementSectionProps) {
     };
     await commitRebalance(month, [payload]);
 
-    if (decision === "APPLY") markSet(setAppliedIds, item.transaction_id);
-    if (decision === "DEFER") markSet(setDeferredIds, item.transaction_id);
-    if (decision === "WRONG") markSet(setWrongIds, item.transaction_id);
+    if (decision === "APPLY") {
+      markSet(setAppliedIds, item.transaction_id);
+      // 리밸런싱 완료 시 리밸런싱 세션 재조회 (완료된 항목 제외)
+      await fetchRebalanceData();
+      // 정산제안도 재조회 (완료된 항목이 정산제안에 추가됨)
+      await fetchSettlementData();
+    } else {
+      if (decision === "DEFER") markSet(setDeferredIds, item.transaction_id);
+      if (decision === "WRONG") markSet(setWrongIds, item.transaction_id);
+    }
   };
 
   const openLearnModalForWrong = (item: RebalanceSuggestionItem) => {
@@ -161,6 +168,23 @@ function SettlementSection({ month }: SettlementSectionProps) {
     });
   };
 
+  const handleApplySettlement = async () => {
+    if (checkedSuggestions.size === 0) {
+      alert("완료할 항목을 선택해주세요.");
+      return;
+    }
+
+    try {
+      await applySettlement(month, Array.from(checkedSuggestions));
+      // 정산제안 데이터 다시 불러오기 (완료된 항목 제외)
+      await fetchSettlementData();
+      // 체크박스 초기화
+      setCheckedSuggestions(new Set());
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "정산제안 완료 처리에 실패했습니다.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="settlement-section">
@@ -218,7 +242,19 @@ function SettlementSection({ month }: SettlementSectionProps) {
       {/* 정산 제안 */}
       {suggestions.length > 0 && (
         <div className="settlement-suggestions">
-          <h5 className="settlement-subtitle">정산 제안</h5>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <h5 className="settlement-subtitle">정산 제안</h5>
+            {checkedSuggestions.size > 0 && (
+              <button
+                type="button"
+                className="rebalance-session-btn rebalance-session-btn--apply"
+                onClick={handleApplySettlement}
+                style={{ padding: "6px 14px", fontSize: "12px" }}
+              >
+                완료 ({checkedSuggestions.size})
+              </button>
+            )}
+          </div>
           <div className="settlement-list">
             {suggestions.map((suggestion, index) => {
               const key = `${suggestion.from_account}-${suggestion.to_account}-${suggestion.amount}`;

@@ -19,3 +19,7 @@ export async function fetchRebalanceSuggestions(month: string): Promise<Rebalanc
 export async function commitRebalance(month: string, decisions: CommitRebalanceDecision[]): Promise<void> {
   await httpClient.post(`/settlements/rebalance/commit`, { month, decisions });
 }
+
+export async function applySettlement(month: string, itemKeys: string[]): Promise<void> {
+  await httpClient.post(`/settlements/apply`, { month, item_keys: itemKeys });
+}

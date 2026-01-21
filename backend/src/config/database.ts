@@ -74,13 +74,37 @@ export const initializeTables = async (): Promise<void> => {
         memo VARCHAR(255) NULL,
         suggested_account VARCHAR(100) NULL,
         decision ENUM('APPLY','DEFER','WRONG') NOT NULL,
+        is_settled BOOLEAN NOT NULL DEFAULT FALSE,
         corrected_account VARCHAR(100) NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         KEY idx_month (month),
-        KEY idx_transaction_id (transaction_id)
+        KEY idx_transaction_id (transaction_id),
+        KEY idx_is_settled (decision, is_settled, month)
       ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
     `);
     console.log('✅ rebalance_feedback 테이블 확인/생성 완료');
+
+    // 기존 테이블에 is_settled 컬럼이 없으면 추가 (마이그레이션)
+    try {
+      const [columns] = await pool.execute(`
+        SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'rebalance_feedback'
+          AND COLUMN_NAME = 'is_settled'
+      `);
+      if ((columns as any[]).length === 0) {
+        await pool.execute(`
+          ALTER TABLE rebalance_feedback
+          ADD COLUMN is_settled BOOLEAN NOT NULL DEFAULT FALSE AFTER decision,
+          ADD INDEX idx_is_settled (decision, is_settled, month)
+        `);
+        console.log('✅ rebalance_feedback.is_settled 컬럼 추가 완료');
+      }
+    } catch (error) {
+      // 컬럼이 이미 있거나 오류가 발생해도 계속 진행
+      console.log('⚠️  rebalance_feedback.is_settled 컬럼 확인/추가 스킵:', error);
+    }
   } catch (error) {
     console.error('❌ 테이블 초기화 실패:', error);
   }
