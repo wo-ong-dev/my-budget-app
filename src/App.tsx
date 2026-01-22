@@ -812,16 +812,6 @@ function AuthenticatedApp() {
           // BOM 제거
           const content = text.replace(/^\uFEFF/, "");
 
-          // CSV 파싱
-          const lines = content.split(/\r?\n/).filter(line => line.trim());
-          if (lines.length < 2) {
-            throw new Error("CSV 파일이 비어있어요.");
-          }
-
-          // 헤더 제외하고 데이터 행만 파싱
-          const dataLines = lines.slice(1);
-          const drafts: TransactionDraft[] = [];
-
           // 개선된 CSV 파싱 함수 (큰따옴표 처리)
           const parseCSVLine = (line: string): string[] => {
             const result: string[] = [];
@@ -854,6 +844,28 @@ function AuthenticatedApp() {
             
             return result;
           };
+
+          // CSV 파싱
+          const lines = content.split(/\r?\n/).filter(line => line.trim());
+          if (lines.length < 2) {
+            throw new Error("CSV 파일이 비어있어요.");
+          }
+
+          // 헤더 파싱하여 형식 감지
+          const headerLine = lines[0];
+          const headerCells = parseCSVLine(headerLine);
+          
+          // 뱅크샐러드 형식 감지: "대분류", "소분류", "결제 수단" 등의 키워드 확인
+          const isBankSaladFormat = headerCells.some(cell => 
+            cell.includes('대분류') || 
+            cell.includes('소분류') || 
+            cell.includes('결제 수단') ||
+            cell.includes('화폐')
+          );
+
+          // 헤더 제외하고 데이터 행만 파싱
+          const dataLines = lines.slice(1);
+          const drafts: TransactionDraft[] = [];
 
           // 날짜 파싱 헬퍼 함수
           const parseDateFromCSV = (dateStr: string): string => {
@@ -904,6 +916,53 @@ function AuthenticatedApp() {
             return isNegative ? -amount : amount;
           };
 
+          // 항목명 매핑 테이블 (결제 수단 → 통장분류)
+          const accountMapping: Record<string, string> = {
+            '토스뱅크 체크카드': '토스뱅크',
+            '토스뱅크 통장': '토스뱅크',
+            '카카오페이 머니': '카카오페이',
+            '카카오페이': '카카오페이',
+            'KB Star*t통장-저축예금': '국민은행',
+            'KB Star*t통장': '국민은행',
+            'KB': '국민은행',
+            '국민은행': '국민은행',
+            '삼성카드 taptap O': '삼성카드',
+            '삼성카드': '삼성카드',
+            'WON 통장': 'WON',
+            '세이프박스': '세이프박스',
+          };
+
+          // 항목명 매핑 함수
+          const mapAccount = (paymentMethod: string): string => {
+            const trimmed = paymentMethod.trim();
+            // 정확히 일치하는 경우
+            if (accountMapping[trimmed]) {
+              return accountMapping[trimmed];
+            }
+            // 부분 일치 검색 (예: "토스뱅크" 포함)
+            for (const [key, value] of Object.entries(accountMapping)) {
+              if (trimmed.includes(key) || key.includes(trimmed)) {
+                return value;
+              }
+            }
+            // 매핑 없으면 원본 반환
+            return trimmed;
+          };
+
+          // 카테고리 매핑 함수 (대분류/소분류 → 소비항목)
+          const mapCategory = (mainCategory: string, subCategory: string): string => {
+            // 소분류가 있고 "미분류"가 아니면 소분류 우선
+            if (subCategory && subCategory.trim() && subCategory.trim() !== '미분류') {
+              return subCategory.trim();
+            }
+            // 대분류가 있으면 대분류 사용
+            if (mainCategory && mainCategory.trim() && mainCategory.trim() !== '미분류') {
+              return mainCategory.trim();
+            }
+            // 둘 다 없거나 미분류면 빈 문자열
+            return '';
+          };
+
           for (let i = 0; i < dataLines.length; i++) {
             const line = dataLines[i];
             
@@ -915,8 +974,46 @@ function AuthenticatedApp() {
               continue;
             }
 
-            // 새로운 순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목
-            let [dateStr, typeStr, amountStr, memo = "", account = "", category = ""] = cells;
+            let dateStr: string;
+            let typeStr: string;
+            let amountStr: string;
+            let memo: string;
+            let account: string;
+            let category: string;
+
+            if (isBankSaladFormat) {
+              // 뱅크샐러드 형식: 날짜, 시간, 타입, 대분류, 소분류, 내용, 금액, 화폐, 결제 수단, 메모
+              // 헤더 인덱스 찾기
+              const dateIdx = headerCells.findIndex(c => c.includes('날짜'));
+              const typeIdx = headerCells.findIndex(c => c.includes('타입'));
+              const mainCategoryIdx = headerCells.findIndex(c => c.includes('대분류'));
+              const subCategoryIdx = headerCells.findIndex(c => c.includes('소분류'));
+              const contentIdx = headerCells.findIndex(c => c.includes('내용'));
+              const amountIdx = headerCells.findIndex(c => c.includes('금액'));
+              const paymentMethodIdx = headerCells.findIndex(c => c.includes('결제 수단'));
+              const memoIdx = headerCells.findIndex(c => c.includes('메모'));
+
+              dateStr = cells[dateIdx] || '';
+              typeStr = cells[typeIdx] || '';
+              amountStr = cells[amountIdx] || '';
+              const mainCategory = cells[mainCategoryIdx] || '';
+              const subCategory = cells[subCategoryIdx] || '';
+              const content = cells[contentIdx] || '';
+              const paymentMethod = cells[paymentMethodIdx] || '';
+              const memoValue = cells[memoIdx] || '';
+
+              // 메모는 내용과 메모를 합침
+              memo = [content, memoValue].filter(v => v).join(' ').trim();
+              
+              // 통장분류 매핑
+              account = mapAccount(paymentMethod);
+              
+              // 카테고리 매핑
+              category = mapCategory(mainCategory, subCategory);
+            } else {
+              // 가계부 형식: 날짜, 구분, 금액, 메모, 통장분류, 소비항목
+              [dateStr, typeStr, amountStr, memo = "", account = "", category = ""] = cells;
+            }
 
             // 날짜 파싱
             const date = parseDateFromCSV(dateStr);
@@ -931,6 +1028,12 @@ function AuthenticatedApp() {
             // 유효성 검사
             if (!type) {
               console.warn(`${i + 2}번째 줄 건너뛰기: 필수 필드 누락`);
+              continue;
+            }
+
+            // 이체 거래는 제외
+            if (type === "이체" || type === "이체출금" || type === "이체입금") {
+              console.warn(`${i + 2}번째 줄 건너뛰기: 이체 거래는 제외 (${type})`);
               continue;
             }
 
