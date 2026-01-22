@@ -1295,6 +1295,7 @@ function AuthenticatedApp() {
           onClickTitle={() => setActiveTab("input")}
           onExportCSV={handleExportCSV}
           onImportCSV={handleImportCSV}
+          onCompareCSV={handleCompareCSV}
         />
         <TabNavigation tabs={tabs} activeTab={activeTab} onSelect={handleTabChange} />
 
