@@ -846,12 +846,14 @@ function AuthenticatedApp() {
           };
 
           // 금액 파싱 헬퍼 함수
-          const parseAmountFromCSV = (amountStr: string): number => {
-            if (!amountStr || amountStr.trim() === "") return 0;
+          const parseAmountFromCSV = (amountStr: string): number | null => {
+            if (!amountStr || amountStr.trim() === "") return null;
             const isNegative = amountStr.trim().startsWith("-");
             const numStr = amountStr.replace(/[^0-9]/g, "");
+            if (!numStr) return null; // 숫자가 없으면 null
             const amount = parseFloat(numStr);
-            return isNaN(amount) ? 0 : (isNegative ? -amount : amount);
+            if (isNaN(amount) || amount === 0) return null; // NaN이거나 0이면 null
+            return isNegative ? -amount : amount;
           };
 
           for (let i = 0; i < dataLines.length; i++) {
@@ -891,8 +893,8 @@ function AuthenticatedApp() {
             }
 
             const amount = parseAmountFromCSV(amountStr);
-            if (isNaN(amount)) {
-              console.warn(`${i + 2}번째 줄 건너뛰기: 잘못된 금액 (${amountStr})`);
+            if (amount === null || amount === 0) {
+              console.warn(`${i + 2}번째 줄 건너뛰기: 잘못된 금액 또는 0원 (${amountStr})`);
               continue;
             }
 
