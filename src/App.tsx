@@ -792,13 +792,28 @@ function AuthenticatedApp() {
 
         try {
           setLoading(true);
-          const text = await file.text();
+          
+          // 파일을 ArrayBuffer로 읽어서 인코딩 감지 시도
+          const arrayBuffer = await file.arrayBuffer();
+          const decoder = new TextDecoder('utf-8');
+          let text = decoder.decode(arrayBuffer);
+          
+          // UTF-8로 디코딩 실패 시 (한글 깨짐) 다른 인코딩 시도
+          if (text.includes('') || text.includes('')) {
+            // CP949 (EUC-KR 계열) 시도
+            try {
+              const cp949Decoder = new TextDecoder('euc-kr');
+              text = cp949Decoder.decode(arrayBuffer);
+            } catch (e) {
+              // 실패 시 원본 유지
+            }
+          }
 
           // BOM 제거
           const content = text.replace(/^\uFEFF/, "");
 
           // CSV 파싱
-          const lines = content.split("\n").filter(line => line.trim());
+          const lines = content.split(/\r?\n/).filter(line => line.trim());
           if (lines.length < 2) {
             throw new Error("CSV 파일이 비어있어요.");
           }
@@ -806,6 +821,39 @@ function AuthenticatedApp() {
           // 헤더 제외하고 데이터 행만 파싱
           const dataLines = lines.slice(1);
           const drafts: TransactionDraft[] = [];
+
+          // 개선된 CSV 파싱 함수 (큰따옴표 처리)
+          const parseCSVLine = (line: string): string[] => {
+            const result: string[] = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+              const char = line[i];
+              
+              if (char === '"') {
+                if (inQuotes && line[i + 1] === '"') {
+                  // 이스케이프된 따옴표
+                  current += '"';
+                  i++; // 다음 따옴표 건너뛰기
+                } else {
+                  // 따옴표 시작/끝
+                  inQuotes = !inQuotes;
+                }
+              } else if (char === ',' && !inQuotes) {
+                // 쉼표로 필드 구분
+                result.push(current.trim());
+                current = '';
+              } else {
+                current += char;
+              }
+            }
+            
+            // 마지막 필드 추가
+            result.push(current.trim());
+            
+            return result;
+          };
 
           // 날짜 파싱 헬퍼 함수
           const parseDateFromCSV = (dateStr: string): string => {
@@ -858,15 +906,14 @@ function AuthenticatedApp() {
 
           for (let i = 0; i < dataLines.length; i++) {
             const line = dataLines[i];
-            // CSV 파싱 (큰따옴표로 감싸진 필드 처리)
-            const matches = line.match(/("(?:[^"]|"")*"|[^,]*)/g);
-            if (!matches || matches.length < 3) {
+            
+            // 개선된 CSV 파싱 사용
+            const cells = parseCSVLine(line);
+            
+            if (cells.length < 3) {
+              console.warn(`${i + 2}번째 줄 건너뛰기: 필드 수 부족 (${cells.length}개)`);
               continue;
             }
-
-            const cells = matches
-              .map(cell => cell.replace(/^"|"$/g, "").replace(/""/g, '"').trim())
-              .filter((_, index) => index % 2 === 0); // Remove comma matches
 
             // 새로운 순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목
             let [dateStr, typeStr, amountStr, memo = "", account = "", category = ""] = cells;
