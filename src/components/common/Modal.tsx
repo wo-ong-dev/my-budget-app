@@ -1,4 +1,5 @@
 ﻿import { useEffect, type PropsWithChildren } from "react";
+import { createPortal } from "react-dom";
 
 type ModalProps = PropsWithChildren<{
   open: boolean;
@@ -31,7 +32,7 @@ function Modal({ open, title, onClose, children }: ModalProps) {
     }
   };
 
-  return (
+  const modalContent = (
     <div className="modal-backdrop" role="dialog" aria-modal="true" onClick={handleBackdropClick}>
       <div className="modal">
         <header className="modal__header">
@@ -49,6 +50,9 @@ function Modal({ open, title, onClose, children }: ModalProps) {
       </div>
     </div>
   );
+
+  // Portal을 사용하여 document.body에 직접 렌더링
+  return createPortal(modalContent, document.body);
 }
 
 export default Modal;
