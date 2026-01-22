@@ -1111,6 +1111,12 @@ function AuthenticatedApp() {
               continue;
             }
 
+            // 9,999원 이하 수입 건은 제외 (은행 이자 등)
+            if (type === "수입" && amount > 0 && amount <= 9999) {
+              console.warn(`${i + 2}번째 줄 건너뛰기: 9,999원 이하 수입은 제외 (${amount}원)`);
+              continue;
+            }
+
             drafts.push({
               date,
               type: type as TransactionType,
