@@ -970,14 +970,36 @@ function AuthenticatedApp() {
 
           // 중복 체크 함수 (날짜, 구분, 금액, 계좌, 카테고리, 메모 모두 확인)
           const isDuplicate = (draft: TransactionDraft): boolean => {
-            return existingTransactions.some(tx =>
-              tx.date === draft.date &&
-              tx.type === draft.type &&
-              tx.amount === draft.amount &&
-              (tx.account ?? "") === (draft.account ?? "") &&
-              (tx.category ?? "") === (draft.category ?? "") &&
-              (tx.memo ?? "") === (draft.memo ?? "")
-            );
+            return existingTransactions.some(tx => {
+              // 날짜 비교 (정규화된 형식)
+              const txDate = tx.date.trim();
+              const draftDate = draft.date.trim();
+              if (txDate !== draftDate) return false;
+
+              // 구분 비교
+              if (tx.type !== draft.type) return false;
+
+              // 금액 비교 (부동소수점 오차 허용)
+              const amountDiff = Math.abs(Number(tx.amount) - Number(draft.amount));
+              if (amountDiff > 0.01) return false;
+
+              // 계좌 비교 (공백 제거 후 비교)
+              const txAccount = (tx.account ?? "").trim();
+              const draftAccount = (draft.account ?? "").trim();
+              if (txAccount !== draftAccount) return false;
+
+              // 카테고리 비교 (공백 제거 후 비교)
+              const txCategory = (tx.category ?? "").trim();
+              const draftCategory = (draft.category ?? "").trim();
+              if (txCategory !== draftCategory) return false;
+
+              // 메모 비교 (공백 제거 후 비교)
+              const txMemo = (tx.memo ?? "").trim();
+              const draftMemo = (draft.memo ?? "").trim();
+              if (txMemo !== draftMemo) return false;
+
+              return true;
+            });
           };
 
           // 중복 제거
