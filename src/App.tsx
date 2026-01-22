@@ -778,20 +778,20 @@ function AuthenticatedApp() {
     }
   };
 
-  const handleImportCSV = () => {
+  // CSV 파일 처리 함수 (공통 로직)
+  const processCSVFile = async (file: File) => {
+    if (!file) {
+      return;
+    }
+
+    // CSV 파일인지 확인
+    const fileName = file.name.toLowerCase();
+    if (!fileName.endsWith('.csv')) {
+      throw new Error('CSV 파일만 가져올 수 있어요.');
+    }
+
     try {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".csv,.xlsx,.xls";
-
-      input.onchange = async (event) => {
-        const file = (event.target as HTMLInputElement).files?.[0];
-        if (!file) {
-          return;
-        }
-
-        try {
-          setLoading(true);
+      setLoading(true);
           
           // 파일을 ArrayBuffer로 읽어서 인코딩 감지 시도
           const arrayBuffer = await file.arrayBuffer();
@@ -1034,6 +1034,19 @@ function AuthenticatedApp() {
         }
       };
 
+  const handleImportCSV = () => {
+    try {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".csv,.xlsx,.xls";
+
+      input.onchange = async (event) => {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (file) {
+          await processCSVFile(file);
+        }
+      };
+
       input.click();
     } catch (err) {
       const message = err instanceof Error ? err.message : "파일을 선택하지 못했어요.";
@@ -1041,8 +1054,49 @@ function AuthenticatedApp() {
     }
   };
 
+  // 드래그 앤 드롭 핸들러
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const csvFile = files.find(file => file.name.toLowerCase().endsWith('.csv'));
+
+    if (csvFile) {
+      await processCSVFile(csvFile);
+    } else if (files.length > 0) {
+      setError('CSV 파일만 드롭할 수 있어요.');
+    }
+  };
+
   return (
-    <div className="app-shell">
+    <div 
+      className={`app-shell ${isDragging ? 'app-shell--dragging' : ''}`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <div className="app-container" {...swipeHandlers}>
         <Header
           onClickTitle={() => setActiveTab("input")}
