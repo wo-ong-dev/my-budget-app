@@ -1401,28 +1401,43 @@ function AuthenticatedApp() {
             });
           };
 
+          // 최근 1개월치만 필터링 (오늘 기준)
+          const today = new Date();
+          const oneMonthAgo = new Date(today);
+          oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+          const oneMonthAgoStr = oneMonthAgo.toISOString().split('T')[0];
+
+          const recentDrafts = drafts.filter(draft => draft.date >= oneMonthAgoStr);
+          const excludedCount = drafts.length - recentDrafts.length;
+
+          if (excludedCount > 0) {
+            console.log(`⏭️  1개월 이전 데이터 ${excludedCount}개는 제외되었습니다. (${oneMonthAgoStr} 이전)`);
+          }
+
           // 중복 제거
-          const newDrafts = drafts.filter(draft => !isDuplicate(draft));
-          const duplicateCount = drafts.length - newDrafts.length;
+          const newDrafts = recentDrafts.filter(draft => !isDuplicate(draft));
+          const duplicateCount = recentDrafts.length - newDrafts.length;
 
           // 비교 모드인 경우 통계만 표시
           if (compareOnly) {
-            const totalCSV = drafts.length;
+            const totalCSV = recentDrafts.length;
             const matchedCount = duplicateCount;
             const unmatchedCount = newDrafts.length;
             const matchRate = totalCSV > 0 ? (matchedCount / totalCSV * 100).toFixed(2) : '0.00';
-            
+
             const message = `📊 CSV vs 서버 데이터 비교 결과\n\n` +
-              `CSV 총 항목: ${totalCSV}개\n` +
+              `CSV 전체: ${drafts.length}개\n` +
+              `최근 1개월: ${totalCSV}개 (${oneMonthAgoStr} 이후)\n` +
               `서버 일치 항목: ${matchedCount}개\n` +
               `서버 미일치 항목: ${unmatchedCount}개\n` +
               `일치율: ${matchRate}%\n\n` +
               `기간: ${minDate} ~ ${maxDate}\n` +
               `서버 데이터: ${existingTransactions.length}개`;
-            
+
             alert(message);
             console.log('CSV 비교 상세:', {
-              csvTotal: totalCSV,
+              csvTotal: drafts.length,
+              recentCSV: totalCSV,
               serverTotal: existingTransactions.length,
               matched: matchedCount,
               unmatched: unmatchedCount,
@@ -1449,6 +1464,9 @@ function AuthenticatedApp() {
           let message = `${newDrafts.length}개의 내역을 가져왔어요.`;
           if (duplicateCount > 0) {
             message += `\n(중복 ${duplicateCount}개는 건너뛰었어요.)`;
+          }
+          if (excludedCount > 0) {
+            message += `\n(1개월 이전 ${excludedCount}개는 제외되었어요.)`;
           }
           alert(message);
           setActiveTab("history");
