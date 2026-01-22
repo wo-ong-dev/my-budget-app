@@ -63,10 +63,11 @@ export class BudgetModel {
     const accountMap = new Map<string, Budget>();
 
     // 전월 데이터를 기본으로 (단, 현재 월로 변경)
+    let virtualId = -1; // 음수 ID로 시작 (커스텀 데이터와 구분)
     for (const prevBudget of prevBudgets) {
       accountMap.set(prevBudget.account, {
         ...prevBudget,
-        id: 0, // 가상 ID (저장되지 않은 상태)
+        id: virtualId--, // 고유한 음수 ID 생성 (-1, -2, -3, ...)
         month, // 현재 월로 변경
         is_custom: false
       });
