@@ -15,4 +15,7 @@ router.put('/:id', TransactionController.updateTransaction);
 // 거래 내역 삭제
 router.delete('/:id', TransactionController.deleteTransaction);
 
+// 중복 거래 내역 삭제 (관리자용)
+router.post('/remove-duplicates', TransactionController.removeDuplicates);
+
 export default router;
