@@ -855,10 +855,11 @@ function AuthenticatedApp() {
           const headerLine = lines[0];
           const headerCells = parseCSVLine(headerLine);
           
-          // 뱅크샐러드 형식 감지: "대분류", "소분류", "결제 수단" 등의 키워드 확인
+          // 뱅크샐러드 형식 감지: "대분류", "소분류", "결제수단" 또는 "결제 수단" 등의 키워드 확인
           const isBankSaladFormat = headerCells.some(cell => 
             cell.includes('대분류') || 
             cell.includes('소분류') || 
+            cell.includes('결제수단') ||
             cell.includes('결제 수단') ||
             cell.includes('화폐')
           );
@@ -918,48 +919,87 @@ function AuthenticatedApp() {
 
           // 항목명 매핑 테이블 (결제 수단 → 통장분류)
           const accountMapping: Record<string, string> = {
+            // 토스뱅크
             '토스뱅크 체크카드': '토스뱅크',
             '토스뱅크 통장': '토스뱅크',
+            '토스 간편결제': '토스뱅크',
+            '토뱅': '토스뱅크',
+            // 카카오페이
             '카카오페이 머니': '카카오페이',
+            '카카오페이 간편결제': '카카오페이',
             '카카오페이': '카카오페이',
+            // 네이버페이
+            '네이버페이 간편결제': '네이버페이',
+            '네이버페이 간편결제(포인트)': '네이버페이',
+            '네이버페이': '네이버페이',
+            // 국민은행
             'KB Star*t통장-저축예금': '국민은행',
             'KB Star*t통장': '국민은행',
             'KB': '국민은행',
             '국민은행': '국민은행',
+            // 삼성카드
             '삼성카드 taptap O': '삼성카드',
             '삼성카드': '삼성카드',
+            // 기타
             'WON 통장': 'WON',
             '세이프박스': '세이프박스',
           };
 
           // 항목명 매핑 함수
           const mapAccount = (paymentMethod: string): string => {
+            if (!paymentMethod) return '';
             const trimmed = paymentMethod.trim();
+            
             // 정확히 일치하는 경우
             if (accountMapping[trimmed]) {
               return accountMapping[trimmed];
             }
-            // 부분 일치 검색 (예: "토스뱅크" 포함)
-            for (const [key, value] of Object.entries(accountMapping)) {
+            
+            // 부분 일치 검색 (긴 키부터 우선 매칭)
+            const sortedKeys = Object.keys(accountMapping).sort((a, b) => b.length - a.length);
+            for (const key of sortedKeys) {
               if (trimmed.includes(key) || key.includes(trimmed)) {
-                return value;
+                return accountMapping[key];
               }
             }
+            
+            // 특정 패턴 매칭
+            if (trimmed.includes('토스') || trimmed.includes('토뱅')) {
+              return '토스뱅크';
+            }
+            if (trimmed.includes('카카오')) {
+              return '카카오페이';
+            }
+            if (trimmed.includes('네이버')) {
+              return '네이버페이';
+            }
+            if (trimmed.includes('KB') || trimmed.includes('국민')) {
+              return '국민은행';
+            }
+            if (trimmed.includes('삼성')) {
+              return '삼성카드';
+            }
+            
             // 매핑 없으면 원본 반환
             return trimmed;
           };
 
           // 카테고리 매핑 함수 (대분류/소분류 → 소비항목)
           const mapCategory = (mainCategory: string, subCategory: string): string => {
+            const main = mainCategory?.trim() || '';
+            const sub = subCategory?.trim() || '';
+            
             // 소분류가 있고 "미분류"가 아니면 소분류 우선
-            if (subCategory && subCategory.trim() && subCategory.trim() !== '미분류') {
-              return subCategory.trim();
+            if (sub && sub !== '미분류') {
+              return sub;
             }
-            // 대분류가 있으면 대분류 사용
-            if (mainCategory && mainCategory.trim() && mainCategory.trim() !== '미분류') {
-              return mainCategory.trim();
+            
+            // 대분류가 있고 "미분류"가 아니면 대분류 사용
+            if (main && main !== '미분류') {
+              return main;
             }
-            // 둘 다 없거나 미분류면 빈 문자열
+            
+            // 둘 다 없거나 미분류면 빈 문자열 (가계부에서 수동 분류 필요)
             return '';
           };
 
@@ -982,15 +1022,17 @@ function AuthenticatedApp() {
             let category: string;
 
             if (isBankSaladFormat) {
-              // 뱅크샐러드 형식: 날짜, 시간, 타입, 대분류, 소분류, 내용, 금액, 화폐, 결제 수단, 메모
-              // 헤더 인덱스 찾기
+              // 뱅크샐러드 형식: 날짜, 시간, 타입, 대분류, 소분류, 내용, 금액, 화폐, 결제수단, 메모
+              // 헤더 인덱스 찾기 (공백 유무 모두 고려)
               const dateIdx = headerCells.findIndex(c => c.includes('날짜'));
               const typeIdx = headerCells.findIndex(c => c.includes('타입'));
               const mainCategoryIdx = headerCells.findIndex(c => c.includes('대분류'));
               const subCategoryIdx = headerCells.findIndex(c => c.includes('소분류'));
               const contentIdx = headerCells.findIndex(c => c.includes('내용'));
               const amountIdx = headerCells.findIndex(c => c.includes('금액'));
-              const paymentMethodIdx = headerCells.findIndex(c => c.includes('결제 수단'));
+              const paymentMethodIdx = headerCells.findIndex(c => 
+                c.includes('결제수단') || c.includes('결제 수단')
+              );
               const memoIdx = headerCells.findIndex(c => c.includes('메모'));
 
               dateStr = cells[dateIdx] || '';
