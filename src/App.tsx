@@ -958,11 +958,14 @@ function AuthenticatedApp() {
             'KB Star*t통장': '국민은행',
             'KB': '국민은행',
             '국민은행': '국민은행',
-            // 삼성카드
-            '삼성카드 taptap O': '삼성카드',
-            '삼성카드': '삼성카드',
+            'KB국민 nori 체크카드(RF)': '국민은행',
+            // 삼성카드 → 신용카드로 매핑 (서버 데이터와 일치)
+            '삼성카드 taptap O': '신용카드',
+            '삼성카드': '신용카드',
+            // WON → 우리은행으로 매핑 (서버 데이터와 일치)
+            'WON 통장': '우리은행',
+            'WON': '우리은행',
             // 기타
-            'WON 통장': 'WON',
             '세이프박스': '세이프박스',
           };
 
@@ -998,11 +1001,75 @@ function AuthenticatedApp() {
               return '국민은행';
             }
             if (trimmed.includes('삼성')) {
-              return '삼성카드';
+              return '신용카드'; // 서버 데이터와 일치하도록 변경
+            }
+            if (trimmed.includes('WON') || trimmed.includes('won')) {
+              return '우리은행'; // 서버 데이터와 일치하도록 변경
             }
             
             // 매핑 없으면 원본 반환
             return trimmed;
+          };
+
+          // 카테고리 매핑 테이블 (CSV 카테고리 → 서버 카테고리)
+          const categoryMapping: Record<string, string> = {
+            // 음식 관련
+            '한식': '식비',
+            '일식': '식비',
+            '중식': '식비',
+            '양식': '식비',
+            '아시아음식': '식비',
+            '패스트푸드': '식비',
+            '치킨': '식비',
+            '피자': '식비',
+            '베이커리': '식비',
+            '디저트/떡': '식비',
+            '아이스크림/빙수': '식비',
+            '커피/음료': '카페/음료',
+            '맥주/호프': '술/모임',
+            '이자카야': '술/모임',
+            '바(BAR)': '술/모임',
+            '요리주점': '술/모임',
+            // 생활 관련
+            '생필품': '생활/마트',
+            '마트': '생활/마트',
+            '편의점': '생활/마트',
+            '식재료': '생활/마트',
+            // 교통
+            '대중교통': '교통비',
+            '택시': '교통비',
+            '주유': '교통비',
+            '시외버스': '교통비',
+            // 구독/서비스
+            '서비스구독': '구독/포인트',
+            // 건강/의료
+            '약국': '건강/의료',
+            '정형외과': '건강/의료',
+            '병원': '건강/의료',
+            '의료': '건강/의료',
+            // 패션/미용
+            '신발': '패션/미용',
+            '의류': '패션/미용',
+            '화장품': '패션/미용',
+            // 기타
+            '공연': '취미',
+            '음악': '취미',
+            '게임': '취미',
+            '스포츠': '취미',
+            '여행': '여행/숙박',
+            '숙박비': '여행/숙박',
+            '선물': '선물/경조사비',
+            '관리비': '월세/관리비',
+            '전기세': '월세/관리비',
+            '가스비': '월세/관리비',
+            '인터넷': '통신비/인터넷비',
+            '휴대폰': '통신비/인터넷비',
+            '보험': '저축/상조/보험',
+            '차량보험': '저축/상조/보험',
+            '이자/대출': '저축/상조/보험',
+            '저축': '저축/상조/보험',
+            '은행': '기타',
+            '증권/투자': '기타',
           };
 
           // 카테고리 매핑 함수 (대분류/소분류 → 소비항목)
@@ -1011,17 +1078,20 @@ function AuthenticatedApp() {
             const sub = subCategory?.trim() || '';
             
             // 소분류가 있고 "미분류"가 아니면 소분류 우선
+            let category = '';
             if (sub && sub !== '미분류') {
-              return sub;
+              category = sub;
+            } else if (main && main !== '미분류') {
+              category = main;
             }
             
-            // 대분류가 있고 "미분류"가 아니면 대분류 사용
-            if (main && main !== '미분류') {
-              return main;
+            // 카테고리 매핑 테이블 적용
+            if (category && categoryMapping[category]) {
+              return categoryMapping[category];
             }
             
-            // 둘 다 없거나 미분류면 빈 문자열 (가계부에서 수동 분류 필요)
-            return '';
+            // 매핑 없으면 원본 반환
+            return category;
           };
 
           for (let i = 0; i < dataLines.length; i++) {
@@ -1136,41 +1206,198 @@ function AuthenticatedApp() {
           const minDate = dates[0];
           const maxDate = dates[dates.length - 1];
 
-          // 서버에서 해당 기간의 모든 거래 내역 가져오기 (중복 체크용)
-          console.log(`중복 체크를 위해 ${minDate} ~ ${maxDate} 기간의 데이터를 서버에서 가져옵니다.`);
-          const existingTransactions = await fetchTransactionsByDateRange(minDate, maxDate);
+          // 서버에서 해당 기간 ±1개월 범위의 거래 내역 가져오기 (중복 체크용)
+          // 날짜 계산: YYYY-MM-DD 형식에서 ±1개월
+          const addMonths = (dateStr: string, months: number): string => {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const date = new Date(year, month - 1 + months, day);
+            return date.toISOString().split('T')[0];
+          };
 
-          // 중복 체크 함수 (날짜, 구분, 금액, 계좌, 카테고리, 메모 모두 확인)
+          const fetchStartDate = addMonths(minDate, -1); // 최소 날짜 1개월 전
+          const fetchEndDate = addMonths(maxDate, 1);    // 최대 날짜 1개월 후
+
+          console.log(`중복 체크를 위해 ${fetchStartDate} ~ ${fetchEndDate} 기간의 데이터를 서버에서 가져옵니다. (CSV 범위: ${minDate} ~ ${maxDate})`);
+          const existingTransactions = await fetchTransactionsByDateRange(fetchStartDate, fetchEndDate);
+
+          // 메모 정규화 함수 (비교를 위해)
+          const normalizeMemo = (memo: string): string => {
+            if (!memo) return '';
+            // "송금 내역", "토스", "카카오페이" 등의 접두사 제거
+            let normalized = memo.trim();
+            normalized = normalized.replace(/^(송금 내역|토스|카카오페이|네이버페이)\s+/i, '');
+            // 연속된 공백을 하나로
+            normalized = normalized.replace(/\s+/g, ' ');
+            return normalized;
+          };
+
+          // 상호명 키워드 추출 함수 (앞 2-3글자)
+          const extractKeywords = (memo: string): string[] => {
+            if (!memo) return [];
+            const keywords: string[] = [];
+
+            // 한글 연속 문자열 추출
+            const koreanWords = memo.match(/[가-힣]+/g) || [];
+
+            koreanWords.forEach(word => {
+              if (word.length >= 2) {
+                keywords.push(word.substring(0, 2)); // 앞 2글자
+              }
+              if (word.length >= 3) {
+                keywords.push(word.substring(0, 3)); // 앞 3글자
+              }
+              keywords.push(word); // 전체도 포함
+            });
+
+            return keywords;
+          };
+
+          // 토큰 기반 유사도 계산 함수
+          const calculateTokenSimilarity = (memo1: string, memo2: string): number => {
+            if (!memo1 || !memo2) return 0;
+
+            // 공백, 특수문자 기준으로 토큰화
+            const tokens1 = memo1.toLowerCase().split(/[\s\-_()]+/).filter(t => t.length >= 2);
+            const tokens2 = memo2.toLowerCase().split(/[\s\-_()]+/).filter(t => t.length >= 2);
+
+            // 상호명 키워드도 추가
+            const keywords1 = extractKeywords(memo1);
+            const keywords2 = extractKeywords(memo2);
+
+            const allTokens1 = [...tokens1, ...keywords1];
+            const allTokens2 = [...tokens2, ...keywords2];
+
+            if (allTokens1.length === 0 || allTokens2.length === 0) return 0;
+
+            // 공통 토큰 개수 계산
+            const commonTokens = allTokens1.filter(t1 =>
+              allTokens2.some(t2 => t1.includes(t2) || t2.includes(t1))
+            );
+
+            // Jaccard 유사도 (공통 토큰 / 전체 고유 토큰)
+            const allTokens = new Set([...allTokens1, ...allTokens2]);
+            return commonTokens.length / allTokens.size;
+          };
+
+          // 반복 패턴 분석 함수 (같은 금액이 반복되는 경우)
+          const findRepeatingPattern = (draft: TransactionDraft): Transaction | null => {
+            // 날짜 범위: 현재 날짜 기준 ±3개월 이내의 같은 금액 거래 찾기
+            const draftDate = new Date(draft.date);
+            const threeMonthsAgo = new Date(draftDate);
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            const threeMonthsLater = new Date(draftDate);
+            threeMonthsLater.setMonth(threeMonthsLater.getMonth() + 3);
+
+            const sameAmountTransactions = existingTransactions.filter(tx => {
+              const txDate = new Date(tx.date.includes('T') ? tx.date.split('T')[0] : tx.date);
+              const amountMatch = Math.abs(Math.abs(tx.amount) - Math.abs(draft.amount)) < 0.01;
+              const inDateRange = txDate >= threeMonthsAgo && txDate <= threeMonthsLater;
+              return amountMatch && inDateRange;
+            });
+
+            // 같은 금액이 2회 이상 반복되면 가장 최근 거래 반환
+            if (sameAmountTransactions.length >= 2) {
+              return sameAmountTransactions.sort((a, b) => {
+                const dateA = new Date(a.date.includes('T') ? a.date.split('T')[0] : a.date);
+                const dateB = new Date(b.date.includes('T') ? b.date.split('T')[0] : b.date);
+                return dateB.getTime() - dateA.getTime();
+              })[0];
+            }
+
+            return null;
+          };
+
+          // 중복 체크 함수 (날짜 + 금액 + 메모(다단계 매칭) 기준)
           const isDuplicate = (draft: TransactionDraft): boolean => {
             return existingTransactions.some(tx => {
-              // 날짜 비교 (정규화된 형식)
-              const txDate = tx.date.trim();
+              // 1. 날짜 비교 (정규화된 형식)
+              let txDate = tx.date.trim();
+              // ISO 형식인 경우 날짜 부분만 추출
+              if (txDate.includes('T')) {
+                txDate = txDate.split('T')[0];
+              }
               const draftDate = draft.date.trim();
               if (txDate !== draftDate) return false;
 
-              // 구분 비교
-              if (tx.type !== draft.type) return false;
-
-              // 금액 비교 (부동소수점 오차 허용)
-              const amountDiff = Math.abs(Number(tx.amount) - Number(draft.amount));
+              // 2. 금액 비교 (부동소수점 오차 허용, 절댓값 사용)
+              const txAmount = Math.abs(Number(tx.amount));
+              const draftAmount = Math.abs(Number(draft.amount));
+              const amountDiff = Math.abs(txAmount - draftAmount);
               if (amountDiff > 0.01) return false;
 
-              // 계좌 비교 (공백 제거 후 비교)
-              const txAccount = (tx.account ?? "").trim();
-              const draftAccount = (draft.account ?? "").trim();
-              if (txAccount !== draftAccount) return false;
+              // 3. 메모 비교 (다단계 매칭)
+              const txMemo = normalizeMemo(tx.memo ?? "");
+              const draftMemo = normalizeMemo(draft.memo ?? "");
 
-              // 카테고리 비교 (공백 제거 후 비교)
-              const txCategory = (tx.category ?? "").trim();
-              const draftCategory = (draft.category ?? "").trim();
-              if (txCategory !== draftCategory) return false;
+              // 3-1. 메모가 둘 다 비어있으면 일치
+              if (!txMemo && !draftMemo) return true;
 
-              // 메모 비교 (공백 제거 후 비교)
-              const txMemo = (tx.memo ?? "").trim();
-              const draftMemo = (draft.memo ?? "").trim();
-              if (txMemo !== draftMemo) return false;
+              // 3-2. CSV가 "송금 내역"만 있고 서버에 메모가 있으면 → 일치 (서버 메모 우선)
+              const draftMemoOriginal = (draft.memo ?? "").trim();
+              if (draftMemoOriginal === "송금 내역" && txMemo) {
+                return true; // 날짜+금액 일치 + CSV는 송금내역 → 중복으로 간주
+              }
 
-              return true;
+              // 3-3. 둘 중 하나만 비어있으면 불일치
+              if (!txMemo || !draftMemo) return false;
+
+              // 3-4. 정확히 일치하는 경우
+              if (txMemo === draftMemo) return true;
+
+              // 3-5. 부분 일치: 한쪽이 다른 쪽을 포함하는 경우
+              const longer = txMemo.length > draftMemo.length ? txMemo : draftMemo;
+              const shorter = txMemo.length > draftMemo.length ? draftMemo : txMemo;
+
+              if (shorter.length >= 3 && longer.includes(shorter)) {
+                return true;
+              }
+
+              // 3-6. 토큰 기반 유사도 체크 (25% 이상 일치 시 중복으로 간주)
+              // 상호명 키워드 매칭 강화로 임계값 낮춤
+              const similarity = calculateTokenSimilarity(txMemo, draftMemo);
+              if (similarity >= 0.25) {
+                return true;
+              }
+
+              // 3-7. 반복 패턴 학습 (같은 금액이 반복되는 경우)
+              const repeatingTx = findRepeatingPattern(draft);
+              if (repeatingTx) {
+                // 현재 비교 중인 거래(tx)가 반복 패턴과 같은 금액인지 확인
+                const amountMatch = Math.abs(Math.abs(tx.amount) - Math.abs(draft.amount)) < 0.01;
+                if (amountMatch) {
+                  const repeatingMemo = normalizeMemo(repeatingTx.memo ?? "");
+                  if (repeatingMemo) {
+                    // 반복 패턴의 경우, 여러 조건으로 매칭 시도
+                    const repeatSimilarity = calculateTokenSimilarity(draftMemo, repeatingMemo);
+
+                    // 조건 1: 토큰 유사도 15% 이상
+                    if (repeatSimilarity >= 0.15) {
+                      return true;
+                    }
+
+                    // 조건 2: 한쪽이 다른 쪽을 포함하는 경우
+                    if (repeatingMemo.length >= 2 && draftMemo.includes(repeatingMemo)) {
+                      return true;
+                    }
+                    if (draftMemo.length >= 2 && repeatingMemo.includes(draftMemo)) {
+                      return true;
+                    }
+
+                    // 조건 3: CSV 메모가 숫자 코드이고 반복 패턴이 확실한 경우
+                    if (/^\d+$/.test(draftMemo) && repeatingMemo.length >= 2) {
+                      return true;
+                    }
+
+                    // 조건 4: 현재 거래(tx)가 반복 패턴에서 찾은 거래와 같은 경우
+                    // 예: CSV "에스제이산림조합상" → 서버에 같은 금액으로 "상조" 반복 → 날짜+금액 일치하면 매칭
+                    if (tx.id === repeatingTx.id && draftDate === txDate) {
+                      return true;
+                    }
+                  }
+                }
+              }
+
+              return false;
             });
           };
 
