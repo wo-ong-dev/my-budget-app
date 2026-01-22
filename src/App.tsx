@@ -778,8 +778,29 @@ function AuthenticatedApp() {
     }
   };
 
+  // CSV 파일 비교 함수 (서버 데이터와 비교)
+  const handleCompareCSV = () => {
+    try {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".csv";
+
+      input.onchange = async (event) => {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (file) {
+          await processCSVFile(file, true); // compareOnly = true
+        }
+      };
+
+      input.click();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "파일을 선택하지 못했어요.";
+      setError(message);
+    }
+  };
+
   // CSV 파일 처리 함수 (공통 로직)
-  const processCSVFile = async (file: File) => {
+  const processCSVFile = async (file: File, compareOnly: boolean = false) => {
     if (!file) {
       return;
     }
@@ -1150,6 +1171,33 @@ function AuthenticatedApp() {
           // 중복 제거
           const newDrafts = drafts.filter(draft => !isDuplicate(draft));
           const duplicateCount = drafts.length - newDrafts.length;
+
+          // 비교 모드인 경우 통계만 표시
+          if (compareOnly) {
+            const totalCSV = drafts.length;
+            const matchedCount = duplicateCount;
+            const unmatchedCount = newDrafts.length;
+            const matchRate = totalCSV > 0 ? (matchedCount / totalCSV * 100).toFixed(2) : '0.00';
+            
+            const message = `📊 CSV vs 서버 데이터 비교 결과\n\n` +
+              `CSV 총 항목: ${totalCSV}개\n` +
+              `서버 일치 항목: ${matchedCount}개\n` +
+              `서버 미일치 항목: ${unmatchedCount}개\n` +
+              `일치율: ${matchRate}%\n\n` +
+              `기간: ${minDate} ~ ${maxDate}\n` +
+              `서버 데이터: ${existingTransactions.length}개`;
+            
+            alert(message);
+            console.log('CSV 비교 상세:', {
+              csvTotal: totalCSV,
+              serverTotal: existingTransactions.length,
+              matched: matchedCount,
+              unmatched: unmatchedCount,
+              matchRate: `${matchRate}%`,
+              unmatchedItems: newDrafts.slice(0, 10) // 처음 10개만 표시
+            });
+            return;
+          }
 
           if (newDrafts.length === 0) {
             alert(`모든 항목이 이미 존재합니다. (중복 ${duplicateCount}개)`);
