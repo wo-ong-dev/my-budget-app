@@ -35,15 +35,16 @@ export class TransactionController {
   static async createTransaction(req: Request, res: Response): Promise<void> {
     try {
       const transactionData: TransactionDraft = req.body;
-      
-      if (!transactionData.date || !transactionData.type || !transactionData.amount) {
+
+      // 필수 필드 검증 (amount는 0도 허용하므로 undefined/null만 체크)
+      if (!transactionData.date || !transactionData.type || transactionData.amount === undefined || transactionData.amount === null) {
         res.status(400).json({
           ok: false,
           error: '날짜, 유형, 금액은 필수 입력 항목입니다.'
         });
         return;
       }
-      
+
       if (transactionData.amount <= 0) {
         res.status(400).json({
           ok: false,
