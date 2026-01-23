@@ -11,12 +11,28 @@ function Modal({ open, title, onClose, children }: ModalProps) {
   // 모달이 열릴 때 body 스크롤 방지
   useEffect(() => {
     if (open) {
+      // 현재 스크롤 위치를 저장하고 고정
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
       document.body.style.overflow = "hidden";
     } else {
+      // 저장된 스크롤 위치로 복원
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
       document.body.style.overflow = "";
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
+      }
     }
 
     return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
       document.body.style.overflow = "";
     };
   }, [open]);
