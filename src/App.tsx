@@ -602,9 +602,10 @@ function AuthenticatedApp() {
     try {
       setSubmitting(true);
       await updateTransaction(editingTransaction.id, normalizeDraft(draft));
+      await refetch();
+      // refetch 완료 후 모달 닫기 (스크롤 복원을 위해)
       setEditModalOpen(false);
       setEditingTransaction(null);
-      await refetch();
     } catch (err) {
       const message = err instanceof Error ? err.message : "내역을 수정하지 못했어요.";
       setError(message);
@@ -623,13 +624,14 @@ function AuthenticatedApp() {
       setDeleting(true);
       await deleteTransaction(transaction.id);
       await refetch();
+      // refetch 완료 후 모달 닫기 (스크롤 복원을 위해)
+      setEditModalOpen(false);
+      setEditingTransaction(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : "내역을 삭제하지 못했어요.";
       setError(message);
     } finally {
       setDeleting(false);
-      setEditModalOpen(false);
-      setEditingTransaction(null);
     }
   };
 
