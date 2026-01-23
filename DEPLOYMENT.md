@@ -14,6 +14,24 @@
 
 ## 🛠️ **배포 방법(권장: GitHub Actions)**
 
+### ⚡ **빠른 배포 방법 (Claude Code 세션에서)**
+```bash
+# 1. 변경사항 커밋 & 푸시
+git add .
+git commit -m "feat: your commit message"
+git push origin main
+
+# 2. GitHub Actions가 자동으로 배포 시작
+# → https://github.com/wo-ong-dev/my-budget-app/actions 에서 진행상황 확인
+```
+
+**그냥 main 브랜치에 push하면 자동으로 배포됩니다!**
+- 프론트엔드 빌드 → EC2 Nginx 배포
+- 백엔드 빌드 → PM2 재시작
+- DB 마이그레이션 자동 실행
+
+---
+
 ### Workflow: `.github/workflows/deploy.yml`
 트리거
 - main 브랜치 푸시 또는 수동 `workflow_dispatch`
