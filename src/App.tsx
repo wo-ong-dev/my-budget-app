@@ -590,7 +590,12 @@ function AuthenticatedApp() {
     }
   };
 
+  // 스크롤 위치 저장용
+  const scrollPositionRef = useRef<number>(0);
+
   const handleEditRequest = (transaction: Transaction) => {
+    // 모달 열기 전 현재 스크롤 위치 저장
+    scrollPositionRef.current = window.scrollY;
     setEditingTransaction(transaction);
     setEditModalOpen(true);
   };
@@ -605,6 +610,10 @@ function AuthenticatedApp() {
       setEditModalOpen(false);
       setEditingTransaction(null);
       await refetch();
+      // 저장된 스크롤 위치로 복원
+      setTimeout(() => {
+        window.scrollTo(0, scrollPositionRef.current);
+      }, 0);
     } catch (err) {
       const message = err instanceof Error ? err.message : "내역을 수정하지 못했어요.";
       setError(message);
@@ -623,6 +632,10 @@ function AuthenticatedApp() {
       setDeleting(true);
       await deleteTransaction(transaction.id);
       await refetch();
+      // 저장된 스크롤 위치로 복원
+      setTimeout(() => {
+        window.scrollTo(0, scrollPositionRef.current);
+      }, 0);
     } catch (err) {
       const message = err instanceof Error ? err.message : "내역을 삭제하지 못했어요.";
       setError(message);
@@ -1637,6 +1650,10 @@ function AuthenticatedApp() {
         onClose={() => {
           setEditModalOpen(false);
           setEditingTransaction(null);
+          // 모달을 닫기만 할 때도 스크롤 위치 복원
+          setTimeout(() => {
+            window.scrollTo(0, scrollPositionRef.current);
+          }, 0);
         }}
         submitting={isSubmitting}
         deleting={isDeleting}
