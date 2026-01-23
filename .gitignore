@@ -34,3 +34,23 @@ backend/env.production
 *.njsproj
 *.sln
 *.sw?
+
+# CSV 데이터 분석용 임시 파일들 (GitHub 업로드 불필요)
+# 2025-01-23: CSV와 서버 데이터 비교/분석 작업용 임시 파일들
+# 실제 프로젝트 코드가 아니므로 커밋하지 않음
+*.csv
+*-transactions*.json
+*-transactions*.txt
+*comparison-result*.json
+*comparison-result*.txt
+matching-analysis.txt
+progress-summary.txt
+csv-transactions-list.txt
+
+# 분석용 스크립트 (일회성 분석 도구)
+analyze-matching-issue.js
+check-duplicates.js
+check-server-data.js
+compare-csv-with-server.js
+test-improved-logic.js
+test-similarity.js
