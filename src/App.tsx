@@ -1206,25 +1206,41 @@ function AuthenticatedApp() {
             if (isBankSaladFormat) {
               // 뱅크샐러드 형식: 날짜, 시간, 타입, 대분류, 소분류, 내용, 금액, 화폐, 결제수단, 메모
               // 헤더 인덱스 찾기 (공백 유무 모두 고려)
-              const dateIdx = headerCells.findIndex(c => c.includes('날짜'));
-              const typeIdx = headerCells.findIndex(c => c.includes('타입'));
-              const mainCategoryIdx = headerCells.findIndex(c => c.includes('대분류'));
-              const subCategoryIdx = headerCells.findIndex(c => c.includes('소분류'));
-              const contentIdx = headerCells.findIndex(c => c.includes('내용'));
-              const amountIdx = headerCells.findIndex(c => c.includes('금액'));
-              const paymentMethodIdx = headerCells.findIndex(c => 
-                c.includes('결제수단') || c.includes('결제 수단')
+              const dateIdxRaw = headerCells.findIndex(c => c.includes("날짜"));
+              const typeIdxRaw = headerCells.findIndex(c => c.includes("타입"));
+              const mainCategoryIdxRaw = headerCells.findIndex(c => c.includes("대분류"));
+              const subCategoryIdxRaw = headerCells.findIndex(c => c.includes("소분류"));
+              const contentIdxRaw = headerCells.findIndex(c => c.includes("내용"));
+              const amountIdxRaw = headerCells.findIndex(c => c.includes("금액"));
+              const paymentMethodIdxRaw = headerCells.findIndex(c =>
+                c.includes("결제수단") || c.includes("결제 수단")
               );
-              const memoIdx = headerCells.findIndex(c => c.includes('메모'));
+              const memoIdxRaw = headerCells.findIndex(c => c.includes("메모"));
 
-              dateStr = cells[dateIdx] || '';
-              typeStr = cells[typeIdx] || '';
-              amountStr = cells[amountIdx] || '';
-              const mainCategory = cells[mainCategoryIdx] || '';
-              const subCategory = cells[subCategoryIdx] || '';
-              const content = cells[contentIdx] || '';
-              const paymentMethod = cells[paymentMethodIdx] || '';
-              const memoValue = cells[memoIdx] || '';
+              // 인덱스가 -1이거나 잘못 매핑된 경우를 대비해 안전한 기본값 사용
+              const dateIdx = dateIdxRaw >= 0 ? dateIdxRaw : 0;
+              const typeIdx = typeIdxRaw >= 0 ? typeIdxRaw : 2; // 기본: 2번째(타입)
+              const mainCategoryIdx = mainCategoryIdxRaw >= 0 ? mainCategoryIdxRaw : 3;
+              const subCategoryIdx = subCategoryIdxRaw >= 0 ? subCategoryIdxRaw : 4;
+              const contentIdx = contentIdxRaw >= 0 ? contentIdxRaw : 5;
+              const amountIdx = amountIdxRaw >= 0 ? amountIdxRaw : 6;
+              const paymentMethodIdx = paymentMethodIdxRaw >= 0 ? paymentMethodIdxRaw : 8;
+              const memoIdx = memoIdxRaw >= 0 ? memoIdxRaw : 9;
+
+              dateStr = cells[dateIdx] || "";
+              typeStr = cells[typeIdx] || "";
+
+              // 혹시 타입 자리에 시간이 들어온 경우 (예: "20:16") 보정
+              if (/^\d{1,2}:\d{2}/.test(typeStr) && cells.length > 2) {
+                typeStr = cells[2] || typeStr;
+              }
+
+              amountStr = cells[amountIdx] || "";
+              const mainCategory = cells[mainCategoryIdx] || "";
+              const subCategory = cells[subCategoryIdx] || "";
+              const content = cells[contentIdx] || "";
+              const paymentMethod = cells[paymentMethodIdx] || "";
+              const memoValue = cells[memoIdx] || "";
 
               // 메모는 내용과 메모를 합침
               memo = [content, memoValue].filter(v => v).join(' ').trim();
