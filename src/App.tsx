@@ -10,6 +10,7 @@ import TransactionList from "./components/transactions/TransactionList";
 import EditTransactionModal from "./components/transactions/EditTransactionModal";
 import SummaryPanel from "./components/summary/SummaryPanel";
 import BudgetPanel from "./components/budget/BudgetPanel";
+import ExportCSVModal from "./components/export/ExportCSVModal";
 import type {
   Transaction,
   TransactionDraft,
@@ -286,6 +287,7 @@ function AuthenticatedApp() {
   const [apiCategories, setApiCategories] = useState<CategoryItem[]>([]);
   const [budgets, setBudgets] = useState<BudgetWithUsage[]>([]);
   const [isBudgetLoading, setBudgetLoading] = useState(false);
+  const [isExportModalOpen, setExportModalOpen] = useState(false);
 
   const hasLoadedRef = useRef(false);
 
@@ -722,8 +724,28 @@ function AuthenticatedApp() {
     }));
   };
 
-  const handleExportCSV = () => {
+  // 내보내기 모달 열기
+  const handleOpenExportModal = () => {
+    setExportModalOpen(true);
+  };
+
+  // 기간별 CSV 내보내기
+  const handleExportCSV = async (startMonth: string, endMonth: string) => {
     try {
+      // 시작월의 첫날과 종료월의 마지막날 계산
+      const startDate = `${startMonth}-01`;
+      const [endYear, endM] = endMonth.split("-").map(Number);
+      const lastDay = new Date(endYear, endM, 0).getDate();
+      const endDate = `${endMonth}-${String(lastDay).padStart(2, "0")}`;
+
+      // 기간 내 데이터 조회
+      const data = await fetchTransactionsByDateRange(startDate, endDate);
+
+      if (data.length === 0) {
+        setError("선택한 기간에 내역이 없습니다.");
+        return;
+      }
+
       // CSV 헤더 (원하는 순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목)
       const headers = ["날짜", "구분", "금액", "메모", "통장분류", "소비항목"];
 
@@ -745,7 +767,7 @@ function AuthenticatedApp() {
       };
 
       // 데이터를 CSV 행으로 변환 (순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목)
-      const rows = transactions.map(tx => [
+      const rows = data.map(tx => [
         formatDateForCSV(tx.date),
         tx.type,
         formatAmountForCSV(tx.amount),
@@ -764,11 +786,16 @@ function AuthenticatedApp() {
       const bom = "\uFEFF";
       const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
 
+      // 파일명 생성
+      const fileName = startMonth === endMonth
+        ? `가계부_${startMonth}.csv`
+        : `가계부_${startMonth}_${endMonth}.csv`;
+
       // 다운로드
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute("download", `가계부_${filters.month}.csv`);
+      link.setAttribute("download", fileName);
       link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
@@ -1546,7 +1573,7 @@ function AuthenticatedApp() {
       <div className="app-container" {...swipeHandlers}>
         <Header
           onClickTitle={() => setActiveTab("input")}
-          onExportCSV={handleExportCSV}
+          onExportCSV={handleOpenExportModal}
           onImportCSV={handleImportCSV}
           onCompareCSV={handleCompareCSV}
         />
@@ -1642,6 +1669,14 @@ function AuthenticatedApp() {
         }}
         submitting={isSubmitting}
         deleting={isDeleting}
+      />
+
+      <ExportCSVModal
+        isOpen={isExportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onExport={handleExportCSV}
+        availableMonths={availableMonths}
+        currentMonth={filters.month}
       />
     </div>
   );

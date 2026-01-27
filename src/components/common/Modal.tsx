@@ -5,9 +5,10 @@ type ModalProps = PropsWithChildren<{
   open: boolean;
   title?: string;
   onClose: () => void;
+  hideFooter?: boolean;
 }>;
 
-function Modal({ open, title, onClose, children }: ModalProps) {
+function Modal({ open, title, onClose, children, hideFooter = false }: ModalProps) {
   // 모달이 열릴 때 body 스크롤 방지
   useEffect(() => {
     if (open) {
@@ -68,11 +69,13 @@ function Modal({ open, title, onClose, children }: ModalProps) {
           </button>
         </header>
         <div className="modal__body">{children}</div>
-        <footer className="modal__footer">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            닫기
-          </button>
-        </footer>
+        {!hideFooter && (
+          <footer className="modal__footer">
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
+              닫기
+            </button>
+          </footer>
+        )}
       </div>
     </div>
   );
