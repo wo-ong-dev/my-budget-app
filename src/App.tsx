@@ -902,21 +902,11 @@ function AuthenticatedApp() {
     try {
       setLoading(true);
           
-          // 파일을 ArrayBuffer로 읽어서 인코딩 감지 시도
+          // 파일을 ArrayBuffer로 읽어서 UTF-8로 디코딩
+          // (뱅크샐러드/대부분 서비스가 UTF-8 CSV를 사용하므로, 별도 인코딩 추측 없이 고정)
           const arrayBuffer = await file.arrayBuffer();
-          const decoder = new TextDecoder('utf-8');
-          let text = decoder.decode(arrayBuffer);
-          
-          // UTF-8로 디코딩 실패 시 (한글 깨짐) 다른 인코딩 시도
-          if (text.includes('') || text.includes('')) {
-            // CP949 (EUC-KR 계열) 시도
-            try {
-              const cp949Decoder = new TextDecoder('euc-kr');
-              text = cp949Decoder.decode(arrayBuffer);
-            } catch (e) {
-              // 실패 시 원본 유지
-            }
-          }
+          const utf8Decoder = new TextDecoder("utf-8");
+          const text = utf8Decoder.decode(arrayBuffer);
 
           // BOM 제거
           const content = text.replace(/^\uFEFF/, "");
