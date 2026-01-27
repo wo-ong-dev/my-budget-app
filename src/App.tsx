@@ -1205,34 +1205,48 @@ function AuthenticatedApp() {
 
             if (isBankSaladFormat) {
               // 뱅크샐러드 형식: 날짜, 시간, 타입, 대분류, 소분류, 내용, 금액, 화폐, 결제수단, 메모
-              // 헤더 인덱스 찾기 (공백 유무 모두 고려)
-              const dateIdxRaw = headerCells.findIndex(c => c.includes("날짜"));
-              const typeIdxRaw = headerCells.findIndex(c => c.includes("타입"));
-              const mainCategoryIdxRaw = headerCells.findIndex(c => c.includes("대분류"));
-              const subCategoryIdxRaw = headerCells.findIndex(c => c.includes("소분류"));
-              const contentIdxRaw = headerCells.findIndex(c => c.includes("내용"));
-              const amountIdxRaw = headerCells.findIndex(c => c.includes("금액"));
-              const paymentMethodIdxRaw = headerCells.findIndex(c =>
+              // 우리가 사용하는 대표 CSV 형식은 다음 순서를 가정:
+              // 0: 날짜, 1: 시간, 2: 타입, 3: 대분류, 4: 소분류, 5: 내용, 6: 금액, 7: 화폐, 8: 결제수단, 9: 메모
+
+              // 기본 인덱스 (가장 일반적인 구조)
+              let dateIdx = 0;
+              let typeIdx = 2;
+              let mainCategoryIdx = 3;
+              let subCategoryIdx = 4;
+              let contentIdx = 5;
+              let amountIdx = 6;
+              let paymentMethodIdx = 8;
+              let memoIdx = 9;
+
+              // 혹시 컬럼 순서가 바뀐 변형 CSV인 경우를 대비해 헤더 기반으로 보정
+              const headerDateIdx = headerCells.findIndex(c => c.includes("날짜"));
+              const headerTypeIdx = headerCells.findIndex(c => c.includes("타입"));
+              const headerMainCategoryIdx = headerCells.findIndex(c => c.includes("대분류"));
+              const headerSubCategoryIdx = headerCells.findIndex(c => c.includes("소분류"));
+              const headerContentIdx = headerCells.findIndex(c => c.includes("내용"));
+              const headerAmountIdx = headerCells.findIndex(c => c.includes("금액"));
+              const headerPaymentMethodIdx = headerCells.findIndex(c =>
                 c.includes("결제수단") || c.includes("결제 수단")
               );
-              const memoIdxRaw = headerCells.findIndex(c => c.includes("메모"));
+              const headerMemoIdx = headerCells.findIndex(c => c.includes("메모"));
 
-              // 인덱스가 -1이거나 잘못 매핑된 경우를 대비해 안전한 기본값 사용
-              const dateIdx = dateIdxRaw >= 0 ? dateIdxRaw : 0;
-              const typeIdx = typeIdxRaw >= 0 ? typeIdxRaw : 2; // 기본: 2번째(타입)
-              const mainCategoryIdx = mainCategoryIdxRaw >= 0 ? mainCategoryIdxRaw : 3;
-              const subCategoryIdx = subCategoryIdxRaw >= 0 ? subCategoryIdxRaw : 4;
-              const contentIdx = contentIdxRaw >= 0 ? contentIdxRaw : 5;
-              const amountIdx = amountIdxRaw >= 0 ? amountIdxRaw : 6;
-              const paymentMethodIdx = paymentMethodIdxRaw >= 0 ? paymentMethodIdxRaw : 8;
-              const memoIdx = memoIdxRaw >= 0 ? memoIdxRaw : 9;
+              if (headerDateIdx >= 0) dateIdx = headerDateIdx;
+              if (headerTypeIdx >= 0) typeIdx = headerTypeIdx;
+              if (headerMainCategoryIdx >= 0) mainCategoryIdx = headerMainCategoryIdx;
+              if (headerSubCategoryIdx >= 0) subCategoryIdx = headerSubCategoryIdx;
+              if (headerContentIdx >= 0) contentIdx = headerContentIdx;
+              if (headerAmountIdx >= 0) amountIdx = headerAmountIdx;
+              if (headerPaymentMethodIdx >= 0) paymentMethodIdx = headerPaymentMethodIdx;
+              if (headerMemoIdx >= 0) memoIdx = headerMemoIdx;
 
               dateStr = cells[dateIdx] || "";
-              typeStr = cells[typeIdx] || "";
+
+              const rawTypeFromCells = cells[typeIdx] || "";
+              typeStr = rawTypeFromCells.trim();
 
               // 혹시 타입 자리에 시간이 들어온 경우 (예: "20:16") 보정
               if (/^\d{1,2}:\d{2}/.test(typeStr) && cells.length > 2) {
-                typeStr = cells[2] || typeStr;
+                typeStr = (cells[2] || typeStr).trim();
               }
 
               amountStr = cells[amountIdx] || "";
@@ -1263,7 +1277,7 @@ function AuthenticatedApp() {
             }
 
             // 구분 정규화: "(주)지출" → "지출", "(주)수입" → "수입"
-            let type = typeStr.replace(/\(주\)/g, "").trim();
+            let type = (typeStr || "").replace(/\(주\)/g, "").trim();
 
             // 일부 카드/은행 앱에서 다른 표기를 쓰는 경우를 보정
             // 예: "지출 " (공백 포함), "지출_카드", "카드지출", "현금지출" 등
