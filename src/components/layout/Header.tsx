@@ -1,4 +1,5 @@
-﻿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useTheme } from "../../hooks/useTheme";
 
 type HeaderProps = {
   onClickTitle?: () => void;
@@ -10,6 +11,7 @@ type HeaderProps = {
 function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -43,8 +45,17 @@ function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV }: Header
         <h1 className="app-header__title">내 가계부</h1>
         <p className="app-header__subtitle">간편한 수입·지출 관리</p>
       </div>
-      {(onExportCSV || onImportCSV || onCompareCSV) && (
-        <div className="app-header__menu" ref={menuRef}>
+      <div className="app-header__actions">
+        <button
+          type="button"
+          className="theme-toggle-btn"
+          onClick={toggleTheme}
+          aria-label={theme === "light" ? "다크 모드로 전환" : "라이트 모드로 전환"}
+        >
+          {theme === "light" ? "🌙" : "☀️"}
+        </button>
+        {(onExportCSV || onImportCSV || onCompareCSV) && (
+          <div className="app-header__menu" ref={menuRef}>
           <button
             type="button"
             className="menu-toggle-btn"
@@ -85,7 +96,8 @@ function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV }: Header
             </div>
           )}
         </div>
-      )}
+        )}
+      </div>
     </header>
   );
 }
