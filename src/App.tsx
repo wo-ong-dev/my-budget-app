@@ -749,16 +749,9 @@ function AuthenticatedApp() {
       // CSV 헤더 (원하는 순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목)
       const headers = ["날짜", "구분", "금액", "메모", "통장분류", "소비항목"];
 
-      // 날짜를 "YYYY년 M월 D일 (요일)" 형식으로 변환
+      // 날짜를 "YYYY-MM-DD" 형식으로 변환
       const formatDateForCSV = (dateStr: string) => {
-        const [year, month, day] = dateStr.split('-');
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-
-        // 요일 한글 변환
-        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-        const dayOfWeek = dayNames[date.getDay()];
-
-        return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일 (${dayOfWeek})`;
+        return dateStr; // 이미 YYYY-MM-DD 형식
       };
 
       // 금액을 "₩#,###" 형식으로 변환
