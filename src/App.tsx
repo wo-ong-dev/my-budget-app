@@ -1265,8 +1265,32 @@ function AuthenticatedApp() {
               // 카테고리 매핑
               category = mapCategory(mainCategory, subCategory);
             } else {
-              // 가계부 형식: 날짜, 구분, 금액, 메모, 통장분류, 소비항목
-              [dateStr, typeStr, amountStr, memo = "", account = "", category = ""] = cells;
+              // 기본 가계부 형식: 날짜, 구분, 금액, 메모, 통장분류, 소비항목
+              // 단, 헤더 감지가 실패했더라도 실제 데이터가 "뱅크샐러드 형식"일 수 있으므로 한 번 더 패턴으로 감지
+              const looksLikeBankSaladRow =
+                cells.length >= 10 &&
+                /^\d{4}-\d{2}-\d{2}/.test(cells[0]) &&   // 날짜
+                /^\d{1,2}:\d{2}/.test(cells[1]);        // 시간
+
+              if (looksLikeBankSaladRow) {
+                // 행 단위로 뱅크샐러드 형식으로 재해석
+                dateStr = cells[0] || "";
+                typeStr = (cells[2] || "").trim(); // 타입
+                amountStr = cells[6] || "";        // 금액
+
+                const mainCategory = cells[3] || "";
+                const subCategory = cells[4] || "";
+                const content = cells[5] || "";
+                const paymentMethod = cells[8] || "";
+                const memoValue = cells[9] || "";
+
+                memo = [content, memoValue].filter(v => v).join(" ").trim();
+                account = mapAccount(paymentMethod);
+                category = mapCategory(mainCategory, subCategory);
+              } else {
+                // 가계부 내보내기 형식
+                [dateStr, typeStr, amountStr, memo = "", account = "", category = ""] = cells;
+              }
             }
 
             // 날짜 파싱
