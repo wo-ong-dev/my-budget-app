@@ -909,6 +909,138 @@ body {
   min-height: 350px;
 }
 
+.stats-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.stats-card-header .stats-card-title {
+  margin: 0;
+}
+
+/* 카테고리 뷰 탭 */
+.category-view-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--gray-100);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.category-view-tab {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--gray-600);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-view-tab:hover {
+  color: var(--gray-700);
+  background: var(--gray-200);
+}
+
+.category-view-tab--active {
+  background: #fff;
+  color: var(--primary-600);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 카테고리 목록 뷰 */
+.category-list-view {
+  padding: 8px 0;
+}
+
+.category-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category-list-item__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category-list-item__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--gray-700);
+}
+
+.category-list-item__color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.category-list-item__values {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.category-list-item__amount {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.category-list-item__percentage {
+  font-size: 13px;
+  color: var(--gray-500);
+  min-width: 45px;
+  text-align: right;
+}
+
+.category-list-item__bar {
+  height: 6px;
+  background: var(--gray-200);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.category-list-item__bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.category-list-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-200);
+  font-size: 14px;
+  color: var(--gray-600);
+}
+
+.category-list-total strong {
+  font-size: 16px;
+  color: var(--gray-800);
+}
+
 .chart-container {
   width: 100%;
   max-width: 100%;

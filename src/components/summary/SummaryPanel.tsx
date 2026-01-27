@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { TransactionSummary, MonthlyComparison } from "../../types";
 import { formatCurrency, monthLabel } from "../../utils/formatters";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+
+type CategoryViewType = "chart" | "list";
 
 type SummaryPanelProps = {
   summary: TransactionSummary | null;
@@ -20,6 +22,7 @@ function SummaryPanel({
   onMonthChange,
   monthlyComparison
 }: SummaryPanelProps) {
+  const [categoryView, setCategoryView] = useState<CategoryViewType>("chart");
   // 로딩 중일 때 스켈레톤 UI 표시
   if (loading) {
     return (
@@ -293,34 +296,94 @@ function SummaryPanel({
 
       {summary.categories && summary.categories.length > 0 && chartData.length > 0 ? (
         <section className="stats-card stats-card--chart">
-          <h4 className="stats-card-title"><span className="stats-card-icon">📊</span>카테고리별 지출</h4>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height={300} debounce={1}>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  fill="#8884d8"
-                  paddingAngle={5}
-                  dataKey="value"
-                  animationDuration={400}
-                  isAnimationActive={true}
-                  animationBegin={0}
-                  label={renderCustomLabel}
-                  labelLine={false}
-                >
-                  {chartData.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} animationDuration={0} />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="stats-card-header">
+            <h4 className="stats-card-title"><span className="stats-card-icon">📊</span>카테고리별 지출</h4>
+            <div className="category-view-tabs">
+              <button
+                type="button"
+                className={`category-view-tab ${categoryView === "chart" ? "category-view-tab--active" : ""}`}
+                onClick={() => setCategoryView("chart")}
+              >
+                차트
+              </button>
+              <button
+                type="button"
+                className={`category-view-tab ${categoryView === "list" ? "category-view-tab--active" : ""}`}
+                onClick={() => setCategoryView("list")}
+              >
+                목록
+              </button>
+            </div>
           </div>
+
+          {categoryView === "chart" ? (
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height={300} debounce={1}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                    animationDuration={400}
+                    isAnimationActive={true}
+                    animationBegin={0}
+                    label={renderCustomLabel}
+                    labelLine={false}
+                  >
+                    {chartData.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} animationDuration={0} />
+                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="category-list-view">
+              <ul className="category-list">
+                {chartData.map((item, index) => {
+                  const totalExpense = chartData.reduce((sum, d) => sum + d.value, 0);
+                  const percentage = totalExpense > 0 ? (item.value / totalExpense) * 100 : 0;
+                  return (
+                    <li key={item.name} className="category-list-item">
+                      <div className="category-list-item__header">
+                        <div className="category-list-item__name">
+                          <span
+                            className="category-list-item__color"
+                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                          />
+                          <span>{item.name}</span>
+                        </div>
+                        <div className="category-list-item__values">
+                          <span className="category-list-item__amount">{formatCurrency(item.value)}원</span>
+                          <span className="category-list-item__percentage">{percentage.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                      <div className="category-list-item__bar">
+                        <div
+                          className="category-list-item__bar-fill"
+                          style={{
+                            width: `${percentage}%`,
+                            backgroundColor: COLORS[index % COLORS.length]
+                          }}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="category-list-total">
+                <span>총 지출</span>
+                <strong>{formatCurrency(chartData.reduce((sum, d) => sum + d.value, 0))}원</strong>
+              </div>
+            </div>
+          )}
         </section>
       ) : null}
 
