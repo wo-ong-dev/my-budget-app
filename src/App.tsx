@@ -980,23 +980,25 @@ function AuthenticatedApp() {
           // 날짜 파싱 헬퍼 함수
           const parseDateFromCSV = (dateStr: string): string => {
             // 줄바꿈, 공백 등 정리
-            const cleanedDateStr = dateStr.replace(/[\r\n\t]/g, ' ').trim();
+            const cleanedDateStr = dateStr.replace(/[\r\n\t]/g, " ").trim();
 
-            // "2025-05-01" 형식은 그대로 반환
-            if (cleanedDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-              return cleanedDateStr;
+            // 1) "2025-05-01" 또는 "2025-05-01 12:34:56" 같은 형식
+            //    → 앞의 연-월-일까지 잘라서 사용
+            const isoMatch = cleanedDateStr.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (isoMatch) {
+              return isoMatch[1];
             }
 
-            // "5월 1일" 또는 "5월 1일 (목)" 형식 파싱 (요일 제거)
+            // 2) "5월 1일" 또는 "5월 1일 (목)" 형식 파싱 (요일 제거)
             const match = cleanedDateStr.match(/(\d+)월\s*(\d+)일/);
             if (match) {
-              const monthNum = parseInt(match[1]);
-              const dayNum = parseInt(match[2]);
-              const month = String(monthNum).padStart(2, '0');
-              const day = String(dayNum).padStart(2, '0');
+              const monthNum = parseInt(match[1], 10);
+              const dayNum = parseInt(match[2], 10);
+              const month = String(monthNum).padStart(2, "0");
+              const day = String(dayNum).padStart(2, "0");
 
               // 현재 화면의 연도/월 가져오기
-              const [currentYear, currentMonth] = filters.month.split('-').map(Number);
+              const [currentYear, currentMonth] = filters.month.split("-").map(Number);
 
               // 연도 추정 로직:
               // 1. 입력된 월이 현재 화면 월과 같거나 이전이면 → 같은 연도
@@ -1012,6 +1014,7 @@ function AuthenticatedApp() {
               return `${year}-${month}-${day}`;
             }
 
+            // 3) 인식 실패 시 빈 문자열 반환
             return "";
           };
 
@@ -1245,6 +1248,16 @@ function AuthenticatedApp() {
 
             // 구분 정규화: "(주)지출" → "지출", "(주)수입" → "수입"
             let type = typeStr.replace(/\(주\)/g, "").trim();
+
+            // 일부 카드/은행 앱에서 다른 표기를 쓰는 경우를 보정
+            // 예: "지출 " (공백 포함), "지출_카드", "카드지출", "현금지출" 등
+            if (type && type !== "수입" && type !== "지출") {
+              if (type.includes("지출")) {
+                type = "지출";
+              } else if (type.includes("수입") || type.includes("입금")) {
+                type = "수입";
+              }
+            }
 
             // 유효성 검사
             if (!type) {
