@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
 import Modal from "../common/Modal";
 
+type ExportFormat = "csv" | "excel";
+
 type ExportCSVModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onExport: (startMonth: string, endMonth: string) => void;
+  onExport: (startMonth: string, endMonth: string, format: ExportFormat) => void;
   availableMonths: string[];
   currentMonth: string;
 };
@@ -18,6 +20,7 @@ function ExportCSVModal({
 }: ExportCSVModalProps) {
   const [startMonth, setStartMonth] = useState(currentMonth);
   const [endMonth, setEndMonth] = useState(currentMonth);
+  const [format, setFormat] = useState<ExportFormat>("csv");
 
   // 월을 "YYYY년 MM월" 형식으로 표시
   const formatMonthLabel = (month: string) => {
@@ -40,7 +43,7 @@ function ExportCSVModal({
 
   const handleExport = () => {
     if (!isInvalidRange) {
-      onExport(startMonth, endMonth);
+      onExport(startMonth, endMonth, format);
       onClose();
     }
   };
@@ -49,14 +52,15 @@ function ExportCSVModal({
   const handleClose = () => {
     setStartMonth(currentMonth);
     setEndMonth(currentMonth);
+    setFormat("csv");
     onClose();
   };
 
   return (
     <Modal open={isOpen} onClose={handleClose} hideFooter>
       <div className="export-modal">
-        <h3 className="export-modal__title">CSV 내보내기</h3>
-        <p className="export-modal__desc">내보낼 기간을 선택하세요</p>
+        <h3 className="export-modal__title">데이터 내보내기</h3>
+        <p className="export-modal__desc">내보낼 기간과 형식을 선택하세요</p>
 
         <div className="export-modal__range">
           <div className="export-modal__field">
@@ -94,6 +98,41 @@ function ExportCSVModal({
           </div>
         </div>
 
+        {/* 내보내기 형식 선택 */}
+        <div className="export-modal__format">
+          <label className="export-modal__format-label">형식</label>
+          <div className="export-modal__format-options">
+            <label className={`export-modal__format-option ${format === "csv" ? "export-modal__format-option--active" : ""}`}>
+              <input
+                type="radio"
+                name="format"
+                value="csv"
+                checked={format === "csv"}
+                onChange={() => setFormat("csv")}
+              />
+              <span className="export-modal__format-icon">📄</span>
+              <span className="export-modal__format-text">
+                <strong>CSV</strong>
+                <small>단일 파일</small>
+              </span>
+            </label>
+            <label className={`export-modal__format-option ${format === "excel" ? "export-modal__format-option--active" : ""}`}>
+              <input
+                type="radio"
+                name="format"
+                value="excel"
+                checked={format === "excel"}
+                onChange={() => setFormat("excel")}
+              />
+              <span className="export-modal__format-icon">📊</span>
+              <span className="export-modal__format-text">
+                <strong>Excel</strong>
+                <small>카테고리별 시트</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
         {isInvalidRange && (
           <p className="export-modal__error">시작월이 종료월보다 이후입니다</p>
         )}
@@ -101,6 +140,7 @@ function ExportCSVModal({
         {!isInvalidRange && monthCount > 0 && (
           <p className="export-modal__info">
             총 <strong>{monthCount}개월</strong> 데이터를 내보냅니다
+            {format === "excel" && " (카테고리별 시트 분리)"}
           </p>
         )}
 
@@ -127,3 +167,4 @@ function ExportCSVModal({
 }
 
 export default ExportCSVModal;
+export type { ExportFormat };

@@ -1,15 +1,18 @@
-﻿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useTheme } from "../../hooks/useTheme";
 
 type HeaderProps = {
   onClickTitle?: () => void;
   onExportCSV?: () => void;
   onImportCSV?: () => void;
   onCompareCSV?: () => void;
+  onMonthlyReport?: () => void;
 };
 
-function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV }: HeaderProps) {
+function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV, onMonthlyReport }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -43,8 +46,17 @@ function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV }: Header
         <h1 className="app-header__title">내 가계부</h1>
         <p className="app-header__subtitle">간편한 수입·지출 관리</p>
       </div>
-      {(onExportCSV || onImportCSV || onCompareCSV) && (
-        <div className="app-header__menu" ref={menuRef}>
+      <div className="app-header__actions">
+        <button
+          type="button"
+          className="theme-toggle-btn"
+          onClick={toggleTheme}
+          aria-label={theme === "light" ? "다크 모드로 전환" : "라이트 모드로 전환"}
+        >
+          {theme === "light" ? "🌙" : "☀️"}
+        </button>
+        {(onExportCSV || onImportCSV || onCompareCSV || onMonthlyReport) && (
+          <div className="app-header__menu" ref={menuRef}>
           <button
             type="button"
             className="menu-toggle-btn"
@@ -82,10 +94,20 @@ function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV }: Header
                   🔍 CSV 비교하기
                 </button>
               )}
+              {onMonthlyReport && (
+                <button
+                  type="button"
+                  className="dropdown-menu__item"
+                  onClick={() => handleMenuItemClick(onMonthlyReport)}
+                >
+                  📊 월간 리포트
+                </button>
+              )}
             </div>
           )}
         </div>
-      )}
+        )}
+      </div>
     </header>
   );
 }

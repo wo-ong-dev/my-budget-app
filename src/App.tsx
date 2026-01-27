@@ -11,6 +11,7 @@ import EditTransactionModal from "./components/transactions/EditTransactionModal
 import SummaryPanel from "./components/summary/SummaryPanel";
 import BudgetPanel from "./components/budget/BudgetPanel";
 import ExportCSVModal from "./components/export/ExportCSVModal";
+import MonthlyReportModal from "./components/report/MonthlyReportModal";
 import type {
   Transaction,
   TransactionDraft,
@@ -38,6 +39,8 @@ import {
   deleteBudget,
 } from "./services/budgetService";
 import { getAccountColor } from "./utils/iconMappings";
+import * as XLSX from "xlsx";
+import type { ExportFormat } from "./components/export/ExportCSVModal";
 
 const tabs: TabDefinition[] = [
   { key: "input", label: "내역 입력", description: "새로운 내역을 기록" },
@@ -288,6 +291,7 @@ function AuthenticatedApp() {
   const [budgets, setBudgets] = useState<BudgetWithUsage[]>([]);
   const [isBudgetLoading, setBudgetLoading] = useState(false);
   const [isExportModalOpen, setExportModalOpen] = useState(false);
+  const [isReportModalOpen, setReportModalOpen] = useState(false);
 
   const hasLoadedRef = useRef(false);
 
@@ -729,8 +733,8 @@ function AuthenticatedApp() {
     setExportModalOpen(true);
   };
 
-  // 기간별 CSV 내보내기
-  const handleExportCSV = async (startMonth: string, endMonth: string) => {
+  // 기간별 CSV/Excel 내보내기
+  const handleExportCSV = async (startMonth: string, endMonth: string, format: ExportFormat) => {
     try {
       // 시작월의 첫날과 종료월의 마지막날 계산
       const startDate = `${startMonth}-01`;
@@ -746,56 +750,118 @@ function AuthenticatedApp() {
         return;
       }
 
-      // CSV 헤더 (원하는 순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목)
-      const headers = ["날짜", "구분", "금액", "메모", "통장분류", "소비항목"];
-
-      // 날짜를 "YYYY-MM-DD" 형식으로 변환
-      const formatDateForCSV = (dateStr: string) => {
-        return dateStr; // 이미 YYYY-MM-DD 형식
-      };
-
-      // 금액을 "₩#,###" 형식으로 변환
-      const formatAmountForCSV = (amount: number) => {
-        return `₩${amount.toLocaleString('ko-KR')}`;
-      };
-
-      // 데이터를 CSV 행으로 변환 (순서: 날짜, 구분, 금액, 메모, 통장분류, 소비항목)
-      const rows = data.map(tx => [
-        formatDateForCSV(tx.date),
-        tx.type,
-        formatAmountForCSV(tx.amount),
-        (tx.memo ?? "").replace(/"/g, '""'), // 큰따옴표 이스케이프
-        tx.account ?? "",
-        tx.category ?? ""
-      ]);
-
-      // CSV 문자열 생성
-      const csvContent = [
-        headers.join(","),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
-      ].join("\n");
-
-      // BOM 추가 (한글 깨짐 방지)
-      const bom = "\uFEFF";
-      const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
-
       // 파일명 생성
-      const fileName = startMonth === endMonth
-        ? `가계부_${startMonth}.csv`
-        : `가계부_${startMonth}_${endMonth}.csv`;
+      const fileBaseName = startMonth === endMonth
+        ? `가계부_${startMonth}`
+        : `가계부_${startMonth}_${endMonth}`;
 
-      // 다운로드
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", fileName);
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      if (format === "excel") {
+        // Excel 내보내기 (카테고리별 시트 분리)
+        const workbook = XLSX.utils.book_new();
+
+        // 카테고리별로 데이터 분리
+        const categoryMap = new Map<string, typeof data>();
+        data.forEach(tx => {
+          const category = tx.category || "기타";
+          if (!categoryMap.has(category)) {
+            categoryMap.set(category, []);
+          }
+          categoryMap.get(category)!.push(tx);
+        });
+
+        // 전체 데이터 시트 추가
+        const allHeaders = ["날짜", "구분", "금액", "메모", "통장분류", "소비항목"];
+        const allRows = data.map(tx => ({
+          날짜: tx.date,
+          구분: tx.type,
+          금액: tx.amount,
+          메모: tx.memo ?? "",
+          통장분류: tx.account ?? "",
+          소비항목: tx.category ?? ""
+        }));
+        const allSheet = XLSX.utils.json_to_sheet(allRows, { header: allHeaders });
+
+        // 열 너비 설정
+        allSheet["!cols"] = [
+          { wch: 12 }, // 날짜
+          { wch: 6 },  // 구분
+          { wch: 12 }, // 금액
+          { wch: 30 }, // 메모
+          { wch: 15 }, // 통장분류
+          { wch: 15 }, // 소비항목
+        ];
+        XLSX.utils.book_append_sheet(workbook, allSheet, "전체");
+
+        // 카테고리별 시트 추가
+        const categoryHeaders = ["날짜", "구분", "금액", "메모", "통장분류"];
+        categoryMap.forEach((transactions, category) => {
+          const rows = transactions.map(tx => ({
+            날짜: tx.date,
+            구분: tx.type,
+            금액: tx.amount,
+            메모: tx.memo ?? "",
+            통장분류: tx.account ?? ""
+          }));
+          const sheet = XLSX.utils.json_to_sheet(rows, { header: categoryHeaders });
+
+          // 열 너비 설정
+          sheet["!cols"] = [
+            { wch: 12 }, // 날짜
+            { wch: 6 },  // 구분
+            { wch: 12 }, // 금액
+            { wch: 30 }, // 메모
+            { wch: 15 }, // 통장분류
+          ];
+
+          // 시트 이름에서 특수문자 제거 (Excel 시트 이름 제한)
+          const sheetName = category.replace(/[\\/*?[\]:]/g, "").substring(0, 31);
+          XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
+        });
+
+        // Excel 파일 다운로드
+        XLSX.writeFile(workbook, `${fileBaseName}.xlsx`);
+      } else {
+        // CSV 내보내기
+        const headers = ["날짜", "구분", "금액", "메모", "통장분류", "소비항목"];
+
+        // 금액을 "₩#,###" 형식으로 변환
+        const formatAmountForCSV = (amount: number) => {
+          return `₩${amount.toLocaleString('ko-KR')}`;
+        };
+
+        // 데이터를 CSV 행으로 변환
+        const rows = data.map(tx => [
+          tx.date,
+          tx.type,
+          formatAmountForCSV(tx.amount),
+          (tx.memo ?? "").replace(/"/g, '""'),
+          tx.account ?? "",
+          tx.category ?? ""
+        ]);
+
+        // CSV 문자열 생성
+        const csvContent = [
+          headers.join(","),
+          ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+        ].join("\n");
+
+        // BOM 추가 (한글 깨짐 방지)
+        const bom = "\uFEFF";
+        const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
+
+        // 다운로드
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${fileBaseName}.csv`);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "CSV 내보내기에 실패했어요.";
+      const message = err instanceof Error ? err.message : "내보내기에 실패했어요.";
       setError(message);
     }
   };
@@ -1569,6 +1635,7 @@ function AuthenticatedApp() {
           onExportCSV={handleOpenExportModal}
           onImportCSV={handleImportCSV}
           onCompareCSV={handleCompareCSV}
+          onMonthlyReport={() => setReportModalOpen(true)}
         />
         <TabNavigation tabs={tabs} activeTab={activeTab} onSelect={handleTabChange} />
 
@@ -1670,6 +1737,13 @@ function AuthenticatedApp() {
         onExport={handleExportCSV}
         availableMonths={availableMonths}
         currentMonth={filters.month}
+      />
+
+      <MonthlyReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        summary={summary}
+        month={filters.month}
       />
     </div>
   );
