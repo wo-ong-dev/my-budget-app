@@ -11,6 +11,7 @@ import EditTransactionModal from "./components/transactions/EditTransactionModal
 import SummaryPanel from "./components/summary/SummaryPanel";
 import BudgetPanel from "./components/budget/BudgetPanel";
 import ExportCSVModal from "./components/export/ExportCSVModal";
+import MonthlyReportModal from "./components/report/MonthlyReportModal";
 import type {
   Transaction,
   TransactionDraft,
@@ -288,6 +289,7 @@ function AuthenticatedApp() {
   const [budgets, setBudgets] = useState<BudgetWithUsage[]>([]);
   const [isBudgetLoading, setBudgetLoading] = useState(false);
   const [isExportModalOpen, setExportModalOpen] = useState(false);
+  const [isReportModalOpen, setReportModalOpen] = useState(false);
 
   const hasLoadedRef = useRef(false);
 
@@ -1569,6 +1571,7 @@ function AuthenticatedApp() {
           onExportCSV={handleOpenExportModal}
           onImportCSV={handleImportCSV}
           onCompareCSV={handleCompareCSV}
+          onMonthlyReport={() => setReportModalOpen(true)}
         />
         <TabNavigation tabs={tabs} activeTab={activeTab} onSelect={handleTabChange} />
 
@@ -1670,6 +1673,13 @@ function AuthenticatedApp() {
         onExport={handleExportCSV}
         availableMonths={availableMonths}
         currentMonth={filters.month}
+      />
+
+      <MonthlyReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        summary={summary}
+        month={filters.month}
       />
     </div>
   );

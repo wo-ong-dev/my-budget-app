@@ -6,9 +6,10 @@ type HeaderProps = {
   onExportCSV?: () => void;
   onImportCSV?: () => void;
   onCompareCSV?: () => void;
+  onMonthlyReport?: () => void;
 };
 
-function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV }: HeaderProps) {
+function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV, onMonthlyReport }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { theme, toggleTheme } = useTheme();
@@ -54,7 +55,7 @@ function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV }: Header
         >
           {theme === "light" ? "🌙" : "☀️"}
         </button>
-        {(onExportCSV || onImportCSV || onCompareCSV) && (
+        {(onExportCSV || onImportCSV || onCompareCSV || onMonthlyReport) && (
           <div className="app-header__menu" ref={menuRef}>
           <button
             type="button"
@@ -91,6 +92,15 @@ function Header({ onClickTitle, onExportCSV, onImportCSV, onCompareCSV }: Header
                   onClick={() => handleMenuItemClick(onCompareCSV)}
                 >
                   🔍 CSV 비교하기
+                </button>
+              )}
+              {onMonthlyReport && (
+                <button
+                  type="button"
+                  className="dropdown-menu__item"
+                  onClick={() => handleMenuItemClick(onMonthlyReport)}
+                >
+                  📊 월간 리포트
                 </button>
               )}
             </div>

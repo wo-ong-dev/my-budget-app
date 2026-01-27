@@ -1459,6 +1459,207 @@ body {
   cursor: not-allowed;
 }
 
+/* 월간 리포트 모달 */
+.report-modal {
+  padding: 8px;
+}
+
+.report-modal__title {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.report-content {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid var(--gray-200);
+}
+
+.report-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #10b981;
+}
+
+.report-header__title {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.report-header__subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.report-summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.report-summary__item {
+  flex: 1;
+  padding: 16px 12px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.report-summary__item--income {
+  background: #ecfdf5;
+}
+
+.report-summary__item--expense {
+  background: #fef2f2;
+}
+
+.report-summary__item--balance {
+  background: #eff6ff;
+}
+
+.report-summary__label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.report-summary__value {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.report-summary__item--income .report-summary__value {
+  color: #059669;
+}
+
+.report-summary__item--expense .report-summary__value {
+  color: #dc2626;
+}
+
+.report-summary__item--balance .report-summary__value {
+  color: #2563eb;
+}
+
+.report-section-title {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.report-category-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report-category-item__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.report-category-item__color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.report-category-item__name {
+  flex: 1;
+  font-size: 13px;
+  color: #374151;
+}
+
+.report-category-item__amount {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.report-category-item__percent {
+  font-size: 12px;
+  color: #6b7280;
+  min-width: 40px;
+  text-align: right;
+}
+
+.report-category-item__bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.report-category-item__bar-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.report-footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.report-modal__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.report-modal__btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.report-modal__btn--cancel {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.report-modal__btn--cancel:hover {
+  background: var(--gray-200);
+}
+
+.report-modal__btn--download {
+  background: var(--primary-500);
+  color: #fff;
+}
+
+.report-modal__btn--download:hover {
+  background: var(--primary-600);
+}
+
+.report-modal__btn--download:disabled {
+  background: var(--gray-300);
+  color: var(--gray-500);
+  cursor: not-allowed;
+}
+
 @media (max-width: 520px) {
 
   html,
