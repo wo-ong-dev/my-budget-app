@@ -888,7 +888,7 @@ function AuthenticatedApp() {
   };
 
   // CSV 파일 처리 함수 (공통 로직)
-  const processCSVFile = async (file: File, compareOnly: boolean = false) => {
+          const processCSVFile = async (file: File, compareOnly: boolean = false) => {
     if (!file) {
       return;
     }
@@ -1300,15 +1300,30 @@ function AuthenticatedApp() {
               continue;
             }
 
+            const amount = parseAmountFromCSV(amountStr);
+            if (amount === null || amount === 0) {
+              console.warn(`${i + 2}번째 줄 건너뛰기: 잘못된 금액 또는 0원 (${amountStr})`);
+              continue;
+            }
+
             // 구분 정규화: "(주)지출" → "지출", "(주)수입" → "수입"
             let type = (typeStr || "").replace(/\(주\)/g, "").trim();
 
             // 일부 카드/은행 앱에서 다른 표기를 쓰는 경우를 보정
             // 예: "지출 " (공백 포함), "지출_카드", "카드지출", "현금지출" 등
-            if (type && type !== "수입" && type !== "지출") {
+            if (type && type !== "수입" && type !== "지출" && type !== "이체") {
               if (type.includes("지출")) {
                 type = "지출";
               } else if (type.includes("수입") || type.includes("입금")) {
+                type = "수입";
+              }
+            }
+
+            // 여전히 타입이 이상한 경우(인코딩 깨짐 등)에는 금액 기준으로 추론
+            if (!type || (type !== "수입" && type !== "지출" && type !== "이체")) {
+              if (amount < 0) {
+                type = "지출";
+              } else if (amount > 0) {
                 type = "수입";
               }
             }
@@ -1327,12 +1342,6 @@ function AuthenticatedApp() {
 
             if (type !== "수입" && type !== "지출") {
               console.warn(`${i + 2}번째 줄 건너뛰기: 잘못된 구분 (${type})`);
-              continue;
-            }
-
-            const amount = parseAmountFromCSV(amountStr);
-            if (amount === null || amount === 0) {
-              console.warn(`${i + 2}번째 줄 건너뛰기: 잘못된 금액 또는 0원 (${amountStr})`);
               continue;
             }
 
