@@ -515,7 +515,7 @@ body {
   width: 40px;
   height: 40px;
   border: 1px solid var(--gray-300);
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 10px;
   font-size: 24px;
   font-weight: 600;
@@ -577,7 +577,7 @@ body {
 }
 
 .radio-item--active {
-  background: #fff;
+  background: var(--card-bg);
   color: var(--primary-500);
   box-shadow: 0 8px 16px rgba(102, 126, 234, 0.18);
 }
@@ -774,7 +774,7 @@ body {
   border-radius: 14px;
   padding: 14px 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  background: #fff;
+  background: var(--card-bg);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -1045,7 +1045,7 @@ body {
 }
 
 .category-view-tab--active {
-  background: #fff;
+  background: var(--card-bg);
   color: var(--primary-600);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -1248,7 +1248,7 @@ body {
 
 /* 차트 커스텀 툴팁 */
 .custom-tooltip {
-  background: #fff;
+  background: var(--card-bg);
   padding: 12px 16px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -1541,7 +1541,7 @@ body {
 }
 
 .report-content {
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 24px;
   border: 1px solid var(--gray-200);
@@ -2048,7 +2048,7 @@ body {
   grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr;
   gap: 8px;
   padding: 14px 16px;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 10px;
   border-left: 4px solid var(--primary-500);
   align-items: center;
@@ -2220,7 +2220,7 @@ body {
   border-radius: 6px;
   font-size: 14px;
   outline: none;
-  background: #fff;
+  background: var(--card-bg);
 }
 
 .budget-add__select:focus {
@@ -2434,7 +2434,7 @@ body {
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--gray-200);
-  background: #fff;
+  background: var(--card-bg);
 }
 
 .expense-plan-header {
@@ -2597,7 +2597,7 @@ body {
   border-radius: 6px;
   font-size: 14px;
   outline: none;
-  background: #fff;
+  background: var(--card-bg);
   transition: all 0.2s ease;
   min-width: 0;
 }
@@ -2779,7 +2779,7 @@ body {
   border-radius: 8px;
   font-size: 14px;
   outline: none;
-  background: #fff;
+  background: var(--card-bg);
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
@@ -2925,7 +2925,7 @@ body {
   flex: 1;
   min-width: 150px;
   padding: 12px;
-  background: white;
+  background: var(--card-bg);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -2992,7 +2992,7 @@ body {
   align-items: flex-start;
   gap: 12px;
   padding: 14px;
-  background: white;
+  background: var(--card-bg);
   border: 2px solid var(--gray-200);
   border-radius: 10px;
   transition: all 0.2s ease;
@@ -3072,7 +3072,7 @@ body {
 
 .settlement-transfer-item {
   padding: 12px;
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--gray-200);
   border-radius: 8px;
   display: flex;
@@ -3108,7 +3108,7 @@ body {
   color: var(--gray-500);
   font-size: 14px;
   line-height: 1.6;
-  background: white;
+  background: var(--card-bg);
   border-radius: 8px;
 }
 
@@ -3155,7 +3155,7 @@ body {
 
 .rebalance-session-item {
   padding: 16px;
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--gray-200);
   border-radius: 10px;
   margin-bottom: 12px;
@@ -3283,7 +3283,7 @@ body {
   border: 1px solid var(--gray-300);
   border-radius: 6px;
   font-size: 13px;
-  background: white;
+  background: var(--card-bg);
   color: var(--gray-700);
   transition: all 0.2s ease;
 }
