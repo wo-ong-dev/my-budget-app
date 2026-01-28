@@ -185,7 +185,10 @@ function SummaryPanel({
           dominantBaseline="central"
           style={{
             fontSize: '12px',
-            fontWeight: '600'
+            fontWeight: '600',
+            stroke: strokeColor,
+            strokeWidth: 2,
+            paintOrder: 'stroke fill'
           }}
         >
           {name}
