@@ -141,10 +141,10 @@ function SummaryPanel({
     // 텍스트 정렬 (왼쪽/오른쪽 결정)
     const textAnchor = outerX > cx ? 'start' : 'end';
 
-    // 다크모드에서는 stroke 색상을 어둡게
-    const strokeColor = isDarkMode ? '#1f2937' : '#ffffff';
-    const textColor = isDarkMode ? '#f3f4f6' : '#343a40';
-    const lineColor = isDarkMode ? '#6b7280' : '#ced4da';
+    // 다크모드에서는 stroke 색상을 더 어둡게 (텍스트 가독성 확보)
+    const strokeColor = isDarkMode ? '#111827' : '#ffffff';
+    const textColor = isDarkMode ? '#ffffff' : '#343a40';
+    const lineColor = isDarkMode ? '#9ca3af' : '#ced4da';
 
     return (
       <g>
