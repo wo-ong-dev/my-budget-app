@@ -31,6 +31,15 @@
   --border-color: #dee2e6;
   --card-bg: #ffffff;
   --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  /* 차트 색상 팔레트 */
+  --chart-color-1: #4A90E2;
+  --chart-color-2: #9B59B6;
+  --chart-color-3: #F1C40F;
+  --chart-color-4: #E67E22;
+  --chart-color-5: #27AE60;
+  --chart-color-6: #1ABC9C;
+  --chart-color-7: #3498DB;
+  --chart-color-8: #E74C3C;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -68,6 +77,15 @@
   --border-color: #374151;
   --card-bg: #1f2937;
   --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  /* 다크모드용 차트 색상 - 채도/밝기 낮춤 */
+  --chart-color-1: #5B9BD5;
+  --chart-color-2: #8E6BAD;
+  --chart-color-3: #D4A84B;
+  --chart-color-4: #CD8244;
+  --chart-color-5: #4A9D6E;
+  --chart-color-6: #3A9A8C;
+  --chart-color-7: #5AA3C7;
+  --chart-color-8: #C9605A;
 }
 
 * {
@@ -1052,6 +1070,29 @@ body {
   gap: 6px;
 }
 
+.category-list-item--clickable {
+  cursor: pointer;
+  padding: 8px;
+  margin: -8px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.category-list-item--clickable:hover {
+  background-color: var(--gray-100);
+}
+
+.category-list-item--clickable:active {
+  background-color: var(--gray-200);
+}
+
+.category-list-item__arrow {
+  color: var(--gray-400);
+  font-size: 16px;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
 .category-list-item__header {
   display: flex;
   justify-content: space-between;
@@ -1271,6 +1312,34 @@ body {
   justify-content: space-between;
   font-size: 14px;
   color: var(--gray-700);
+}
+
+.stats-list-item--clickable {
+  cursor: pointer;
+  padding: 8px;
+  margin: -8px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.stats-list-item--clickable:hover {
+  background-color: var(--gray-100);
+}
+
+.stats-list-item--clickable:active {
+  background-color: var(--gray-200);
+}
+
+.stats-list-item__values {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stats-list-item__arrow {
+  color: var(--gray-400);
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .modal-backdrop {

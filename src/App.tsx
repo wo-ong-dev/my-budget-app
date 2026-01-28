@@ -725,6 +725,16 @@ function AuthenticatedApp() {
     setFilters((prev) => ({
       ...prev,
       account: account,
+      category: "ALL",
+    }));
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setActiveTab("history");
+    setFilters((prev) => ({
+      ...prev,
+      category: category,
+      account: "ALL",
     }));
   };
 
@@ -1755,6 +1765,8 @@ function AuthenticatedApp() {
               availableMonths={availableMonths}
               onMonthChange={(month) => setFilters((prev) => ({ ...prev, month }))}
               monthlyComparison={monthlyComparison}
+              onCategoryClick={handleCategoryClick}
+              onAccountClick={handleAccountClick}
             />
           ) : null}
         </section>

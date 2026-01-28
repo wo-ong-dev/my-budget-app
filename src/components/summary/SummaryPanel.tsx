@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { TransactionSummary, MonthlyComparison } from "../../types";
 import { formatCurrency, monthLabel } from "../../utils/formatters";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
@@ -12,7 +12,13 @@ type SummaryPanelProps = {
   availableMonths?: string[];
   onMonthChange?: (month: string) => void;
   monthlyComparison?: MonthlyComparison | null;
+  onCategoryClick?: (category: string) => void;
+  onAccountClick?: (account: string) => void;
 };
+
+// 라이트/다크 모드별 차트 색상
+const LIGHT_COLORS = ["#4A90E2", "#9B59B6", "#F1C40F", "#E67E22", "#27AE60", "#1ABC9C", "#3498DB", "#E74C3C"];
+const DARK_COLORS = ["#5B9BD5", "#8E6BAD", "#D4A84B", "#CD8244", "#4A9D6E", "#3A9A8C", "#5AA3C7", "#C9605A"];
 
 function SummaryPanel({
   summary,
@@ -20,9 +26,33 @@ function SummaryPanel({
   currentMonth,
   availableMonths = [],
   onMonthChange,
-  monthlyComparison
+  monthlyComparison,
+  onCategoryClick,
+  onAccountClick
 }: SummaryPanelProps) {
   const [categoryView, setCategoryView] = useState<CategoryViewType>("chart");
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // 테마 변경 감지
+  useEffect(() => {
+    const checkTheme = () => {
+      const theme = document.documentElement.getAttribute("data-theme");
+      setIsDarkMode(theme === "dark");
+    };
+
+    checkTheme();
+
+    // MutationObserver로 테마 변경 감지
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"]
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const COLORS = isDarkMode ? DARK_COLORS : LIGHT_COLORS;
   // 로딩 중일 때 스켈레톤 UI 표시
   if (loading) {
     return (
@@ -111,19 +141,24 @@ function SummaryPanel({
     // 텍스트 정렬 (왼쪽/오른쪽 결정)
     const textAnchor = outerX > cx ? 'start' : 'end';
 
+    // 다크모드에서는 stroke 색상을 어둡게
+    const strokeColor = isDarkMode ? '#1f2937' : '#ffffff';
+    const textColor = isDarkMode ? '#f3f4f6' : '#343a40';
+    const lineColor = isDarkMode ? '#6b7280' : '#ced4da';
+
     return (
       <g>
         {/* 안쪽: 퍼센트 표시 */}
         <text
           x={innerX}
           y={innerY}
-          fill="var(--gray-800)"
+          fill={textColor}
           textAnchor="middle"
           dominantBaseline="central"
           style={{
             fontSize: '13px',
             fontWeight: 'bold',
-            stroke: '#ffffff',
+            stroke: strokeColor,
             strokeWidth: 3,
             paintOrder: 'stroke fill'
           }}
@@ -137,7 +172,7 @@ function SummaryPanel({
           y1={lineEndY}
           x2={outerX}
           y2={outerY}
-          stroke="var(--gray-400)"
+          stroke={lineColor}
           strokeWidth={1}
         />
 
@@ -145,7 +180,7 @@ function SummaryPanel({
         <text
           x={outerX}
           y={outerY}
-          fill="var(--gray-700)"
+          fill={textColor}
           textAnchor={textAnchor}
           dominantBaseline="central"
           style={{
@@ -195,9 +230,6 @@ function SummaryPanel({
       }));
     }
   }, [summary.categories]);
-
-  // 도넛 차트 색상 팔레트 (이미지 참고)
-  const COLORS = ["#4A90E2", "#9B59B6", "#F1C40F", "#E67E22", "#27AE60", "#1ABC9C", "#3498DB", "#9B59B6"];
 
   // 커스텀 툴팁 컴포넌트
   const CustomTooltip = ({ active, payload }: any) => {
@@ -350,8 +382,21 @@ function SummaryPanel({
                 {chartData.map((item, index) => {
                   const totalExpense = chartData.reduce((sum, d) => sum + d.value, 0);
                   const percentage = totalExpense > 0 ? (item.value / totalExpense) * 100 : 0;
+                  const isClickable = onCategoryClick && item.name !== "그 외";
                   return (
-                    <li key={item.name} className="category-list-item">
+                    <li
+                      key={item.name}
+                      className={`category-list-item ${isClickable ? "category-list-item--clickable" : ""}`}
+                      onClick={isClickable ? () => onCategoryClick(item.name) : undefined}
+                      role={isClickable ? "button" : undefined}
+                      tabIndex={isClickable ? 0 : undefined}
+                      onKeyDown={isClickable ? (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          onCategoryClick(item.name);
+                        }
+                      } : undefined}
+                    >
                       <div className="category-list-item__header">
                         <div className="category-list-item__name">
                           <span
@@ -363,6 +408,7 @@ function SummaryPanel({
                         <div className="category-list-item__values">
                           <span className="category-list-item__amount">{formatCurrency(item.value)}원</span>
                           <span className="category-list-item__percentage">{percentage.toFixed(1)}%</span>
+                          {isClickable && <span className="category-list-item__arrow">›</span>}
                         </div>
                       </div>
                       <div className="category-list-item__bar">
@@ -392,9 +438,24 @@ function SummaryPanel({
           <h4 className="stats-card-title"><span className="stats-card-icon">💳</span>계좌별 지출</h4>
           <ul className="stats-list">
             {summary.accounts.map((item) => (
-              <li key={item.account}>
+              <li
+                key={item.account}
+                className={onAccountClick ? "stats-list-item--clickable" : ""}
+                onClick={onAccountClick ? () => onAccountClick(item.account) : undefined}
+                role={onAccountClick ? "button" : undefined}
+                tabIndex={onAccountClick ? 0 : undefined}
+                onKeyDown={onAccountClick ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onAccountClick(item.account);
+                  }
+                } : undefined}
+              >
                 <span>{item.account}</span>
-                <strong>{formatCurrency(item.expense)}원</strong>
+                <div className="stats-list-item__values">
+                  <strong>{formatCurrency(item.expense)}원</strong>
+                  {onAccountClick && <span className="stats-list-item__arrow">›</span>}
+                </div>
               </li>
             ))}
           </ul>
