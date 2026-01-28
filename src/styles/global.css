@@ -113,8 +113,8 @@ body {
   position: relative;
 }
 
-[data-theme="dark"] body {
-  background: linear-gradient(135deg, #022c22 0%, #064e3b 100%);
+html[data-theme="dark"] body {
+  background: linear-gradient(135deg, #022c22 0%, #064e3b 100%) !important;
 }
 
 #root {
