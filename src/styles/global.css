@@ -3394,3 +3394,28 @@ html[data-theme="dark"] body {
     margin-left: 0;
   }
 }
+
+/* 다크모드: 월간 지출 계획 헤더 */
+[data-theme="dark"] .expense-plan-header {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+}
+
+[data-theme="dark"] .expense-plan-account-name {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .expense-plan-total-label {
+  color: #d1d5db;
+}
+
+[data-theme="dark"] .expense-plan-total-value {
+  color: #f9fafb;
+}
+
+[data-theme="dark"] .expense-plan-total-item--checked .expense-plan-total-value {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .expense-plan-total-item--remaining .expense-plan-total-value {
+  color: #34d399;
+}
