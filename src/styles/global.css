@@ -3419,3 +3419,20 @@ html[data-theme="dark"] body {
 [data-theme="dark"] .expense-plan-total-item--remaining .expense-plan-total-value {
   color: #34d399;
 }
+
+/* 다크모드: 내역 조회 요약 카드 */
+[data-theme="dark"] .history-summary-card {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+}
+
+[data-theme="dark"] .history-summary-label {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+[data-theme="dark"] .history-summary-amount {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .history-summary-icon {
+  filter: none;
+}
