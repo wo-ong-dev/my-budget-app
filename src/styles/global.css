@@ -3436,3 +3436,22 @@ html[data-theme="dark"] body {
 [data-theme="dark"] .history-summary-icon {
   filter: none;
 }
+
+/* 다크모드: 헤더 배경색 */
+[data-theme="dark"] .app-header {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+}
+
+/* 다크모드: 통계 요약 카드 배경색 */
+[data-theme="dark"] .summary-card {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+}
+
+/* 다크모드: 기본 버튼 배경색 */
+[data-theme="dark"] .btn-primary {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+}
