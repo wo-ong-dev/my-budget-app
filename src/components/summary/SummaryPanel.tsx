@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { TransactionSummary, MonthlyComparison } from "../../types";
 import { formatCurrency, monthLabel } from "../../utils/formatters";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import OtherCategoriesModal from "./OtherCategoriesModal";
 
 type CategoryViewType = "chart" | "list";
@@ -250,6 +250,31 @@ function SummaryPanel({
     }
   };
 
+  // 커스텀 툴팁 컴포넌트
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+
+      if (data.name === "그 외") {
+        return (
+          <div className="custom-tooltip">
+            <p className="tooltip-title">그 외</p>
+            <p className="tooltip-value">{formatCurrency(data.value)}원</p>
+            <p className="tooltip-hint">클릭하여 상세 보기</p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="custom-tooltip">
+          <p className="tooltip-title">{data.name}</p>
+          <p className="tooltip-value">{formatCurrency(data.value)}원</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="summary-panel">
       <section className="summary-card">
@@ -362,6 +387,7 @@ function SummaryPanel({
                       />
                     ))}
                   </Pie>
+                  <Tooltip content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                 </PieChart>
               </ResponsiveContainer>
