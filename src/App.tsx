@@ -587,7 +587,10 @@ function AuthenticatedApp() {
       setSubmitting(true);
       await createTransaction(normalizeDraft(draft));
       await refetch();
-      setActiveTab("history");
+      // 빠른 입력 모드가 아닐 때만 내역 조회 탭으로 이동
+      if (!quickInputMode) {
+        setActiveTab("history");
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "내역을 저장하지 못했어요.";
       setError(message);
