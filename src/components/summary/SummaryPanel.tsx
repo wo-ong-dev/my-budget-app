@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { TransactionSummary, MonthlyComparison } from "../../types";
 import { formatCurrency, monthLabel } from "../../utils/formatters";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import OtherCategoriesModal from "./OtherCategoriesModal";
 
 type CategoryViewType = "chart" | "list";
 
@@ -32,6 +33,8 @@ function SummaryPanel({
 }: SummaryPanelProps) {
   const [categoryView, setCategoryView] = useState<CategoryViewType>("chart");
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isOtherModalOpen, setIsOtherModalOpen] = useState(false);
+  const [otherCategoriesData, setOtherCategoriesData] = useState<{ details: Array<{ category: string; amount: number }>; total: number }>({ details: [], total: 0 });
 
   // 테마 변경 감지
   useEffect(() => {
@@ -234,37 +237,17 @@ function SummaryPanel({
     }
   }, [summary.categories]);
 
-  // 커스텀 툴팁 컴포넌트
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-
-      if (data.name === "그 외" && data.details) {
-        return (
-          <div className="custom-tooltip">
-            <p className="tooltip-title">그 외</p>
-            <p className="tooltip-total">합계: {formatCurrency(data.value)}원</p>
-            <div className="tooltip-divider"></div>
-            <ul className="tooltip-details">
-              {data.details.map((detail: any, index: number) => (
-                <li key={index}>
-                  <span>{detail.category}</span>
-                  <span>{formatCurrency(detail.amount)}원</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        );
-      }
-
-      return (
-        <div className="custom-tooltip">
-          <p className="tooltip-title">{data.name}</p>
-          <p className="tooltip-value">{formatCurrency(data.value)}원</p>
-        </div>
-      );
+  // "그 외" 카테고리 클릭 핸들러
+  const handleOtherCategoryClick = (data: any) => {
+    if (data.name === "그 외" && data.details) {
+      setOtherCategoriesData({
+        details: data.details,
+        total: data.value,
+      });
+      setIsOtherModalOpen(true);
+    } else if (onCategoryClick && data.name !== "그 외") {
+      onCategoryClick(data.name);
     }
-    return null;
   };
 
   return (
@@ -370,11 +353,15 @@ function SummaryPanel({
                     label={renderCustomLabel}
                     labelLine={false}
                   >
-                    {chartData.map((_entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {chartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                        cursor="pointer"
+                        onClick={() => handleOtherCategoryClick(entry)}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} animationDuration={0} />
                   <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -385,18 +372,19 @@ function SummaryPanel({
                 {chartData.map((item, index) => {
                   const totalExpense = chartData.reduce((sum, d) => sum + d.value, 0);
                   const percentage = totalExpense > 0 ? (item.value / totalExpense) * 100 : 0;
-                  const isClickable = onCategoryClick && item.name !== "그 외";
+                  const isOther = item.name === "그 외" && (item as any).details;
+                  const isClickable = onCategoryClick || isOther;
                   return (
                     <li
                       key={item.name}
                       className={`category-list-item ${isClickable ? "category-list-item--clickable" : ""}`}
-                      onClick={isClickable ? () => onCategoryClick(item.name) : undefined}
+                      onClick={isClickable ? () => handleOtherCategoryClick(item) : undefined}
                       role={isClickable ? "button" : undefined}
                       tabIndex={isClickable ? 0 : undefined}
                       onKeyDown={isClickable ? (e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          onCategoryClick(item.name);
+                          handleOtherCategoryClick(item);
                         }
                       } : undefined}
                     >
@@ -412,6 +400,7 @@ function SummaryPanel({
                           <span className="category-list-item__amount">{formatCurrency(item.value)}원</span>
                           <span className="category-list-item__percentage">{percentage.toFixed(1)}%</span>
                           {isClickable && <span className="category-list-item__arrow">›</span>}
+                          {isOther && <span className="category-list-item__badge">상세</span>}
                         </div>
                       </div>
                       <div className="category-list-item__bar">
@@ -536,6 +525,14 @@ function SummaryPanel({
           </div>
         </section>
       ) : null}
+
+      <OtherCategoriesModal
+        open={isOtherModalOpen}
+        onClose={() => setIsOtherModalOpen(false)}
+        details={otherCategoriesData.details}
+        totalAmount={otherCategoriesData.total}
+        onCategoryClick={onCategoryClick}
+      />
     </div>
   );
 }
