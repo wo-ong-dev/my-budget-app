@@ -7,6 +7,7 @@ export interface Budget {
   target_amount: number;
   color: string;
   is_custom: boolean;
+  sort_order: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -25,9 +26,9 @@ export interface BudgetWithUsage extends Budget {
 
 export class BudgetModel {
   static async findByMonth(month: string): Promise<BudgetWithUsage[]> {
-    // 1. 현재 월의 커스텀 예산 조회
+    // 1. 현재 월의 커스텀 예산 조회 (sort_order로 정렬)
     const [customBudgetRows] = await pool.execute(
-      `SELECT * FROM budgets WHERE month = ? AND is_custom = TRUE ORDER BY account`,
+      `SELECT * FROM budgets WHERE month = ? AND is_custom = TRUE ORDER BY sort_order, account`,
       [month]
     );
 
@@ -39,9 +40,9 @@ export class BudgetModel {
       ? `${year - 1}-12`
       : `${year}-${String(monthNum - 1).padStart(2, '0')}`;
 
-    // 3. 전월의 모든 예산 조회
+    // 3. 전월의 모든 예산 조회 (sort_order로 정렬)
     let [prevBudgetRows] = await pool.execute(
-      `SELECT * FROM budgets WHERE month = ? ORDER BY account`,
+      `SELECT * FROM budgets WHERE month = ? ORDER BY sort_order, account`,
       [prevMonth]
     );
 
@@ -52,7 +53,7 @@ export class BudgetModel {
       const [latestBudgetRows] = await pool.execute(
         `SELECT * FROM budgets
          WHERE month < ?
-         ORDER BY month DESC, account
+         ORDER BY month DESC, sort_order, account
          LIMIT 100`,
         [month]
       );
@@ -69,7 +70,8 @@ export class BudgetModel {
         ...prevBudget,
         id: virtualId--, // 고유한 음수 ID 생성 (-1, -2, -3, ...)
         month, // 현재 월로 변경
-        is_custom: false
+        is_custom: false,
+        sort_order: prevBudget.sort_order || 0
       });
     }
 
@@ -78,10 +80,13 @@ export class BudgetModel {
       accountMap.set(customBudget.account, customBudget);
     }
 
-    const budgets = Array.from(accountMap.values()).map(b => ({
-      ...b,
-      target_amount: Number(b.target_amount)
-    }));
+    const budgets = Array.from(accountMap.values())
+      .map(b => ({
+        ...b,
+        target_amount: Number(b.target_amount),
+        sort_order: b.sort_order || 0
+      }))
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
     // 월의 시작일과 종료일 계산
     const [_year, _monthNum] = month.split('-').map(Number);
@@ -204,5 +209,47 @@ export class BudgetModel {
 
   static async deleteByAccountAndMonth(account: string, month: string): Promise<void> {
     await pool.execute('DELETE FROM budgets WHERE account = ? AND month = ?', [account, month]);
+  }
+
+  // 예산 순서 업데이트 (드래그앤드롭용)
+  static async updateSortOrder(month: string, orderedAccounts: string[]): Promise<void> {
+    // 각 계좌의 순서를 업데이트
+    for (let i = 0; i < orderedAccounts.length; i++) {
+      const account = orderedAccounts[i];
+      const sortOrder = i + 1;
+
+      // 해당 월에 예산이 있으면 업데이트, 없으면 전월 데이터를 복사하여 생성
+      const existing = await this.findByAccountAndMonth(account, month);
+
+      if (existing) {
+        await pool.execute(
+          'UPDATE budgets SET sort_order = ?, is_custom = TRUE WHERE account = ? AND month = ?',
+          [sortOrder, account, month]
+        );
+      } else {
+        // 전월 데이터 찾기
+        const [year, monthNum] = month.split('-').map(Number);
+        const prevMonth = monthNum === 1
+          ? `${year - 1}-12`
+          : `${year}-${String(monthNum - 1).padStart(2, '0')}`;
+
+        const [prevRows] = await pool.execute(
+          'SELECT * FROM budgets WHERE account = ? AND month = ?',
+          [account, prevMonth]
+        );
+
+        const prevBudget = (prevRows as Budget[])[0];
+
+        if (prevBudget) {
+          // 전월 데이터를 복사하여 현재 월에 생성
+          await pool.execute(
+            `INSERT INTO budgets (account, month, target_amount, color, is_custom, sort_order)
+             VALUES (?, ?, ?, ?, TRUE, ?)
+             ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_custom = TRUE`,
+            [account, month, prevBudget.target_amount, prevBudget.color, sortOrder]
+          );
+        }
+      }
+    }
   }
 }

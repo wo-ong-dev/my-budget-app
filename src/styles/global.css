@@ -2256,6 +2256,42 @@ html[data-theme="dark"] body {
   flex-direction: column;
   gap: 10px;
   margin-bottom: 8px;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+  cursor: grab;
+}
+
+.budget-item[draggable="true"]:hover {
+  background-color: var(--gray-50);
+}
+
+.budget-item--dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.budget-item--drag-over {
+  background-color: var(--primary-50);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 2px var(--primary-300);
+}
+
+/* 드래그 핸들 */
+.budget-drag-handle {
+  cursor: grab;
+  color: var(--gray-400);
+  font-size: 14px;
+  padding: 4px;
+  margin-right: 4px;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.budget-drag-handle:hover {
+  color: var(--gray-600);
+}
+
+.budget-item--dragging .budget-drag-handle {
+  cursor: grabbing;
 }
 
 .budget-progress-section {

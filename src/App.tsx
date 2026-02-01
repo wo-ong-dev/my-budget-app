@@ -37,6 +37,7 @@ import {
   createOrUpdateBudget,
   updateBudget,
   deleteBudget,
+  updateBudgetSortOrder,
 } from "./services/budgetService";
 import { getAccountColor } from "./utils/iconMappings";
 import * as XLSX from "xlsx";
@@ -740,6 +741,21 @@ function AuthenticatedApp() {
       category: category,
       account: "ALL",
     }));
+  };
+
+  // 예산 순서 변경 (드래그앤드롭)
+  const handleReorderBudgets = async (orderedAccounts: string[]) => {
+    if (!filters.month) return;
+    try {
+      setBudgetLoading(true);
+      await updateBudgetSortOrder(filters.month, orderedAccounts);
+      await fetchBudgets();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "예산 순서를 변경하지 못했어요.";
+      setError(message);
+    } finally {
+      setBudgetLoading(false);
+    }
   };
 
   // 내보내기 모달 열기
@@ -1789,6 +1805,7 @@ function AuthenticatedApp() {
               onAddBudget={handleAddBudget}
               onCategoryUpdate={loadMasterData}
               onAccountClick={handleAccountClick}
+              onReorderBudgets={handleReorderBudgets}
             />
           ) : null}
         </section>

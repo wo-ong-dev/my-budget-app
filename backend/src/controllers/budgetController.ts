@@ -134,4 +134,32 @@ export class BudgetController {
       });
     }
   }
+
+  // 예산 순서 업데이트 (드래그앤드롭)
+  static async updateSortOrder(req: Request, res: Response): Promise<void> {
+    try {
+      const { month, orderedAccounts } = req.body;
+
+      if (!month || !orderedAccounts || !Array.isArray(orderedAccounts)) {
+        res.status(400).json({
+          ok: false,
+          error: 'month와 orderedAccounts 배열이 필요합니다.'
+        });
+        return;
+      }
+
+      await BudgetModel.updateSortOrder(month, orderedAccounts);
+
+      res.json({
+        ok: true,
+        message: '예산 순서가 업데이트되었습니다.'
+      });
+    } catch (error) {
+      console.error('예산 순서 업데이트 오류:', error);
+      res.status(500).json({
+        ok: false,
+        error: '예산 순서를 업데이트하는데 실패했습니다.'
+      });
+    }
+  }
 }

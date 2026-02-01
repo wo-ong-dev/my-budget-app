@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { BudgetWithUsage } from "../../types";
 import { formatCurrency, monthLabel } from "../../utils/formatters";
 import { getAccountIcon } from "../../utils/iconMappings";
@@ -18,6 +18,7 @@ type BudgetPanelProps = {
   onAddBudget?: (account: string, month: string, targetAmount: number) => void;
   onCategoryUpdate?: () => void;
   onAccountClick?: (account: string) => void;
+  onReorderBudgets?: (orderedAccounts: string[]) => void;
 };
 
 function BudgetPanel({
@@ -32,6 +33,7 @@ function BudgetPanel({
   onAddBudget,
   onCategoryUpdate,
   onAccountClick,
+  onReorderBudgets,
 }: BudgetPanelProps) {
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -39,6 +41,11 @@ function BudgetPanel({
   const [newAccount, setNewAccount] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [isManagementModalOpen, setManagementModalOpen] = useState(false);
+
+  // 드래그앤드롭 상태
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const dragNodeRef = useRef<HTMLDivElement | null>(null);
 
   if (loading) {
     return <div className="list-placeholder">데이터를 불러오는 중입니다...</div>;
@@ -149,6 +156,52 @@ function BudgetPanel({
     return "budget-progress--success";
   };
 
+  // 드래그앤드롭 핸들러
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    setDraggedIndex(index);
+    dragNodeRef.current = e.currentTarget;
+    e.currentTarget.classList.add("budget-item--dragging");
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    e.currentTarget.classList.remove("budget-item--dragging");
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    dragNodeRef.current = null;
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+    // 새로운 순서로 배열 재정렬
+    const newBudgets = [...budgets];
+    const [draggedItem] = newBudgets.splice(draggedIndex, 1);
+    newBudgets.splice(dropIndex, 0, draggedItem);
+
+    // 계좌 순서 배열 생성
+    const orderedAccounts = newBudgets.map(b => b.account);
+
+    // 부모에게 순서 변경 알림
+    if (onReorderBudgets) {
+      onReorderBudgets(orderedAccounts);
+    }
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   return (
     <div className="budget-panel">
       <div className="budget-header">
@@ -207,14 +260,27 @@ function BudgetPanel({
           <div className="budget-col budget-col--available">사용가능</div>
         </div>
 
-        {budgets.map((budget) => {
+        {budgets.map((budget, index) => {
           const percentage = getProgressPercentage(budget.used_amount, budget.target_amount);
           const progressColor = getProgressColor(percentage);
+          const isDragOver = dragOverIndex === index && draggedIndex !== index;
 
           return (
-            <div key={budget.id} className="budget-item">
+            <div
+              key={budget.id}
+              className={`budget-item ${isDragOver ? "budget-item--drag-over" : ""}`}
+              draggable={!!onReorderBudgets}
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, index)}
+            >
               <div className={`budget-row ${getColorClass(budget.color)}`}>
                 <div className="budget-col budget-col--account">
+                  {onReorderBudgets && (
+                    <span className="budget-drag-handle" title="드래그하여 순서 변경">☰</span>
+                  )}
                   <span className="budget-icon">{getAccountIcon(budget.account)}</span>
                   {onAccountClick ? (
                     <button

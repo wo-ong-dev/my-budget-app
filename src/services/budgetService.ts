@@ -21,3 +21,7 @@ export async function updateBudget(id: number, budget: Partial<BudgetDraft>): Pr
 export async function deleteBudget(id: number): Promise<void> {
   await httpClient.delete(`/budgets/${id}`);
 }
+
+export async function updateBudgetSortOrder(month: string, orderedAccounts: string[]): Promise<void> {
+  await httpClient.post("/budgets/sort-order", { month, orderedAccounts });
+}

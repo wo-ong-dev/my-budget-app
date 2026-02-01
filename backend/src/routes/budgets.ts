@@ -12,6 +12,9 @@ router.get('/debug/all', BudgetController.getAllBudgetsRaw);
 // 예산 생성 또는 업데이트 (upsert)
 router.post('/', BudgetController.createOrUpdateBudget);
 
+// 예산 순서 업데이트 (드래그앤드롭)
+router.post('/sort-order', BudgetController.updateSortOrder);
+
 // 예산 수정
 router.put('/:id', BudgetController.updateBudget);
 
