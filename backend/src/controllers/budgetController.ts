@@ -1,7 +1,23 @@
 import { Request, Response } from 'express';
 import { BudgetModel, BudgetDraft } from '../models/Budget';
+import pool from '../config/database';
 
 export class BudgetController {
+  // 디버그용: 모든 예산 raw 데이터 조회
+  static async getAllBudgetsRaw(req: Request, res: Response): Promise<void> {
+    try {
+      const [rows] = await pool.execute('SELECT * FROM budgets ORDER BY month DESC, account');
+      res.json({
+        ok: true,
+        count: (rows as any[]).length,
+        budgets: rows
+      });
+    } catch (error) {
+      console.error('디버그 조회 오류:', error);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  }
+
   static async getBudgetsByMonth(req: Request, res: Response): Promise<void> {
     try {
       const { month } = req.query;

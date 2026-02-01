@@ -6,6 +6,9 @@ const router = Router();
 // 예산 조회 (월별)
 router.get('/', BudgetController.getBudgetsByMonth);
 
+// 디버그: 모든 예산 조회 (raw DB data)
+router.get('/debug/all', BudgetController.getAllBudgetsRaw);
+
 // 예산 생성 또는 업데이트 (upsert)
 router.post('/', BudgetController.createOrUpdateBudget);
 
