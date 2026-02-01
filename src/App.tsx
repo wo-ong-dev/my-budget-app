@@ -748,12 +748,13 @@ function AuthenticatedApp() {
     if (!filters.month) return;
 
     // Optimistic update: 즉시 UI에 새 순서 반영
-    const newBudgets = orderedAccounts
-      .map((account, index) => {
-        const budget = budgets.find(b => b.account === account);
-        return budget ? { ...budget, sort_order: index + 1 } : null;
-      })
-      .filter((b): b is BudgetWithUsage => b !== null);
+    const newBudgets: BudgetWithUsage[] = [];
+    orderedAccounts.forEach((account, index) => {
+      const budget = budgets.find(b => b.account === account);
+      if (budget) {
+        newBudgets.push({ ...budget, sort_order: index + 1 });
+      }
+    });
     setBudgets(newBudgets);
 
     try {
