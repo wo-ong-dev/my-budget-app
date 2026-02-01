@@ -85,7 +85,17 @@ export class BudgetModel {
         ...b,
         target_amount: Number(b.target_amount),
         sort_order: b.sort_order ?? 0
-      }));
+      }))
+      .sort((a, b) => {
+        // sort_order가 0이 아닌 것들을 먼저 (오름차순)
+        // sort_order가 0인 것들은 id 순서로
+        if (a.sort_order !== 0 && b.sort_order !== 0) {
+          return a.sort_order - b.sort_order;
+        }
+        if (a.sort_order !== 0) return -1;
+        if (b.sort_order !== 0) return 1;
+        return a.id - b.id;
+      });
 
     // 월의 시작일과 종료일 계산
     const [_year, _monthNum] = month.split('-').map(Number);

@@ -746,15 +746,25 @@ function AuthenticatedApp() {
   // 예산 순서 변경 (드래그앤드롭)
   const handleReorderBudgets = async (orderedAccounts: string[]) => {
     if (!filters.month) return;
+
+    // Optimistic update: 즉시 UI에 새 순서 반영
+    const newBudgets = orderedAccounts
+      .map((account, index) => {
+        const budget = budgets.find(b => b.account === account);
+        return budget ? { ...budget, sort_order: index + 1 } : null;
+      })
+      .filter((b): b is BudgetWithUsage => b !== null);
+    setBudgets(newBudgets);
+
     try {
-      setBudgetLoading(true);
       await updateBudgetSortOrder(filters.month, orderedAccounts);
-      await fetchBudgets();
+      // 성공 시 서버 데이터로 동기화 (백그라운드)
+      fetchBudgets();
     } catch (err) {
+      // 실패 시 원래 순서로 되돌리기
+      await fetchBudgets();
       const message = err instanceof Error ? err.message : "예산 순서를 변경하지 못했어요.";
       setError(message);
-    } finally {
-      setBudgetLoading(false);
     }
   };
 
