@@ -37,6 +37,7 @@ import {
   createOrUpdateBudget,
   updateBudget,
   deleteBudget,
+  copyBudgetsFromPreviousMonth,
 } from "./services/budgetService";
 import { getAccountColor } from "./utils/iconMappings";
 import * as XLSX from "xlsx";
@@ -437,7 +438,17 @@ function AuthenticatedApp() {
   const fetchBudgets = useCallback(async () => {
     setBudgetLoading(true);
     try {
-      const list = await fetchBudgetsByMonth(filters.month);
+      let list = await fetchBudgetsByMonth(filters.month);
+
+      // 현재 월에 예산이 없으면 직전 달 예산을 자동으로 복사
+      if (list.length === 0) {
+        const copiedBudgets = await copyBudgetsFromPreviousMonth(filters.month);
+        if (copiedBudgets.length > 0) {
+          // 복사 후 다시 조회 (사용금액 계산 포함)
+          list = await fetchBudgetsByMonth(filters.month);
+        }
+      }
+
       setBudgets(list);
     } catch (err) {
       const message = err instanceof Error ? err.message : "예산 데이터를 불러오지 못했어요.";
