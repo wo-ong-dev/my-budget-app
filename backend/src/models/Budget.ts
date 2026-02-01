@@ -26,9 +26,9 @@ export interface BudgetWithUsage extends Budget {
 
 export class BudgetModel {
   static async findByMonth(month: string): Promise<BudgetWithUsage[]> {
-    // 1. 현재 월의 커스텀 예산 조회 (sort_order로 정렬)
+    // 1. 현재 월의 커스텀 예산 조회
     const [customBudgetRows] = await pool.execute(
-      `SELECT * FROM budgets WHERE month = ? AND is_custom = TRUE ORDER BY sort_order, account`,
+      `SELECT * FROM budgets WHERE month = ? AND is_custom = TRUE ORDER BY id, account`,
       [month]
     );
 
@@ -40,9 +40,9 @@ export class BudgetModel {
       ? `${year - 1}-12`
       : `${year}-${String(monthNum - 1).padStart(2, '0')}`;
 
-    // 3. 전월의 모든 예산 조회 (sort_order로 정렬)
+    // 3. 전월의 모든 예산 조회
     let [prevBudgetRows] = await pool.execute(
-      `SELECT * FROM budgets WHERE month = ? ORDER BY sort_order, account`,
+      `SELECT * FROM budgets WHERE month = ? ORDER BY id, account`,
       [prevMonth]
     );
 
@@ -53,7 +53,7 @@ export class BudgetModel {
       const [latestBudgetRows] = await pool.execute(
         `SELECT * FROM budgets
          WHERE month < ?
-         ORDER BY month DESC, sort_order, account
+         ORDER BY month DESC, id, account
          LIMIT 100`,
         [month]
       );
@@ -84,9 +84,8 @@ export class BudgetModel {
       .map(b => ({
         ...b,
         target_amount: Number(b.target_amount),
-        sort_order: b.sort_order || 0
-      }))
-      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        sort_order: b.sort_order ?? 0
+      }));
 
     // 월의 시작일과 종료일 계산
     const [_year, _monthNum] = month.split('-').map(Number);

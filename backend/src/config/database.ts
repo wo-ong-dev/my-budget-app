@@ -105,6 +105,29 @@ export const initializeTables = async (): Promise<void> => {
       // 컬럼이 이미 있거나 오류가 발생해도 계속 진행
       console.log('⚠️  rebalance_feedback.is_settled 컬럼 확인/추가 스킵:', error);
     }
+
+    // budgets 테이블에 sort_order 컬럼 추가 (드래그앤드롭 순서용)
+    try {
+      const [sortOrderCols] = await pool.execute(`
+        SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'budgets'
+          AND COLUMN_NAME = 'sort_order'
+      `);
+      if ((sortOrderCols as any[]).length === 0) {
+        await pool.execute(`
+          ALTER TABLE budgets ADD COLUMN sort_order INT DEFAULT 0 AFTER is_custom
+        `);
+        // 기존 데이터에 기본 순서 부여
+        await pool.execute(`
+          UPDATE budgets SET sort_order = id WHERE sort_order = 0 OR sort_order IS NULL
+        `);
+        console.log('✅ budgets.sort_order 컬럼 추가 완료');
+      }
+    } catch (error) {
+      console.log('⚠️  budgets.sort_order 컬럼 확인/추가 스킵:', error);
+    }
   } catch (error) {
     console.error('❌ 테이블 초기화 실패:', error);
   }
