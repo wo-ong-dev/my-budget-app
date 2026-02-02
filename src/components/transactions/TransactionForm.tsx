@@ -67,8 +67,8 @@ function TransactionForm({
   };
 
   const handleAmountChange = (value: string) => {
-    setAmountInput(value);
     const numeric = parseCurrencyInput(value);
+    setAmountInput(formatCurrencyInput(numeric));
     setDraft((prev) => ({ ...prev, amount: numeric }));
   };
 
