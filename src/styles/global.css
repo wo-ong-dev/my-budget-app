@@ -554,6 +554,91 @@ html[data-theme="dark"] body {
   opacity: 0.2;
 }
 
+/* 월 표시 (가운데 정렬) */
+.month-display {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 10px 0;
+}
+
+/* 필터 접기/펼치기 토글 버튼 */
+.filter-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--gray-100);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-toggle-btn:hover {
+  background: var(--gray-200);
+}
+
+.filter-toggle-btn--has-active {
+  border-color: var(--primary-500);
+  color: var(--primary-500);
+}
+
+.filter-toggle-btn__text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-active-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--primary-500);
+  border-radius: 50%;
+}
+
+.filter-toggle-btn__icon {
+  font-size: 18px;
+  font-weight: 600;
+  transition: transform 0.3s ease;
+  transform: rotate(90deg);
+}
+
+.filter-toggle-btn__icon--expanded {
+  transform: rotate(-90deg);
+}
+
+/* 접을 수 있는 필터 영역 */
+.filter-collapsible {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+  overflow: hidden;
+}
+
+.filter-collapsible--expanded {
+  grid-template-rows: 1fr;
+}
+
+.filter-collapsible__content {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.filter-collapsible--expanded .filter-collapsible__content {
+  padding-top: 16px;
+}
+
 .radio-group {
   display: flex;
   gap: 8px;
@@ -1173,7 +1258,7 @@ html[data-theme="dark"] body {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   /* 모바일 터치/드래그 시 텍스트 깜빡임 방지 */
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -1181,6 +1266,11 @@ html[data-theme="dark"] body {
   user-select: none;
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
+  /* 모바일 스크롤 시 SVG 텍스트 유지를 위한 설정 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: auto;
+  contain: layout style;
 }
 
 .chart-container svg {
@@ -1189,6 +1279,10 @@ html[data-theme="dark"] body {
   -ms-user-select: none;
   user-select: none;
   touch-action: pan-y;
+  overflow: visible;
+  /* GPU 가속을 통한 렌더링 안정화 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .chart-container text {
@@ -1947,10 +2041,21 @@ html[data-theme="dark"] body {
 
   .stats-card--chart {
     /* 모바일에서는 높이 제한 해제 */
+    overflow: visible !important;
   }
 
   .chart-container {
-    /* 모바일에서는 차트 컨테이너 설정 최소화 */
+    /* 모바일에서 스크롤 시 텍스트 유지 */
+    overflow: visible !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: auto;
+  }
+
+  .chart-container svg {
+    overflow: visible !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
 
   .stats-list {
