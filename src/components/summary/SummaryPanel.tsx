@@ -56,7 +56,47 @@ function SummaryPanel({
   }, []);
 
   const COLORS = isDarkMode ? DARK_COLORS : LIGHT_COLORS;
-  // 로딩 중일 때 스켈레톤 UI 표시
+
+  // --- useMemo는 반드시 early return 위에 위치 (React rules of hooks) ---
+  // 도넛 차트 데이터 준비 - 상위 7개만 표시, 나머지는 '그 외'로 묶기
+  const chartData = useMemo(() => {
+    const allCategories = summary?.categories
+      ?.filter((item) => item.expense > 0)
+      .sort((a, b) => b.expense - a.expense) || [];
+
+    if (allCategories.length > 7) {
+      // 상위 7개
+      const top7 = allCategories.slice(0, 7).map((item) => ({
+        name: item.category,
+        value: item.expense,
+      }));
+
+      // 나머지는 '그 외'로 묶기
+      const others = allCategories.slice(7);
+      const othersTotal = others.reduce((sum, item) => sum + item.expense, 0);
+
+      if (othersTotal > 0) {
+        return [
+          ...top7,
+          {
+            name: "그 외",
+            value: othersTotal,
+            details: others.map(item => ({ category: item.category, amount: item.expense }))
+          }
+        ];
+      } else {
+        return top7;
+      }
+    } else {
+      return allCategories.map((item) => ({
+        name: item.category,
+        value: item.expense,
+      }));
+    }
+  }, [summary?.categories]);
+  // --- hooks 끝 ---
+
+  // 로딩 중일 때 스켐레톤 UI 표시
   if (loading) {
     return (
       <div className="summary-panel">
@@ -137,7 +177,7 @@ function SummaryPanel({
     const outerX = cx + outerRadius_label * Math.cos(-midAngle * RADIAN);
     const outerY = cy + outerRadius_label * Math.sin(-midAngle * RADIAN);
 
-    // 선 끝점 (도넛과 라벨 사이 연결선)
+    // 선 끝점 (도넣과 라벨 사이 연결선)
     const lineEndX = cx + outerRadius * 1.05 * Math.cos(-midAngle * RADIAN);
     const lineEndY = cy + outerRadius * 1.05 * Math.sin(-midAngle * RADIAN);
 
@@ -199,43 +239,6 @@ function SummaryPanel({
       </g>
     );
   };
-
-  // 도넛 차트 데이터 준비 - 상위 7개만 표시, 나머지는 '그 외'로 묶기
-  const chartData = useMemo(() => {
-    const allCategories = summary.categories
-      ?.filter((item) => item.expense > 0)
-      .sort((a, b) => b.expense - a.expense) || [];
-
-    if (allCategories.length > 7) {
-      // 상위 7개
-      const top7 = allCategories.slice(0, 7).map((item) => ({
-        name: item.category,
-        value: item.expense,
-      }));
-
-      // 나머지는 '그 외'로 묶기
-      const others = allCategories.slice(7);
-      const othersTotal = others.reduce((sum, item) => sum + item.expense, 0);
-
-      if (othersTotal > 0) {
-        return [
-          ...top7,
-          {
-            name: "그 외",
-            value: othersTotal,
-            details: others.map(item => ({ category: item.category, amount: item.expense }))
-          }
-        ];
-      } else {
-        return top7;
-      }
-    } else {
-      return allCategories.map((item) => ({
-        name: item.category,
-        value: item.expense,
-      }));
-    }
-  }, [summary.categories]);
 
   // "그 외" 카테고리 클릭 핸들러
   const handleOtherCategoryClick = (data: any) => {
