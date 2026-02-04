@@ -980,6 +980,25 @@ html[data-theme="dark"] body {
   border-radius: 16px;
 }
 
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+}
+
+.empty-state__icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.empty-state__text {
+  color: var(--gray-500);
+  font-size: 14px;
+  margin: 0;
+}
+
 /* 요약 패널 스타일은 위의 공통 스타일에서 처리됨 */
 
 .summary-card {
@@ -1094,6 +1113,9 @@ html[data-theme="dark"] body {
 
 .stats-card--chart {
   min-height: 350px;
+  /* iOS Safari: 스크롤 컨테이너 내 SVG 텍스트 깜빡임 방지를 위한 GPU 레이어 분리 */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
 }
 
 .stats-card-header {
@@ -1259,18 +1281,12 @@ html[data-theme="dark"] body {
   align-items: center;
   justify-content: center;
   overflow: visible;
-  /* 모바일 터치/드래그 시 텍스트 깜빡임 방지 */
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
-  /* 모바일 스크롤 시 SVG 텍스트 유지를 위한 설정 */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  will-change: auto;
-  contain: layout style;
 }
 
 .chart-container svg {
@@ -1280,9 +1296,6 @@ html[data-theme="dark"] body {
   user-select: none;
   touch-action: pan-y;
   overflow: visible;
-  /* GPU 가속을 통한 렌더링 안정화 */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
 }
 
 .chart-container text {
@@ -1292,7 +1305,6 @@ html[data-theme="dark"] body {
   stroke: #ffffff;
   stroke-width: 3px;
   paint-order: stroke fill;
-  /* 텍스트 선택 및 깜빡임 방지 */
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -2045,17 +2057,11 @@ html[data-theme="dark"] body {
   }
 
   .chart-container {
-    /* 모바일에서 스크롤 시 텍스트 유지 */
     overflow: visible !important;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    will-change: auto;
   }
 
   .chart-container svg {
     overflow: visible !important;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
   }
 
   .stats-list {

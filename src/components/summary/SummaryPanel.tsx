@@ -337,6 +337,19 @@ function SummaryPanel({
         </ul>
       </section>
 
+      {chartData.length === 0 ? (
+        <section className="stats-card">
+          <div className="empty-state">
+            <span className="empty-state__icon">📊</span>
+            <p className="empty-state__text">
+              {summary.totalIncome === 0 && summary.totalExpense === 0
+                ? "이 달에 내역이 없습니다."
+                : "이 달에 지출 내역이 없습니다."}
+            </p>
+          </div>
+        </section>
+      ) : null}
+
       {summary.categories && summary.categories.length > 0 && chartData.length > 0 ? (
         <section className="stats-card stats-card--chart">
           <div className="stats-card-header">
@@ -361,7 +374,7 @@ function SummaryPanel({
 
           {categoryView === "chart" ? (
             <div className="chart-container">
-              <ResponsiveContainer width="100%" height={300} debounce={1}>
+              <ResponsiveContainer width="100%" height={300} debounce={150}>
                 <PieChart>
                   <Pie
                     data={chartData}
