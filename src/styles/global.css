@@ -1287,6 +1287,9 @@ html[data-theme="dark"] body {
   user-select: none;
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
+  /* iOS Safari: 스크롤 중 SVG 텍스트가 사라지는 compositor 클리핑 방지 */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .chart-container svg {

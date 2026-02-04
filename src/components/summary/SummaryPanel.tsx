@@ -388,9 +388,7 @@ function SummaryPanel({
                     fill="#8884d8"
                     paddingAngle={5}
                     dataKey="value"
-                    animationDuration={400}
-                    isAnimationActive={true}
-                    animationBegin={0}
+                    isAnimationActive={false}
                     label={renderCustomLabel}
                     labelLine={false}
                   >

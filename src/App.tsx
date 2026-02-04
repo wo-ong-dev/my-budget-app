@@ -321,7 +321,10 @@ function AuthenticatedApp() {
   });
 
   const refetch = useCallback(async () => {
-    setLoading(true);
+    // 초기 로드 시에만 스켐레톤 표시 → 이후 월 이동 시 깜빡 방지
+    if (!hasLoadedRef.current) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const list = await fetchTransactionsByMonth(filters.month);
