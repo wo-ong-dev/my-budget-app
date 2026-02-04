@@ -189,6 +189,28 @@ function SummaryPanel({
     const textColor = isDarkMode ? '#ffffff' : '#343a40';
     const lineColor = isDarkMode ? '#9ca3af' : '#ced4da';
 
+    // 모바일 등 좁은 폭에서 외부 라벨이 잘리지 않도록 동적 축약
+    // cx는 SVG의 중앙 X → containerWidth = cx * 2
+    const containerWidth = cx * 2;
+    const labelPad = 8; // SVG 경계로부터의 안전 여백 (px)
+    const availableWidth = outerX > cx
+      ? containerWidth - outerX - labelPad   // 오른쪽 라벨: outerX → 우측 끝까지
+      : outerX - labelPad;                   // 왼쪽 라벨: 좌측 끝 → outerX까지
+    // 한글(U+1100 이상) ≈ 11px, 영문·기호 ≈ 6px (fontSize 12px / fontWeight 600 기준)
+    const charW = (ch: string): number => ch.charCodeAt(0) >= 0x1100 ? 11 : 6;
+    const nameW = [...name].reduce((s: number, c: string) => s + charW(c), 0);
+    let displayName: string = name;
+    if (nameW > availableWidth && availableWidth > 0) {
+      // 사용 가능한 폭 내로 축약 후 '…' 추가
+      let w = 0;
+      let i = 0;
+      for (; i < name.length; i++) {
+        if (w + charW(name[i]) + 6 > availableWidth) break; // 6 ≈ '…' 폭
+        w += charW(name[i]);
+      }
+      displayName = i > 0 ? name.slice(0, i) + '…' : '…';
+    }
+
     return (
       <g>
         {/* 안쪽: 퍼센트 표시 */}
@@ -219,7 +241,7 @@ function SummaryPanel({
           strokeWidth={1}
         />
 
-        {/* 바깥쪽: 카테고리 이름 */}
+        {/* 바깥쪽: 카테고리 이름 (폭 초과 시 축약) */}
         <text
           x={outerX}
           y={outerY}
@@ -234,7 +256,7 @@ function SummaryPanel({
             paintOrder: 'stroke fill'
           }}
         >
-          {name}
+          {displayName}
         </text>
       </g>
     );
